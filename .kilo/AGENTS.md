@@ -54,9 +54,6 @@ Keep the OpenCode plugin implementations unchanged unless a separate port is aut
 - The six local server plugins use hook and tool shapes present in Kilo's V1 API.
   Retain their OpenCode imports, helper modules, dependencies, and auto-discovery placement.
   Published Lunchbox packages have Node engine requirements, not an `engines.opencode` version gate.
-- `/branches` is retained but unavailable on Kilo: its unchanged safety guard requires `http://opencode.internal`,
-  while Kilo uses `http://kilo.internal` or a daemon transport. Do not weaken that guard to enable the panel.
-  A host-aware branch-panel port requires separate authorization.
 - Config/context panels and bookmarks use shared TUI APIs, but source compatibility does not verify interactive
   rendering. Kilo and this workspace use different OpenTUI versions. The original OpenCode native suite is not a
   Kilo certification, and npm-installed plugin behavior is outside this repository's test scope.
@@ -85,9 +82,6 @@ Keep the OpenCode plugin implementations unchanged unless a separate port is aut
   ordered shell rules, and secret Read guards. Agent permissions append to global rules; the last matching rule wins.
 - Builder is the primary integrator. Planner/reviewers are read-only leaves. Built-in general is an editing worker;
   explore retains native restrictions. Keep delegation exact and deny by default. No routes from reviewers to writers.
-  Custom planners and reviewers deny the known native mutation, scheduling, process-control, and publication tools.
-  Re-audit that list when Kilo adds capabilities. It is not a deny-by-default boundary for unknown tools.
-  Preserve inherited read, search, skill, and directory rules. Per-agent allows can erase stricter project restrictions.
   Verify transitive reachability and the depth ceiling without granting tools to make a check pass.
 - Skills are native `skills/<name>/SKILL.md` files with discoverable descriptions. Load stack guidance only for
   relevant work. Do not recreate language personas, automatic stage fan-out, or universal response envelopes.
@@ -120,6 +114,12 @@ Keep the OpenCode plugin implementations unchanged unless a separate port is aut
   Inspect loaded text and diagnostics after restart; host hook errors can leave unresolved includes.
 - Keep GitHub/Playwright MCP typed and disabled without credential interpolation. Do not inspect secrets for verification.
   V2 ignores V1 plugins and top-level `subagent_depth`; a V2 port is separate work.
+
+## Read-only agent permissions
+
+Custom planners and reviewers deny the known native mutation, scheduling, process-control, and publication tools.
+Re-audit that list when Kilo adds capabilities. It is not a deny-by-default boundary for unknown tools.
+Preserve inherited read, search, skill, and directory rules. Per-agent allows can erase stricter project restrictions.
 
 ## Plugin tooling
 
@@ -180,14 +180,6 @@ Their TUI-only entrypoints are registered in `tui.jsonc` and stay outside server
 Keep config/context views read-only and preserve evidence limits. Bookmark storage stays scoped by project,
 workspace, directory, and session; preserve malformed records on errors. Handoff drafts require explicit copy
 and must never submit prompts automatically. Do not add workflow-stage tracking to these panels.
-
-`/branches` is a TUI-only extension in `extensions/branches/`. It requires the embedded local V1 server and a
-worktree-root launch. Attached servers and workspace routing are blocked. Git operations require explicit confirmation.
-Never add automatic stash, discard, force deletion, reset, rebase, push, or remote deletion to this panel.
-Activity checks cover the current directory instance, not other instances or processes. They are warnings, not locks.
-Keep confirmation cancellation, stale-state checks, worktree checks, and ignored-file protection on every mutation path.
-Pull fetches first, then merges the upstream with fast-forward-only and ignored-file protection.
-An interrupted command can leave Git changes or conflicts. Refresh and inspect before retrying. Never auto-abort.
 
 ## Documentation and third-party material
 
