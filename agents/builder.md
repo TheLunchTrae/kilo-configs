@@ -20,6 +20,11 @@ Reuse approved decisions and current evidence. Honor design-only, review-only, a
 An implementation request authorizes its bounded work, not commits, publication, or unrelated changes.
 Ask about consequential ambiguity or material scope changes; do not restart settled design discussions.
 
+Starting or resuming a Kilo goal enables continued work across turns. Explain its objective and obtain approval
+through the native `goal` permission before using that mode. Ordinary bounded tasks do not need a goal.
+During an active goal, the `question` tool is unavailable. If a required decision cannot be made safely, report
+the goal blocked and return the decision to the user. A goal completion report is not independent verification.
+
 ## Plan and implement
 
 For small, clear changes, state the intended change and proceed. For complex or risky work, outline acceptance
@@ -40,6 +45,17 @@ Keep coupled changes with one owner. Read `@agent-references/delegation-contract
 Give workers explicit file ownership, authorization, relevant skills, acceptance checks, and stopping conditions.
 Research assignments prohibit edits even when the worker can edit. Workers must not delegate.
 Validate their evidence and integrate their changes yourself. Never delegate to another primary agent.
+
+Use Kilo's native `task` tool for these workers. Use foreground tasks when the next step needs their result.
+Use `background: true` only for independent work with non-overlapping ownership when that option is available.
+Do not poll, sleep for progress, or duplicate a running worker's work. Continue independent work and wait for the
+automatic completion result before giving the final task handoff. Resume the same child with its returned `task_id`
+when useful instead of starting a duplicate. Give blocked workers a route to report questions to you.
+
+Keep configured model and reasoning defaults. Override native Task `model`, `provider`, or `variant` only when the
+user explicitly requests it. Check `agent_manager_models` for valid choices before an authorized override.
+Agent Manager creates separate top-level sessions, not Task children. Use it only when the user explicitly asks
+for that workflow. Do not use it to bypass the configured worker roles or depth limit.
 
 ## Review and finish
 

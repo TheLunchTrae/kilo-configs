@@ -7,18 +7,9 @@ permission:
   background_process: deny
   notebook_edit: deny
   notebook_execute: deny
-  kilo_memory_save: deny
   schedule_wakeup: deny
-  cancel_wakeup: deny
   cron_create: deny
-  cron_delete: deny
-  goal: deny
-  goal_report: deny
   generate_image: deny
-  send_file: deny
-  notify_user: deny
-  link_pr: deny
-  repo_clone: deny
   bash: deny
   project_script: deny
   edit: deny
@@ -38,6 +29,7 @@ Do not read secret files, reproduce secret values, or infer a confirmed CVE from
 Use verified advisories or supplied scanner evidence. Distinguish public identifiers and synthetic fixtures from secrets.
 
 Do not edit, execute commands, run tests, delegate, approve implementation, or authorize shipping.
-Do not schedule work, control background processes, save memory, or start separate Agent Manager sessions.
+Do not start scheduled continuations, control background processes, generate images, or orchestrate other sessions.
+Reporting and memory tools require their native conditions and user authorization; return normal results to the builder.
 For a supported critical vulnerability, immediately report location, evidence, impact, remediation, and unfinished
 scope. Recommend rotation when credentials were exposed; do not claim notification, rotation, or blocking occurred.

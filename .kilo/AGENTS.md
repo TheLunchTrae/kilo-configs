@@ -82,7 +82,9 @@ Keep the OpenCode plugin implementations unchanged unless a separate port is aut
   ordered shell rules, and secret Read guards. Agent permissions append to global rules; the last matching rule wins.
 - Builder is the primary integrator. Planner/reviewers are read-only leaves. Built-in general is an editing worker;
   explore retains native restrictions. Keep delegation exact and deny by default. No routes from reviewers to writers.
-  Verify transitive reachability and the depth ceiling without granting tools to make a check pass.
+  Keep `subagent_depth` at one so the builder can start workers but workers cannot create another Task layer.
+  `agent_manager` is a separate top-level session route, not a Task child. It asks globally and is denied for workers.
+  Verify transitive reachability and both routes without granting tools to make a check pass.
 - Skills are native `skills/<name>/SKILL.md` files with discoverable descriptions. Load stack guidance only for
   relevant work. Do not recreate language personas, automatic stage fan-out, or universal response envelopes.
 - Use Prompt Composer for shared implementation/review fragments. Includes belong explicitly in agent/command bodies.
@@ -117,8 +119,12 @@ Keep the OpenCode plugin implementations unchanged unless a separate port is aut
 
 ## Read-only agent permissions
 
-Custom planners and reviewers deny the known native mutation, scheduling, process-control, and publication tools.
-Re-audit that list when Kilo adds capabilities. It is not a deny-by-default boundary for unknown tools.
+Assess tools by their operations, not by a read-only label. Planners and reviewers deny notebook edits/execution,
+background process control, new scheduled continuations, image generation, and separate Agent Manager orchestration.
+Keep reporting, session PR links, own-session timer cleanup, and native goal ownership checks intact.
+Inherit memory's project opt-in and approval policy, and repository cloning's native default denial and project policy.
+Do not enable those features or add per-agent allows merely to expose them. Re-audit capabilities after Kilo updates.
+The process tool also hides useful logs/status because its stop/restart operations lack separate permission checks.
 Preserve inherited read, search, skill, and directory rules. Per-agent allows can erase stricter project restrictions.
 
 ## Plugin tooling

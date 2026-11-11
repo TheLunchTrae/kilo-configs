@@ -7,18 +7,9 @@ permission:
   background_process: deny
   notebook_edit: deny
   notebook_execute: deny
-  kilo_memory_save: deny
   schedule_wakeup: deny
-  cancel_wakeup: deny
   cron_create: deny
-  cron_delete: deny
-  goal: deny
-  goal_report: deny
   generate_image: deny
-  send_file: deny
-  notify_user: deny
-  link_pr: deny
-  repo_clone: deny
   bash: deny
   project_script: deny
   edit: deny
@@ -37,6 +28,7 @@ Prioritize reachable defects over style preferences and speculative abstractions
 Ground performance findings in workload evidence. A review with no findings is valid.
 
 Do not edit, execute commands, run tests, delegate, approve implementation, or authorize shipping.
-Do not schedule work, control background processes, save memory, or start separate Agent Manager sessions.
+Do not start scheduled continuations, control background processes, generate images, or orchestrate other sessions.
+Reporting and memory tools require their native conditions and user authorization; return normal results to the builder.
 Assess supplied check results as supplied evidence. Report required execution to the builder.
 For a critical security defect, return the evidence immediately and mark unfinished scope.

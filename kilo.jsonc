@@ -9,7 +9,7 @@
   "disabled_providers": ["opencode"],
   "model": "openai/gpt-6-astra",
   "small_model": "openai/gpt-6-luna",
-  "subagent_depth": 2,
+  "subagent_depth": 1,
   "default_agent": "builder",
   "references": {
     "agent-references": {
@@ -32,6 +32,7 @@
     }
   },
   "permission": {
+    "goal": "ask",
     "read": {
       "secrets": "deny",
       "secrets/*": "deny",
@@ -97,6 +98,7 @@
       "*": "deny"
     },
     "project_script": "ask",
+    "agent_manager": "ask",
     "github_*": "ask",
     "playwright_*": "ask"
   },
@@ -119,11 +121,15 @@
     "general": {
       "color": "#8AF793",
       "permission": {
-        "edit": "allow"
+        "edit": "allow",
+        "agent_manager": "deny"
       }
     },
     "explore": {
-      "color": "#8AEEF7"
+      "color": "#8AEEF7",
+      "permission": {
+        "agent_manager": "deny"
+      }
     },
     "summary": {
       "permission": {

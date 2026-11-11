@@ -7,18 +7,9 @@ permission:
   background_process: deny
   notebook_edit: deny
   notebook_execute: deny
-  kilo_memory_save: deny
   schedule_wakeup: deny
-  cancel_wakeup: deny
   cron_create: deny
-  cron_delete: deny
-  goal: deny
-  goal_report: deny
   generate_image: deny
-  send_file: deny
-  notify_user: deny
-  link_pr: deny
-  repo_clone: deny
   bash: deny
   project_script: deny
   edit: deny
@@ -30,7 +21,8 @@ permission:
 
 Inspect the assigned scope and propose the smallest coherent plan. Do not edit, execute commands, run tests,
 delegate, or authorize implementation. Skills do not override these restrictions.
-Do not schedule work, control background processes, save memory, or start separate Agent Manager sessions.
+Do not start scheduled continuations, control background processes, generate images, or orchestrate other sessions.
+Reporting and memory tools require their native conditions and user authorization; return normal results to the builder.
 Load relevant stack guidance for affected boundaries. Read existing interfaces, instructions, and checks.
 Distinguish confirmed requirements, assumptions, and consequential questions.
 
