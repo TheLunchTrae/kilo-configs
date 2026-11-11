@@ -1,0 +1,44 @@
+{
+  "name": "kilo-configs",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --experimental-strip-types --test tests/*.test.mjs tests/*.test.ts",
+    "test:native": "node tests/run-native.mjs",
+    "test:native:minimum": "node tests/run-native.mjs minimum",
+    "test:kilo": "node tests/kilo-native.mjs",
+    "test:render": "bun test --preload @opentui/solid/preload ./tests/bookmarks-view.native.ts",
+    "typecheck": "tsc --project tsconfig.json",
+    "lint": "eslint . --max-warnings 0",
+    "lint:fix": "npm run lint -- --fix",
+    "format": "prettier --write plugins extensions tests eslint.config.mjs prettier.config.mjs && biome check --write",
+    "format:check": "prettier --check plugins extensions tests eslint.config.mjs prettier.config.mjs && biome check",
+    "check": "npm run typecheck && npm run lint && npm run format:check && npm test"
+  },
+  "engines": {
+    "opencode": "^1.19.5"
+  },
+  "dependencies": {
+    "@opencode-ai/plugin": "^1.19.5",
+    "jsonc-parser": "3.3.1"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.6.4",
+    "@eslint-community/eslint-plugin-eslint-comments": "4.7.2",
+    "@eslint/js": "10.0.1",
+    "@opencode-ai/sdk": "^1.19.5",
+    "@opentui/core": "0.4.5",
+    "@opentui/keymap": "0.4.5",
+    "@opentui/solid": "0.4.5",
+    "@types/node": "24.10.1",
+    "eslint": "10.10.0",
+    "eslint-config-prettier": "10.1.8",
+    "eslint-plugin-regexp": "3.3.0",
+    "globals": "17.12.0",
+    "prettier": "3.9.6",
+    "semver": "7.8.5",
+    "solid-js": "1.9.12",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.69.0"
+  }
+}

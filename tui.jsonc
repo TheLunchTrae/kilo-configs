@@ -1,0 +1,13 @@
+{
+  "$schema": "https://app.kilo.ai/tui.json",
+  "theme": "pink",
+  "plugin": [
+    ["@lunchbox-labs/opencode-model-profiles@0.2.0", { "configFile": "../kilo/models.jsonc" }],
+    "@lunchbox-labs/opencode-prompt-composer@0.2.4",
+    "@lunchbox-labs/opencode-tool-inspector@0.2.2",
+    "./extensions/session-tools/config.ts",
+    "./extensions/session-tools/context.ts",
+    "./extensions/session-tools/bookmarks.tsx",
+    "./extensions/branches/index.ts"
+  ]
+}

@@ -1,0 +1,2 @@
+# Normalize text files and use LF on checkout on every platform. Detect binary files automatically.
+* text=auto eol=lf
