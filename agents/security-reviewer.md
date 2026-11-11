@@ -4,30 +4,26 @@ mode: subagent
 color: "#F78AB7"
 modelRef: reasoning
 permission:
-  '*': deny
-  read:
-    '*': allow
-    '*.env': ask
-    '*.env.*': ask
-    '*.env.example': allow
-    secrets: deny
-    secrets/*: deny
-    '*/secrets': deny
-    '*/secrets/*': deny
-  glob: allow
-  grep: allow
-  list: allow
-  skill: allow
-  webfetch: allow
-  websearch: allow
-  semantic_search: allow
-  git_inspect: allow
-  board_read: allow
-  board_post: allow
+  background_process: deny
+  notebook_edit: deny
+  notebook_execute: deny
+  kilo_memory_save: deny
+  schedule_wakeup: deny
+  cancel_wakeup: deny
+  cron_create: deny
+  cron_delete: deny
+  goal: deny
+  goal_report: deny
+  generate_image: deny
+  send_file: deny
+  notify_user: deny
+  link_pr: deny
+  repo_clone: deny
   bash: deny
   project_script: deny
   edit: deny
   task: deny
+  agent_manager: deny
   github_*: deny
   playwright_*: deny
 ---
@@ -42,5 +38,6 @@ Do not read secret files, reproduce secret values, or infer a confirmed CVE from
 Use verified advisories or supplied scanner evidence. Distinguish public identifiers and synthetic fixtures from secrets.
 
 Do not edit, execute commands, run tests, delegate, approve implementation, or authorize shipping.
+Do not schedule work, control background processes, save memory, or start separate Agent Manager sessions.
 For a supported critical vulnerability, immediately report location, evidence, impact, remediation, and unfinished
 scope. Recommend rotation when credentials were exposed; do not claim notification, rotation, or blocking occurred.

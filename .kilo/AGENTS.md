@@ -85,10 +85,9 @@ Keep the OpenCode plugin implementations unchanged unless a separate port is aut
   ordered shell rules, and secret Read guards. Agent permissions append to global rules; the last matching rule wins.
 - Builder is the primary integrator. Planner/reviewers are read-only leaves. Built-in general is an editing worker;
   explore retains native restrictions. Keep delegation exact and deny by default. No routes from reviewers to writers.
-  Custom planners and reviewers deny unknown tools, then allow inspection and Swarm coordination explicitly.
-  Keep their read rules aligned with sensitive-file policy. Per-agent allows can override earlier global/project rules.
-  Preserve `.env` prompts and secret-directory denials when changing those allowlists.
-  Do not duplicate `external_directory` paths: Kilo preserves its native directory policy under a mode-wide denial.
+  Custom planners and reviewers deny the known native mutation, scheduling, process-control, and publication tools.
+  Re-audit that list when Kilo adds capabilities. It is not a deny-by-default boundary for unknown tools.
+  Preserve inherited read, search, skill, and directory rules. Per-agent allows can erase stricter project restrictions.
   Verify transitive reachability and the depth ceiling without granting tools to make a check pass.
 - Skills are native `skills/<name>/SKILL.md` files with discoverable descriptions. Load stack guidance only for
   relevant work. Do not recreate language personas, automatic stage fan-out, or universal response envelopes.
