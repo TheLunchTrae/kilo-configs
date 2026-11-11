@@ -125,7 +125,10 @@
       }
     },
     "explore": {
-      "color": "#8AEEF7"
+      "color": "#8AEEF7",
+      "permission": {
+        "agent_manager": "deny"
+      }
     },
     "summary": {
       "permission": {
