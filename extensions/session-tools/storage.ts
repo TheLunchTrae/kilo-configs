@@ -1,5 +1,5 @@
-import type { TuiPluginApi } from '@opencode-ai/plugin/tui';
-import type { Session } from '@opencode-ai/sdk/v2';
+import type { TuiPluginApi } from '@kilocode/plugin/tui';
+import type { Session } from '@kilocode/sdk/v2';
 import { type Bookmark, type BookmarkStore, PanelError, bookmarkKey, readBookmarks } from './model.ts';
 
 export function bookmarkStore(api: Pick<TuiPluginApi, 'kv'>, data: { session: Session }) {

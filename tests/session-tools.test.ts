@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import type { Agent, Config, Session } from '@opencode-ai/sdk/v2';
-import type { TuiPluginApi } from '@opencode-ai/plugin/tui';
+import type { Agent, Config, Session } from '@kilocode/sdk/v2';
+import type { TuiPluginApi } from '@kilocode/plugin/tui';
 import {
   type Bookmark,
   type Entry,

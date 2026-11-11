@@ -1,6 +1,6 @@
 /** @jsxImportSource @opentui/solid */
 import { randomUUID } from 'node:crypto';
-import type { TuiPluginApi, TuiPluginModule } from '@opencode-ai/plugin/tui';
+import type { TuiPluginApi, TuiPluginModule } from '@kilocode/plugin/tui';
 import type { TextareaRenderable } from '@opentui/core';
 import { onCleanup } from 'solid-js';
 import { useTerminalDimensions } from '@opentui/solid';
@@ -79,7 +79,7 @@ function Draft(props: { api: TuiPluginApi; text: string; view: ReturnType<typeof
 
 export default {
   id: 'session-bookmarks',
-  // eslint-disable-next-line @typescript-eslint/require-await -- OpenCode requires Promise-returning TUI initialization hooks.
+  // eslint-disable-next-line @typescript-eslint/require-await -- Kilo requires Promise-returning TUI initialization hooks.
   tui: async (api) => {
     const view = ui(api);
     const source = async () => {

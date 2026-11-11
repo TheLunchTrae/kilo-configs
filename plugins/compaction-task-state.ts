@@ -1,6 +1,6 @@
-import type { Plugin } from '@opencode-ai/plugin';
+import type { Plugin } from '@kilocode/plugin';
 
-// Appended after OpenCode's default compaction prompt. It follows a subset of the checkpoint skill's handoff
+// Appended after Kilo's default compaction prompt. It follows a subset of the checkpoint skill's handoff
 // fields so automatic compaction keeps the state that authorization and verification rules depend on.
 const TASK_STATE_GUIDANCE = `Preserve task control state in the summary. When the conversation established them, record:
 
@@ -17,7 +17,7 @@ const TASK_STATE_GUIDANCE = `Preserve task control state in the summary. When th
 Keep exact paths, commands, identifiers, and error text. Mark unrecorded or uncertain items as unknown; do not
 infer approvals or check results. Omit fields that do not apply.`;
 
-// eslint-disable-next-line @typescript-eslint/require-await -- OpenCode's plugin factory requires a Promise result.
+// eslint-disable-next-line @typescript-eslint/require-await -- Kilo's plugin factory requires a Promise result.
 export const CompactionTaskStatePlugin: Plugin = async () => ({
   // eslint-disable-next-line @typescript-eslint/require-await -- The hook contract returns a Promise.
   'experimental.session.compacting': async (_input, output) => {

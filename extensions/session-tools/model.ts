@@ -1,4 +1,4 @@
-import type { Agent, AssistantMessage, Config, Message, Part, Session } from '@opencode-ai/sdk/v2';
+import type { Agent, AssistantMessage, Config, Message, Part, Session } from '@kilocode/sdk/v2';
 
 export interface Entry {
   info: Message;
@@ -135,9 +135,9 @@ export function configFacts(
   const last = lastAssistant(entries, agent.name);
   const model = hasResponseData(agent.model) ? `${agent.model.providerID}/${agent.model.modelID}` : undefined;
   const facts: Fact[] = [
-    { label: 'Agent default (server-resolved)', value: model ?? 'No agent model; OpenCode selects a fallback' },
+    { label: 'Agent default (server-resolved)', value: model ?? 'No agent model; Kilo selects a fallback' },
     { label: 'Configured variant', value: cleanOr(agent.variant, 'Model default') },
-    { label: 'Workspace default (merged)', value: cleanOr(config.model, 'OpenCode fallback') },
+    { label: 'Workspace default (merged)', value: cleanOr(config.model, 'Kilo fallback') },
     {
       label: 'Global file default',
       value: hasResponseData(global) ? cleanOr(global.model, 'Not configured') : 'Unavailable',

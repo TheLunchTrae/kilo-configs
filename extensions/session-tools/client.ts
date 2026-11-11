@@ -1,5 +1,5 @@
-import type { TuiDialogSelectOption, TuiPluginApi } from '@opencode-ai/plugin/tui';
-import type { Session } from '@opencode-ai/sdk/v2';
+import type { TuiDialogSelectOption, TuiPluginApi } from '@kilocode/plugin/tui';
+import type { Session } from '@kilocode/sdk/v2';
 import { type Entry, PanelError, clean, hasResponseData, historyLimit } from './model.ts';
 import { dialogNavigation } from '../tui/navigation.ts';
 

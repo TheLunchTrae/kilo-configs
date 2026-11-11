@@ -1,4 +1,4 @@
-import type { PluginInput } from '@opencode-ai/plugin';
+import type { PluginInput } from '@kilocode/plugin';
 import assert from 'node:assert/strict';
 import { rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -51,7 +51,8 @@ describe('scrub-secrets plugin', () => {
   beforeEach(() => {
     for (const [name, value] of Object.entries({
       ...variables,
-      OPENCODE_SCRUB_ENV_ALLOW: 'SCRUB_TEST_ALLOWED_TOKEN',
+      KILO_SCRUB_ENV_ALLOW: 'SCRUB_TEST_ALLOWED_TOKEN',
+      OPENCODE_SCRUB_ENV_ALLOW: 'SCRUB_TEST_API_TOKEN',
     })) {
       saved.set(name, process.env[name]);
       process.env[name] = value;
@@ -88,6 +89,15 @@ describe('scrub-secrets plugin', () => {
     const output = { env: {} as Record<string, string> };
     await env({ cwd: '/project' }, output);
     assert.deepEqual(output.env, {});
+  });
+
+  it('does not use the retired OpenCode allowlist when the Kilo allowlist is absent', async () => {
+    delete process.env.KILO_SCRUB_ENV_ALLOW;
+    const { env } = await create();
+    const output = { env: {} as Record<string, string> };
+    await env({ cwd: '/project', sessionID: 'session', callID: 'call' }, output);
+    assert.equal(output.env.SCRUB_TEST_API_TOKEN, '');
+    assert.equal(output.env.SCRUB_TEST_ALLOWED_TOKEN, '');
   });
 
   it('redacts credential formats, environment values, and URL passwords from output', async () => {

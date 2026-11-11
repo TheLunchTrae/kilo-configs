@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import type { TuiDialogSelectProps, TuiPluginApi, TuiPluginModule } from '@opencode-ai/plugin/tui';
-import type { Session } from '@opencode-ai/sdk/v2';
+import type { TuiDialogSelectProps, TuiPluginApi, TuiPluginModule } from '@kilocode/plugin/tui';
+import type { Session } from '@kilocode/sdk/v2';
 import type { JSX } from '@opentui/solid';
 import { bookmarkKey } from '../extensions/session-tools/model.ts';
 

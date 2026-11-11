@@ -1,6 +1,6 @@
 # Personal Kilo Code configs
 
-This repository contains my personal Kilo Code configuration, with the original OpenCode plugins.
+This repository contains my personal Kilo Code configuration.
 
 ## Source and license notices
 

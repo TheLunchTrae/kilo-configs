@@ -1,4 +1,4 @@
-import type { Plugin } from '@opencode-ai/plugin';
+import type { Plugin } from '@kilocode/plugin';
 import { readFile } from 'node:fs/promises';
 import { basename, extname, resolve } from 'node:path';
 
@@ -7,7 +7,7 @@ import { basename, extname, resolve } from 'node:path';
 // (Markdown, plain text) are ignored. Detection is heuristic: it follows common line, block, trailing, and
 // Python docstring syntaxes, not a full parser for each language.
 //
-// OPENCODE_COMMENT_GUARD selects the mode: `all` blocks every new comment except tool directives (lint,
+// KILO_COMMENT_GUARD selects the mode: `all` blocks every new comment except tool directives (lint,
 // type-checker, and formatter pragmas), `off` disables the guard, and any other value or no value blocks only
 // leaking comments.
 
@@ -168,7 +168,7 @@ const PREPROCESSOR_PATTERN =
   /^#(?:!|\[|include|define|undef|if|ifdef|ifndef|elif|else|endif|pragma|error|warning|line|import)\b/;
 
 const readMode = (): Mode => {
-  const value = process.env.OPENCODE_COMMENT_GUARD?.trim().toLowerCase();
+  const value = process.env.KILO_COMMENT_GUARD?.trim().toLowerCase();
   return value === 'all' || value === 'off' ? value : 'leaks';
 };
 
@@ -504,13 +504,13 @@ const formatError = (findings: Finding[], mode: Mode): string => {
   const more = findings.length > MAX_REPORTED ? ` (+${String(findings.length - MAX_REPORTED)} more)` : '';
   const rule =
     mode === 'all'
-      ? 'New code comments are disabled (OPENCODE_COMMENT_GUARD=all). Remove the comments and retry.'
+      ? 'New code comments are disabled (KILO_COMMENT_GUARD=all). Remove the comments and retry.'
       : 'Comments must describe the code as it is. Remove references to the conversation, prompt, requests, ' +
         'or earlier versions, then retry.';
   return `blocked by comment-guard plugin: ${shown}${more}. ${rule}`;
 };
 
-// eslint-disable-next-line @typescript-eslint/require-await -- OpenCode's plugin factory requires a Promise result.
+// eslint-disable-next-line @typescript-eslint/require-await -- Kilo's plugin factory requires a Promise result.
 export const CommentGuardPlugin: Plugin = async ({ directory }) => ({
   'tool.execute.before': async (input, output) => {
     const mode = readMode();

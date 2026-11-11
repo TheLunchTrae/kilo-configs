@@ -1,6 +1,6 @@
 {
   "$schema": "https://app.kilo.ai/config.json",
-  // These are the original OpenCode packages. See .kilo/AGENTS.md for Kilo compatibility limits.
+  // Replace these pins only after the Kilo packages are published. See .kilo/AGENTS.md for current limits.
   "plugin": [
     ["@lunchbox-labs/opencode-model-profiles@0.2.0", { "configFile": "../kilo/models.jsonc" }],
     "@lunchbox-labs/opencode-prompt-composer@0.2.4"

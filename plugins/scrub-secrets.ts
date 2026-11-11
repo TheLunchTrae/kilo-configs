@@ -1,4 +1,4 @@
-import type { Plugin, PluginInput } from '@opencode-ai/plugin';
+import type { Plugin, PluginInput } from '@kilocode/plugin';
 import { existsSync } from 'node:fs';
 import { homedir } from 'node:os';
 
@@ -110,11 +110,11 @@ const notify = (client: Client, kinds: ReadonlySet<string>, tool: string): void 
     });
 };
 
-// eslint-disable-next-line @typescript-eslint/require-await -- OpenCode's plugin factory requires a Promise result.
+// eslint-disable-next-line @typescript-eslint/require-await -- Kilo's plugin factory requires a Promise result.
 export const ScrubSecretsPlugin: Plugin = async ({ client }) => {
-  // OPENCODE_SCRUB_ENV_ALLOW names variables that shell commands still need, separated by commas.
+  // KILO_SCRUB_ENV_ALLOW names variables that shell commands still need, separated by commas.
   const allowed = new Set(
-    (process.env.OPENCODE_SCRUB_ENV_ALLOW ?? '')
+    (process.env.KILO_SCRUB_ENV_ALLOW ?? '')
       .split(',')
       .map((name) => name.trim())
       .filter((name) => name.length > 0),
