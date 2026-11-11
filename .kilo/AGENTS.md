@@ -82,7 +82,9 @@ Keep the OpenCode plugin implementations unchanged unless a separate port is aut
   ordered shell rules, and secret Read guards. Agent permissions append to global rules; the last matching rule wins.
 - Builder is the primary integrator. Planner/reviewers are read-only leaves. Built-in general is an editing worker;
   explore retains native restrictions. Keep delegation exact and deny by default. No routes from reviewers to writers.
-  Verify transitive reachability and the depth ceiling without granting tools to make a check pass.
+  Keep `subagent_depth` at one so the builder can start workers but workers cannot create another Task layer.
+  `agent_manager` is a separate top-level session route, not a Task child. It asks globally and is denied for workers.
+  Verify transitive reachability and both routes without granting tools to make a check pass.
 - Skills are native `skills/<name>/SKILL.md` files with discoverable descriptions. Load stack guidance only for
   relevant work. Do not recreate language personas, automatic stage fan-out, or universal response envelopes.
 - Use Prompt Composer for shared implementation/review fragments. Includes belong explicitly in agent/command bodies.
