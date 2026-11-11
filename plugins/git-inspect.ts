@@ -1,4 +1,4 @@
-import { type Plugin, tool } from '@opencode-ai/plugin';
+import { type Plugin, tool } from '@kilocode/plugin';
 import { spawn } from 'node:child_process';
 import { isBlockedPath, secretExcludePathspecs } from '../extensions/security/secret-paths.ts';
 
@@ -229,7 +229,7 @@ const runGit =
       }
     });
 
-// eslint-disable-next-line @typescript-eslint/require-await -- OpenCode's plugin factory requires a Promise result.
+// eslint-disable-next-line @typescript-eslint/require-await -- Kilo's plugin factory requires a Promise result.
 export const GitInspectPlugin: Plugin = async () => ({
   tool: {
     git_inspect: tool({

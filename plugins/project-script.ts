@@ -1,4 +1,4 @@
-import { type Plugin, tool } from '@opencode-ai/plugin';
+import { type Plugin, tool } from '@kilocode/plugin';
 import { type ChildProcess, spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync } from 'node:fs';
@@ -289,7 +289,7 @@ const run = (
     });
   });
 
-// eslint-disable-next-line @typescript-eslint/require-await -- OpenCode's plugin factory requires a Promise result.
+// eslint-disable-next-line @typescript-eslint/require-await -- Kilo's plugin factory requires a Promise result.
 export const ProjectScriptPlugin: Plugin = async () => ({
   tool: {
     project_script: tool({

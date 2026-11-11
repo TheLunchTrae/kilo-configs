@@ -1,4 +1,4 @@
-import type { PluginInput } from '@opencode-ai/plugin';
+import type { PluginInput } from '@kilocode/plugin';
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 

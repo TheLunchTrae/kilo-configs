@@ -7,38 +7,48 @@ import { test } from 'node:test';
 import { parse } from 'jsonc-parser';
 import { nativeBinary } from './native-host.ts';
 
-test('native shell policy permits bounded dry runs and rejects destructive commands', async (t) => {
+test('Kilo shell policy permits bounded dry runs and rejects destructive commands', async (t) => {
   if (process.platform !== 'linux') {
     t.skip('The inert /bin/false shell fixture requires Linux.');
     return;
   }
   const binary = nativeBinary();
-  const root = await mkdtemp(join(tmpdir(), 'opencode-clean-policy-'));
+  const root = await mkdtemp(join(tmpdir(), 'kilo-clean-policy-'));
   t.after(() => rm(root, { recursive: true, force: true }));
   const config = parse(await readFile(new URL('../kilo.jsonc', import.meta.url), 'utf8')) as {
     permission: Record<string, unknown>;
   };
   await writeFile(
-    join(root, 'opencode.json'),
+    join(root, 'kilo.json'),
     JSON.stringify({
       // The native parser and permission evaluator run, but no command can execute.
       shell: '/bin/false',
       permission: config.permission,
-      model: 'openai/gpt-4o',
-      provider: { openai: { options: { apiKey: 'synthetic-test-key', baseURL: 'http://127.0.0.1:1/v1' } } },
+      model: 'openai/native-fixture',
+      enabled_providers: ['openai'],
+      provider: {
+        openai: {
+          options: { apiKey: 'synthetic-test-key', baseURL: 'http://127.0.0.1:1/v1' },
+          models: { 'native-fixture': { name: 'Native fixture', limit: { context: 4096, output: 1024 } } },
+        },
+      },
     }),
   );
   const env = {
-    ...process.env,
+    PATH: process.env.PATH,
+    HOME: root,
     XDG_CONFIG_HOME: join(root, 'config'),
     XDG_DATA_HOME: join(root, 'data'),
     XDG_STATE_HOME: join(root, 'state'),
     XDG_CACHE_HOME: join(root, 'cache'),
-    OPENCODE_TEST_HOME: root,
-    OPENCODE_DB: join(root, 'db.sqlite'),
-    OPENCODE_DISABLE_AUTOUPDATE: '1',
-    OPENCODE_DISABLE_MODELS_FETCH: '1',
-    OPENCODE_DISABLE_DEFAULT_PLUGINS: 'true',
+    KILO_TEST_HOME: root,
+    KILO_DB: join(root, 'db.sqlite'),
+    KILO_DISABLE_AUTOUPDATE: 'true',
+    KILO_DISABLE_MODELS_FETCH: 'true',
+    KILO_DISABLE_DEFAULT_PLUGINS: 'true',
+    KILO_DISABLE_EXTERNAL_SKILLS: 'true',
+    KILO_DISABLE_CLAUDE_CODE: 'true',
+    KILO_EXPERIMENTAL_DISABLE_FILEWATCHER: 'true',
   };
   const cases: [string, boolean][] = [
     ['git clean -n', true],
@@ -75,7 +85,7 @@ test('native shell policy permits bounded dry runs and rejects destructive comma
         [
           'debug',
           'agent',
-          'build',
+          'code',
           '--pure',
           '--tool',
           'bash',

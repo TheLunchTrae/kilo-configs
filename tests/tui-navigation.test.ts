@@ -6,7 +6,7 @@ import type {
   TuiDialogPromptProps,
   TuiDialogSelectProps,
   TuiPluginApi,
-} from '@opencode-ai/plugin/tui';
+} from '@kilocode/plugin/tui';
 import { dialogNavigation } from '../extensions/tui/navigation.ts';
 
 type Dialog = TuiDialogSelectProps<string> | TuiDialogAlertProps | TuiDialogConfirmProps | TuiDialogPromptProps;

@@ -85,7 +85,7 @@ Use `/init-docs` when the user requests repository documentation setup or a term
 By default, it adds local documentation rules and terminology to the work repository's `AGENTS.md`.
 The user can supply another repository file or directory as the destination.
 Ordinary documentation edits do not require initialization or a new glossary.
-Keep project terms and overrides in the work repository, not in global OpenCode configuration.
+Keep project terms and overrides in the work repository, not in global Kilo configuration.
 
 ## Review and formal compliance
 

@@ -1,4 +1,4 @@
-import type { PluginInput } from '@opencode-ai/plugin';
+import type { PluginInput } from '@kilocode/plugin';
 import assert from 'node:assert/strict';
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -39,19 +39,32 @@ const patch = (...body: string[]) => ({ patchText: ['*** Begin Patch', ...body, 
 let savedMode: string | undefined;
 
 beforeEach(() => {
-  savedMode = process.env.OPENCODE_COMMENT_GUARD;
-  delete process.env.OPENCODE_COMMENT_GUARD;
+  savedMode = process.env.KILO_COMMENT_GUARD;
+  delete process.env.KILO_COMMENT_GUARD;
 });
 
 afterEach(() => {
   if (savedMode === undefined) {
-    delete process.env.OPENCODE_COMMENT_GUARD;
+    delete process.env.KILO_COMMENT_GUARD;
   } else {
-    process.env.OPENCODE_COMMENT_GUARD = savedMode;
+    process.env.KILO_COMMENT_GUARD = savedMode;
   }
 });
 
 describe('comment-guard plugin', () => {
+  it('does not use the retired OpenCode variable to disable the guard', async (context) => {
+    const previous = process.env.OPENCODE_COMMENT_GUARD;
+    context.after(() => {
+      if (previous === undefined) {
+        delete process.env.OPENCODE_COMMENT_GUARD;
+      } else {
+        process.env.OPENCODE_COMMENT_GUARD = previous;
+      }
+    });
+    process.env.OPENCODE_COMMENT_GUARD = 'off';
+    await assertBlocked('edit', edit('// As requested, retry twice.'), 'As requested');
+  });
+
   it('blocks added comments that reference the conversation or earlier iterations', async () => {
     for (const comment of [
       '// As requested, retry twice before failing.',
@@ -140,7 +153,7 @@ describe('comment-guard plugin', () => {
     await assertBlocked('edit', edit('local x = 1 -- as requested', '/project/init.lua'), 'init.lua');
     await assertBlocked('edit', edit('{- Per our discussion, keep it lazy. -}', '/project/Main.hs'), 'Main.hs');
 
-    process.env.OPENCODE_COMMENT_GUARD = 'all';
+    process.env.KILO_COMMENT_GUARD = 'all';
     await run('edit', edit('SQL = """\nSELECT 1\n"""\nx = 1\ny = 2\n', '/project/query.py'));
   });
 
@@ -224,7 +237,7 @@ describe('comment-guard plugin', () => {
   });
 
   it('blocks every new comment except directives in all mode, and nothing in off mode', async () => {
-    process.env.OPENCODE_COMMENT_GUARD = 'all';
+    process.env.KILO_COMMENT_GUARD = 'all';
     await assertBlocked('edit', edit('// Retry twice.'), 'Retry twice.');
     for (const line of [
       '// eslint-disable-next-line no-console -- CLI output',
@@ -241,7 +254,7 @@ describe('comment-guard plugin', () => {
     await run('edit', edit('f = a --> b', '/project/Main.hs'));
     await run('edit', edit('const ratio = total / count / 2;'));
 
-    process.env.OPENCODE_COMMENT_GUARD = 'off';
+    process.env.KILO_COMMENT_GUARD = 'off';
     await run('edit', edit('// As requested, retry twice.'));
   });
 });

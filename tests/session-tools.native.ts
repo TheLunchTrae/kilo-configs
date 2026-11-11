@@ -18,16 +18,16 @@ interface PluginStatus {
   active: boolean;
 }
 
-test('native TUI activates session inspection panels from source', { timeout: 90_000 }, async (t) => {
+test('Kilo TUI activates session inspection panels from source', { timeout: 90_000 }, async (t) => {
   if (process.platform !== 'linux' || spawnSync('script', ['--version']).status !== 0) {
     t.skip('Native TUI smoke test requires Linux util-linux script');
     return;
   }
   const binary = nativeBinary();
   const repository = fileURLToPath(new URL('../', import.meta.url));
-  const root = await mkdtemp(join(tmpdir(), 'opencode-session-panels-'));
+  const root = await mkdtemp(join(tmpdir(), 'kilo-session-panels-'));
   t.after(() => rm(root, { recursive: true, force: true }));
-  const config = join(root, 'config', 'opencode');
+  const config = join(root, 'config', 'kilo');
   const project = join(root, 'project');
   await mkdir(config, { recursive: true });
   await mkdir(project);
@@ -42,7 +42,7 @@ test('native TUI activates session inspection panels from source', { timeout: 90
     plugin: (string | [string, Record<string, unknown>])[];
   };
   const entries = tui.plugin.filter((entry) => typeof entry === 'string' && entry.startsWith('./extensions/'));
-  await writeFile(join(config, 'opencode.json'), JSON.stringify({ plugin: [], enabled_providers: [] }));
+  await writeFile(join(config, 'kilo.json'), JSON.stringify({ plugin: [], enabled_providers: [] }));
   await writeFile(join(config, 'tui.json'), JSON.stringify({ plugin: [...entries, './audit.js'] }));
   await writeFile(
     join(config, 'audit.js'),
@@ -75,17 +75,19 @@ test('native TUI activates session inspection panels from source', { timeout: 90
     npm_config_fund: 'false',
     npm_config_fetch_retries: '0',
     npm_config_update_notifier: 'false',
-    OPENCODE_TEST_HOME: root,
+    KILO_TEST_HOME: root,
     XDG_CONFIG_HOME: join(root, 'config'),
     XDG_DATA_HOME: join(root, 'data'),
     XDG_CACHE_HOME: join(root, 'cache'),
     XDG_STATE_HOME: join(root, 'state'),
-    OPENCODE_DB: join(root, 'db.sqlite'),
-    OPENCODE_DISABLE_AUTOUPDATE: '1',
-    OPENCODE_DISABLE_MODELS_FETCH: '1',
-    OPENCODE_DISABLE_PROJECT_CONFIG: '1',
-    OPENCODE_DISABLE_DEFAULT_PLUGINS: 'true',
-    OPENCODE_EXPERIMENTAL_DISABLE_FILEWATCHER: 'true',
+    KILO_DB: join(root, 'db.sqlite'),
+    KILO_DISABLE_AUTOUPDATE: 'true',
+    KILO_DISABLE_MODELS_FETCH: 'true',
+    KILO_DISABLE_PROJECT_CONFIG: 'true',
+    KILO_DISABLE_DEFAULT_PLUGINS: 'true',
+    KILO_DISABLE_EXTERNAL_SKILLS: 'true',
+    KILO_DISABLE_CLAUDE_CODE: 'true',
+    KILO_EXPERIMENTAL_DISABLE_FILEWATCHER: 'true',
     PANEL_MARKER: marker,
   };
   const quote = (value: string) => `'${value.replaceAll("'", "'\\''")}'`;

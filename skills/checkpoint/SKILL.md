@@ -15,8 +15,6 @@ Otherwise, propose `.kilo/task-state/<task-id>/HANDOFF.md` under the work projec
 Do not assume this proposed path exists. Use a simple task ID without separators or traversal.
 Confirm the destination, including symlink resolution, remains inside the project.
 Never write work-project state into the global Kilo configuration directory.
-An explicitly selected legacy `.opencode/task-state/` handoff remains valid resume input.
-Do not move or rewrite existing checkpoints merely to adopt the new default.
 
 Saving needs authorization. `/checkpoint` authorizes a new checkpoint, not overwriting unrelated content.
 Preserve notes and uncommitted changes. Return the handoff in chat if writing is blocked.

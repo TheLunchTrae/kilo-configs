@@ -1,10 +1,10 @@
-import type { TuiPluginModule } from '@opencode-ai/plugin/tui';
+import type { TuiPluginModule } from '@kilocode/plugin/tui';
 import { clean, configFacts, hasResponseData } from './model.ts';
 import { currentSession, snapshot, ui } from './client.ts';
 
 export default {
   id: 'effective-config',
-  // eslint-disable-next-line @typescript-eslint/require-await -- OpenCode requires a Promise-returning TUI registration hook.
+  // eslint-disable-next-line @typescript-eslint/require-await -- Kilo requires a Promise-returning TUI registration hook.
   tui: async (api) => {
     const view = ui(api);
     const open = async () => {

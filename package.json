@@ -5,8 +5,7 @@
   "scripts": {
     "test": "node --experimental-strip-types --test tests/*.test.mjs tests/*.test.ts",
     "test:native": "node tests/run-native.mjs",
-    "test:native:minimum": "node tests/run-native.mjs minimum",
-    "test:kilo": "node tests/kilo-native.mjs",
+    "test:kilo": "npm run test:native",
     "test:render": "bun test --preload @opentui/solid/preload ./tests/bookmarks-view.native.ts",
     "typecheck": "tsc --project tsconfig.json",
     "lint": "eslint . --max-warnings 0",
@@ -16,17 +15,17 @@
     "check": "npm run typecheck && npm run lint && npm run format:check && npm test"
   },
   "engines": {
-    "opencode": "^1.19.5"
+    "kilo": "7.8.27"
   },
   "dependencies": {
-    "@opencode-ai/plugin": "^1.19.5",
+    "@kilocode/plugin": "7.8.27",
     "jsonc-parser": "3.3.1"
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.4",
     "@eslint-community/eslint-plugin-eslint-comments": "4.7.2",
     "@eslint/js": "10.0.1",
-    "@opencode-ai/sdk": "^1.19.5",
+    "@kilocode/sdk": "7.8.27",
     "@opentui/core": "0.4.5",
     "@opentui/keymap": "0.4.5",
     "@opentui/solid": "0.4.5",

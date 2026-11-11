@@ -3,13 +3,12 @@ import { spawnSync } from 'node:child_process';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { maxSatisfying, minSatisfying, satisfies, valid } from 'semver';
+import { maxSatisfying, satisfies, valid } from 'semver';
 
-export function selectVersion(versions, range, mode) {
-  assert.ok(['latest', 'minimum'].includes(mode), `Unknown native selection: ${mode}`);
+export function selectVersion(versions, range) {
   assert.ok(Array.isArray(versions) && versions.every((version) => typeof version === 'string'));
-  const version = (mode === 'minimum' ? minSatisfying : maxSatisfying)(versions, range);
-  assert.ok(version !== null, `No published OpenCode version satisfies ${range}`);
+  const version = maxSatisfying(versions, range);
+  assert.ok(version !== null, `No published Kilo version satisfies ${range}`);
   return version;
 }
 
@@ -17,34 +16,59 @@ export function verifyVersion(output, expected, range) {
   const actual = output.trim();
   assert.ok(
     valid(actual) !== null && actual === expected && satisfies(actual, range),
-    `Native OpenCode ${actual} does not match selected ${expected} in ${range}`,
+    `Native Kilo ${actual} does not match selected ${expected} in ${range}`,
   );
 }
 
-export async function withNativeRuntime(mode, action) {
+export async function withNativeRuntime(action) {
   const manifest = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
-  const range = manifest.engines.opencode;
+  const range = manifest.engines.kilo;
   assert.equal(process.arch, 'x64', 'Native test installation requires x64');
   assert.ok(['linux', 'win32'].includes(process.platform), 'Native tests support Linux and Windows');
-  const nativePackage = process.platform === 'win32' ? 'opencode-windows-x64' : 'opencode-linux-x64';
-  const root = await mkdtemp(join(tmpdir(), 'opencode-native-runtime-'));
+  const nativePackage = `@kilocode/cli-${process.platform === 'win32' ? 'windows' : 'linux'}-x64-baseline`;
+  const root = await mkdtemp(join(tmpdir(), 'kilo-native-runtime-'));
   const npmCli = process.env.npm_execpath;
   assert.ok(npmCli !== undefined, 'Run native tests through npm');
   const env = {
-    ...process.env,
-    npm_config_cache: join(root, 'npm-cache'),
+    PATH: process.env.PATH,
+    ...(process.platform === 'win32' ? { SystemRoot: process.env.SystemRoot } : {}),
+    HOME: root,
+    USERPROFILE: root,
+    npm_config_cache: process.env.npm_config_cache ?? join(root, 'npm-cache'),
+    npm_config_userconfig: join(root, 'empty-npmrc'),
+    npm_config_globalconfig: join(root, 'empty-global-npmrc'),
     npm_config_offline: 'false',
     npm_config_prefer_offline: 'false',
     npm_config_prefer_online: 'true',
     npm_config_registry: 'https://registry.npmjs.org',
-    OPENCODE_DISABLE_AUTOUPDATE: '1',
+    KILO_DISABLE_AUTOUPDATE: 'true',
+    KILO_DISABLE_MODELS_FETCH: 'true',
+    KILO_DISABLE_PROJECT_CONFIG: 'true',
+    KILO_DISABLE_DEFAULT_PLUGINS: 'true',
+    KILO_DISABLE_EXTERNAL_SKILLS: 'true',
+    KILO_DISABLE_CLAUDE_CODE: 'true',
+    KILO_EXPERIMENTAL_DISABLE_FILEWATCHER: 'true',
     XDG_CONFIG_HOME: join(root, 'config'),
     XDG_DATA_HOME: join(root, 'data'),
     XDG_STATE_HOME: join(root, 'state'),
     XDG_CACHE_HOME: join(root, 'cache'),
-    OPENCODE_TEST_HOME: root,
-    OPENCODE_DB: join(root, 'db.sqlite'),
+    KILO_TEST_HOME: root,
+    KILO_DB: join(root, 'db.sqlite'),
   };
+  for (const name of [
+    'HTTP_PROXY',
+    'HTTPS_PROXY',
+    'ALL_PROXY',
+    'NO_PROXY',
+    'NODE_EXTRA_CA_CERTS',
+    'SSL_CERT_FILE',
+    'SSL_CERT_DIR',
+    'npm_config_cafile',
+  ]) {
+    if (process.env[name]) {
+      env[name] = process.env[name];
+    }
+  }
   const run = (command, args, options = {}) => {
     const result = spawnSync(command, args, { env, encoding: 'utf8', timeout: 180_000, ...options });
     assert.ifError(result.error);
@@ -52,9 +76,9 @@ export async function withNativeRuntime(mode, action) {
     return result.stdout;
   };
   try {
-    const versions = JSON.parse(run(process.execPath, [npmCli, 'view', 'opencode-ai', 'versions', '--json']));
-    const version = selectVersion(versions, range, mode);
-    console.log(`Native OpenCode: selected ${version} (${mode}, supported ${range})`);
+    const versions = JSON.parse(run(process.execPath, [npmCli, 'view', '@kilocode/cli', 'versions', '--json']));
+    const version = selectVersion(versions, range);
+    console.log(`Native Kilo: selected ${version} (supported ${range})`);
     run(
       process.execPath,
       [
@@ -71,16 +95,10 @@ export async function withNativeRuntime(mode, action) {
       ],
       { stdio: 'inherit' },
     );
-    const binary = join(
-      root,
-      'node_modules',
-      nativePackage,
-      'bin',
-      process.platform === 'win32' ? 'opencode.exe' : 'opencode',
-    );
+    const binary = join(root, 'node_modules', nativePackage, 'bin', process.platform === 'win32' ? 'kilo.exe' : 'kilo');
     verifyVersion(run(binary, ['--version']), version, range);
-    console.log(`Native OpenCode: verified ${version} at ${binary}`);
-    await action({ ...env, OPENCODE_BIN: binary, OPENCODE_NATIVE_VERSION: version });
+    console.log(`Native Kilo: verified ${version} at ${binary}`);
+    await action({ ...env, KILO_BIN: binary, KILO_NATIVE_VERSION: version });
   } finally {
     await rm(root, { recursive: true, force: true });
   }

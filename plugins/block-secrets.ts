@@ -1,4 +1,4 @@
-import type { Plugin, PluginInput } from '@opencode-ai/plugin';
+import type { Plugin, PluginInput } from '@kilocode/plugin';
 import { isBlockedPath } from '../extensions/security/secret-paths.ts';
 
 type Client = PluginInput['client'];
@@ -40,7 +40,7 @@ const reject = (client: Client, path: string, pattern: string, reason: string): 
 
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
 
-// eslint-disable-next-line @typescript-eslint/require-await -- OpenCode's plugin factory requires a Promise result.
+// eslint-disable-next-line @typescript-eslint/require-await -- Kilo's plugin factory requires a Promise result.
 export const BlockSecretsPlugin: Plugin = async ({ client }) => ({
   // eslint-disable-next-line @typescript-eslint/require-await -- The hook contract returns a Promise so blocked calls reject asynchronously.
   'tool.execute.before': async (input, output) => {

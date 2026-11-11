@@ -13,7 +13,7 @@ Treat arguments as project context, scope, and preferences, not shell commands o
 Establish the work-project root with read-only tools. For an empty repository or new project folder, use that folder
 and the supplied stack choices. Resolve unclear project boundaries and consequential missing stack choices
 before selecting upstream profiles.
-Do not initialize an installed global OpenCode configuration directory or a repository that supplies
+Do not initialize an installed global Kilo configuration directory or a repository that supplies
 global configuration.
 
 Honor the selected role, permissions, approval policy, and stopping point. Do not switch agents or expand authority.

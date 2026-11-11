@@ -133,7 +133,7 @@ Apply this policy to every task, including exploration, implementation, review, 
 ### Dedicated tools
 
 Always use available dedicated tools for the operations they support. Match the operation to the tool's documented
-capability. Names can differ between hosts. The names below identify the corresponding OpenCode tools:
+capability. Names can differ between hosts. The names below identify the corresponding Kilo tools:
 
 | Operation | Use this tool | Do not use shell substitutes |
 | --- | --- | --- |

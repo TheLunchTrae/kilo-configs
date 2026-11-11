@@ -8,7 +8,7 @@ const repository = fileURLToPath(new URL('../', import.meta.url));
 const files = (await readdir(new URL('./', import.meta.url)))
   .filter((file) => file.endsWith('.native.ts'))
   .map((file) => `tests/${file}`);
-await withNativeRuntime(process.argv[2] ?? 'latest', (env) => {
+await withNativeRuntime((env) => {
   const result = spawnSync(process.execPath, ['--experimental-strip-types', '--test', ...files], {
     cwd: repository,
     env,
@@ -17,4 +17,6 @@ await withNativeRuntime(process.argv[2] ?? 'latest', (env) => {
   });
   assert.ifError(result.error);
   assert.equal(result.status, 0, 'Native suite failed');
+  console.log('Kilo native suite completed; see per-test results and skips above.');
+  console.log('Model-assisted execution and lifecycle hooks are not covered by this suite.');
 });
