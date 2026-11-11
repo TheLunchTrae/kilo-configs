@@ -7,7 +7,6 @@
     "@lunchbox-labs/opencode-tool-inspector@0.2.2",
     "./extensions/session-tools/config.ts",
     "./extensions/session-tools/context.ts",
-    "./extensions/session-tools/bookmarks.tsx",
-    "./extensions/branches/index.ts"
+    "./extensions/session-tools/bookmarks.tsx"
   ]
 }
