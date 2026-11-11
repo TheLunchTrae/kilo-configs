@@ -65,6 +65,12 @@ Load only skills relevant to the affected code. Inspect installed versions befor
 Skills never grant permissions or override read-only assignments. If the skill tool is unavailable, report the gap
 and read its source only through permitted tools; do not claim native skill composition occurred.
 
+For Kilo configuration, agents, permissions, commands, skills, or Agent Manager setup, load the built-in
+`kilo-config` skill when available. Use its guidance for the installed Kilo version, then inspect the effective
+configuration and applicable project rules. Keep global defaults, project overrides, and plugin-owned settings distinct.
+If the skill is unavailable, report that limit and consult the matching released Kilo documentation or source.
+Do not create a duplicate configuration skill or change permissions, providers, or plugins without authorization.
+
 ## Technical Documentation Standard
 
 Read `@agent-references/asd-ste100.md` before creating or revising technical documentation, including code comments and
