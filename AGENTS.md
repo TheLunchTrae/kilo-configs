@@ -70,6 +70,9 @@ For Kilo configuration, agents, permissions, commands, skills, or Agent Manager 
 configuration and applicable project rules. Keep global defaults, project overrides, and plugin-owned settings distinct.
 If the skill is unavailable, report that limit and consult the matching released Kilo documentation or source.
 Do not create a duplicate configuration skill or change permissions, providers, or plugins without authorization.
+Kilo 7.8.27's shipped skill incorrectly describes permission rules as first-match. Its runtime uses the last match.
+For permission changes, verify the installed resolver and effective ordered rules against current source.
+Put broad fallbacks before their exceptions. Do not copy the shipped fallback-last examples.
 
 ## Technical Documentation Standard
 
