@@ -9,6 +9,7 @@
   "disabled_providers": ["opencode"],
   "model": "openai/gpt-6-astra",
   "small_model": "openai/gpt-6-luna",
+  "web_search": true,
   "subagent_depth": 1,
   "default_agent": "builder",
   "references": {

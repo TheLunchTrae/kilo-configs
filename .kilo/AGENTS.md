@@ -52,6 +52,9 @@ These are release dependencies to remove, not contracts to retain in Kilo implem
 - Keep provider/model identifiers, profiles, variants, and permission order unchanged.
   Direct `openai/` and `anthropic/` identifiers do not become Kilo Gateway identifiers.
   Account access and model availability require a separate user-side check.
+- Keep `web_search: true` so native web search is available to direct OpenAI and Anthropic profiles.
+  This controls tool availability, not search provider selection, credentials, quotas, or billing.
+  Check [Kilo web search behavior](https://kilo.ai/docs/automate/tools#web-search-availability) before changing it.
 - Kilo forcibly denies tools for `summary`, `compaction`, and `title`.
   Their retained `edit: ask` settings express the source policy but do not override that native restriction.
   Kilo also enforces a read-only shell allowlist for `explore`.
