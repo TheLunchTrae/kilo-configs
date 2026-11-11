@@ -1,0 +1,12 @@
+# Default
+node_modules
+/bun.lock
+.kilo/package.json
+.kilo/package-lock.json
+.kilo/bun.lock
+
+# IDE
+.idea
+
+# Secrets
+secrets/**/*

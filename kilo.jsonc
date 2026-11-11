@@ -1,0 +1,153 @@
+{
+  "$schema": "https://app.kilo.ai/config.json",
+  // These are the original OpenCode packages. See .kilo/AGENTS.md for Kilo compatibility limits.
+  "plugin": [
+    ["@lunchbox-labs/opencode-model-profiles@0.2.0", { "configFile": "../kilo/models.jsonc" }],
+    "@lunchbox-labs/opencode-prompt-composer@0.2.4"
+  ],
+  "shell": "C:/Program Files/Git/bin/bash.exe",
+  "disabled_providers": ["opencode"],
+  "model": "openai/gpt-6-astra",
+  "small_model": "openai/gpt-6-luna",
+  "subagent_depth": 2,
+  "default_agent": "builder",
+  "references": {
+    "agent-references": {
+      "path": "~/.config/kilo/references/agent",
+      "description": "Conditional coding, testing, verification, delegation, documentation, and task guidance.",
+      "hidden": true
+    }
+  },
+  "mcp": {
+    "github": {
+      "type": "remote",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "enabled": false,
+      "oauth": false
+    },
+    "playwright": {
+      "type": "local",
+      "command": ["npx", "@playwright/mcp@latest"],
+      "enabled": false
+    }
+  },
+  "permission": {
+    "read": {
+      "secrets": "deny",
+      "secrets/*": "deny",
+      "*/secrets": "deny",
+      "*/secrets/*": "deny"
+    },
+    "bash": {
+      "*": "ask",
+      "git status *": "allow",
+      "git diff *": "allow",
+      "git log *": "allow",
+      "git *--output*": "ask",
+      "git *>*": "ask",
+      "git checkout*": "ask",
+      "git commit*": "ask",
+      "git push*": "ask",
+      "sudo*": "ask",
+      "python*": "ask",
+      "git branch -D*": "deny",
+      "git branch * -D *": "deny",
+      "git clean *": "deny",
+      "git clean -n*": "ask",
+      "git clean --dry-run*": "ask",
+      "git clean -dn *": "ask",
+      "git clean -fdn *": "ask",
+      "git clean -xdn *": "ask",
+      "git clean -d -n *": "ask",
+      "git clean -d --dry-run *": "ask",
+      "git clean *--no-*": "deny",
+      "git push --force*": "deny",
+      "git push -f*": "deny",
+      "git push * --force*": "deny",
+      "git push * -f *": "deny",
+      "git push * +*": "deny",
+      "git push *--mirror*": "deny",
+      "git reset --hard*": "deny",
+      "git reset * --hard*": "deny",
+      "rm -rf*": "deny",
+      "rm -fr*": "deny",
+      "rm -Rf*": "deny",
+      "rm -fR*": "deny",
+      "rm -r -f*": "deny",
+      "rm -f -r*": "deny",
+      "rm -R -f*": "deny",
+      "rm -f -R*": "deny",
+      "rm --recursive --force*": "deny",
+      "rm --force --recursive*": "deny",
+      "rm -r --force*": "deny",
+      "rm --force -r*": "deny",
+      "rm -R --force*": "deny",
+      "rm --force -R*": "deny",
+      "rm --recursive -f*": "deny",
+      "rm -f --recursive*": "deny",
+      "rm * -rf*": "deny",
+      "rm * -fr*": "deny",
+      "rm * -r -f*": "deny",
+      "rm * -f -r*": "deny"
+    },
+    "edit": {
+      "*": "deny"
+    },
+    "task": {
+      "*": "deny"
+    },
+    "project_script": "ask",
+    "github_*": "ask",
+    "playwright_*": "ask"
+  },
+  "agent": {
+    "code": {
+      "disable": true
+    },
+    "plan": {
+      "disable": true
+    },
+    "debug": {
+      "disable": true
+    },
+    "ask": {
+      "disable": true
+    },
+    "orchestrator": {
+      "disable": true
+    },
+    "general": {
+      "color": "#8AF793",
+      "permission": {
+        "edit": "allow"
+      }
+    },
+    "explore": {
+      "color": "#8AEEF7"
+    },
+    "summary": {
+      "permission": {
+        "edit": "ask"
+      }
+    },
+    "compaction": {
+      "options": {
+        "reasoningEffort": "medium"
+      },
+      "permission": {
+        "edit": "ask"
+      }
+    },
+    "title": {
+      "options": {
+        "reasoningEffort": "low"
+      },
+      "permission": {
+        "edit": "ask"
+      }
+    }
+  },
+  "watcher": {
+    "ignore": ["node_modules/**", "dist/**", ".git/**", ".idea/**"]
+  }
+}
