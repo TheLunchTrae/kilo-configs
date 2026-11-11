@@ -13,7 +13,8 @@ Read affected source before editing. Follow root authorization, tool-selection, 
 
 These constraints apply before the inherited OpenCode plugin contracts below.
 The configuration targets [Kilo 7.8.27](https://github.com/Kilo-Org/kilocode/releases/tag/v7.8.27).
-Keep the OpenCode plugin implementations unchanged unless a separate port is authorized.
+Keep published OpenCode package implementations unchanged unless a separate port is authorized.
+Maintain local plugins against the Kilo runtime without weakening their existing safety boundaries.
 
 ### Configuration paths
 
@@ -54,18 +55,19 @@ Keep the OpenCode plugin implementations unchanged unless a separate port is aut
 - The six local server plugins use hook and tool shapes present in Kilo's V1 API.
   Retain their OpenCode imports, helper modules, dependencies, and auto-discovery placement.
   Published Lunchbox packages have Node engine requirements, not an `engines.opencode` version gate.
-- `/branches` is retained but unavailable on Kilo: its unchanged safety guard requires `http://opencode.internal`,
-  while Kilo uses `http://kilo.internal` or a daemon transport. Do not weaken that guard to enable the panel.
-  A host-aware branch-panel port requires separate authorization.
-- Config/context panels and bookmarks use shared TUI APIs, but source compatibility does not verify interactive
-  rendering. Kilo and this workspace use different OpenTUI versions. The original OpenCode native suite is not a
-  Kilo certification, and npm-installed plugin behavior is outside this repository's test scope.
+- `/branches` supports the embedded Kilo and OpenCode transports. Start Kilo with `KILO_NO_DAEMON=1` and no
+  `--port`, `--hostname`, or enabled mDNS. Otherwise, Kilo can attach to a running daemon automatically.
+  Daemon, attached, remote, and workspace-routed transports remain blocked. A loopback URL is not proof of local
+  execution. Keep the matching local directory checks and require confirmation for every Git operation.
+- Native Kilo panel checks cover registration and initial opening, not every interaction or rendered pixel.
+  Kilo and this workspace use different OpenTUI versions. Preserve separate host checks rather than assuming
+  compatibility from types alone. Npm-installed plugin behavior is outside this repository's test scope.
 - Secret guards are heuristic defenses, not a sandbox. A plugin that fails to load provides no protection.
   `shell.env` scrubbing does not sanitize subprocesses launched directly by `project_script` or `git_inspect`.
 
 ### Verification and upstream evidence
 
-- Keep the original OpenCode native checks as regression coverage for the unchanged plugin code.
+- Keep the original OpenCode native checks as regression coverage for the shared plugin APIs.
   Report their host and version separately from Kilo runtime checks. `engines.opencode` describes that baseline.
 - Preserve the third-party test exclusion below. Do not load published Lunchbox plugins in repository fixtures.
 - Configuration and discovery:
@@ -135,7 +137,7 @@ Keep npm, pinned dependencies, loader-required exports, and Promise-returning ho
 | `npm run format` | Format plugin/extension code, tests, and tooling configuration. |
 | `npm run test:native` | Install the newest supported OpenCode V1 runtime and check the original integrations. |
 | `npm run test:native:minimum` | Run those checks on the oldest supported OpenCode runtime. |
-| `npm run test:kilo` | Install pinned Kilo and check local server plugins with isolated synthetic fixtures. |
+| `npm run test:kilo` | Install pinned Kilo and check local server plugins and TUI panels with isolated fixtures. |
 | `npm run test:render` | Render the bookmark panel with Bun. |
 
 Use Node 22.18 or newer. Rendered bookmark tests need Bun on PATH.
@@ -178,8 +180,9 @@ Keep config/context views read-only and preserve evidence limits. Bookmark stora
 workspace, directory, and session; preserve malformed records on errors. Handoff drafts require explicit copy
 and must never submit prompts automatically. Do not add workflow-stage tracking to these panels.
 
-`/branches` is a TUI-only extension in `extensions/branches/`. It requires the embedded local V1 server and a
-worktree-root launch. Attached servers and workspace routing are blocked. Git operations require explicit confirmation.
+`/branches` is a TUI-only extension in `extensions/branches/`. It requires the embedded local Kilo or OpenCode server
+and a worktree-root launch. Daemon, attached servers, and workspace routing are blocked.
+Git operations require explicit confirmation.
 Never add automatic stash, discard, force deletion, reset, rebase, push, or remote deletion to this panel.
 Activity checks cover the current directory instance, not other instances or processes. They are warnings, not locks.
 Keep confirmation cancellation, stale-state checks, worktree checks, and ignored-file protection on every mutation path.

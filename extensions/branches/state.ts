@@ -6,8 +6,10 @@ import { BranchError, BranchRepository } from './git.ts';
 export function embeddedRequest(request: Request): boolean {
   const url = new URL(request.url);
   return (
-    url.origin === 'http://opencode.internal' &&
+    (url.origin === 'http://kilo.internal' || url.origin === 'http://opencode.internal') &&
     !url.searchParams.has('workspace') &&
+    !url.searchParams.has('location[workspace]') &&
+    !request.headers.has('x-kilo-workspace') &&
     !request.headers.has('x-opencode-workspace')
   );
 }
@@ -24,12 +26,12 @@ export async function localDirectory(api: TuiPluginApi): Promise<string> {
     process.argv.includes('attach')
   ) {
     throw new BranchError(
-      '/branches requires the local embedded OpenCode server. Attached or remote servers are not supported.',
+      '/branches requires a local embedded Kilo or OpenCode server. Attached, daemon, or remote servers are not supported.',
     );
   }
   const directory = await realpath(response.data.directory);
   if (directory !== (await realpath(process.cwd())) || directory !== (await realpath(api.state.path.directory))) {
-    throw new BranchError('Project location changed or is not local. Open OpenCode in the worktree root.');
+    throw new BranchError('Project location changed or is not local. Start the CLI in the worktree root.');
   }
   return directory;
 }

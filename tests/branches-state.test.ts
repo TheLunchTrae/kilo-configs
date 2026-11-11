@@ -41,6 +41,38 @@ test('only accepts embedded local requests without workspace routing', () => {
   );
 });
 
+test('accepts the embedded Kilo transport without trusting network lookalikes', () => {
+  assert.equal(embeddedRequest(new Request('http://kilo.internal/path')), true);
+  for (const url of [
+    'http://localhost:4096/path',
+    'http://127.0.0.1:4096/path',
+    'https://kilo.internal/path',
+    'http://kilo.internal:4096/path',
+    'http://kilo.internal.example/path',
+    'http://kilo.internal/path?workspace=',
+    'http://kilo.internal/path?workspace=remote',
+    'http://kilo.internal/path?location%5Bworkspace%5D=remote',
+  ]) {
+    assert.equal(embeddedRequest(new Request(url)), false, url);
+  }
+  assert.equal(
+    embeddedRequest(new Request('http://kilo.internal/path', { headers: { 'x-opencode-workspace': 'remote' } })),
+    false,
+  );
+  assert.equal(
+    embeddedRequest(new Request('http://kilo.internal/path', { headers: { 'x-kilo-workspace': 'remote' } })),
+    false,
+  );
+});
+
+test('Kilo branch access requires matching local project paths', async () => {
+  const { api, pathResponse } = apiFixture();
+  pathResponse.request = new Request('http://kilo.internal/path');
+  assert.equal(await localDirectory(api), await realpath(process.cwd()));
+  pathResponse.data.directory = join(process.cwd(), 'extensions');
+  await assert.rejects(localDirectory(api), /Project location/);
+});
+
 test('local guard rejects remote servers even when their directory matches', async () => {
   const { api, pathResponse } = apiFixture();
   assert.equal(await localDirectory(api), await realpath(process.cwd()));

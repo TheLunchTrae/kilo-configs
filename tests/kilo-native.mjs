@@ -1,9 +1,11 @@
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
-import { cp, mkdir, mkdtemp, realpath, rm, writeFile } from 'node:fs/promises';
+import { spawn, spawnSync } from 'node:child_process';
+import { once } from 'node:events';
+import { cp, mkdir, mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { setTimeout as delay } from 'node:timers/promises';
 
 const version = '7.8.27';
 assert.equal(process.arch, 'x64', 'Native smoke installation requires x64.');
@@ -31,6 +33,8 @@ const env = {
   KILO_TEST_HOME: root,
   KILO_DB: join(root, 'kilo.sqlite'),
   KILO_DISABLE_AUTOUPDATE: 'true',
+  KILO_NO_DAEMON: '1',
+  KILO_TELEMETRY_LEVEL: 'off',
   KILO_DISABLE_MODELS_FETCH: 'true',
   KILO_DISABLE_PROJECT_CONFIG: 'true',
   KILO_DISABLE_DEFAULT_PLUGINS: 'true',
@@ -56,6 +60,70 @@ const success = (result) => {
   assert.equal(result.status, 0, result.stderr + result.stdout);
   assert.doesNotMatch(result.stderr, /failed to (?:load|install) plugin|plugin config hook failed/i);
   return result.stdout;
+};
+
+const panels = async (binary) => {
+  if (process.platform !== 'linux' || spawnSync('script', ['--version']).status !== 0) {
+    console.log('SKIP Kilo native TUI panels: Linux util-linux script is required.');
+    return;
+  }
+  const tui = JSON.parse(await readFile(join(repository, 'tui.jsonc'), 'utf8'));
+  const entries = tui.plugin.filter((entry) => typeof entry === 'string' && entry.startsWith('./extensions/'));
+  await cp(join(repository, 'tests', 'kilo-panel-audit.ts'), join(installation, 'panel-audit.ts'));
+  await writeFile(join(installation, 'tui.json'), JSON.stringify({ plugin: [...entries, './panel-audit.ts'] }));
+  const marker = join(root, 'panels.json');
+  const quote = (value) => `'${value.replaceAll("'", "'\\''")}'`;
+  const child = spawn('script', ['-q', '-c', `${quote(binary)} --print-logs`, '/dev/null'], {
+    cwd: project,
+    env: { ...env, TERM: 'xterm-256color', COLORTERM: 'truecolor', LANG: 'C.UTF-8', PANEL_MARKER: marker },
+    stdio: ['pipe', 'pipe', 'pipe'],
+    detached: true,
+  });
+  const running = () => child.exitCode === null && child.signalCode === null;
+  let logs = '';
+  for (const output of [child.stdout, child.stderr]) {
+    output.on('data', (chunk) => {
+      logs = (logs + chunk.toString()).slice(-64 * 1024);
+    });
+  }
+  try {
+    let result;
+    for (let attempt = 0; attempt < 600; attempt++) {
+      try {
+        result = JSON.parse(await readFile(marker, 'utf8'));
+        break;
+      } catch (error) {
+        if (error.code !== 'ENOENT') {
+          throw error;
+        }
+      }
+      if (!running()) {
+        break;
+      }
+      await delay(100);
+    }
+    assert.ok(result, `Kilo TUI did not complete panel activation: ${logs}`);
+    assert.equal(result.error, undefined, `${result.error}; opened: ${result.opened.join(', ')}\n${logs}`);
+    const expected = ['effective-config', 'context-inspector', 'session-bookmarks', 'branches'];
+    assert.deepEqual(result.opened, expected);
+    const statuses = result.plugins.filter((status) => status.spec.includes('/extensions/'));
+    assert.deepEqual(
+      statuses.map((status) => status.id),
+      expected,
+    );
+    assert.ok(statuses.every((status) => status.active && status.enabled && status.source === 'file'));
+    console.log(`PASS Kilo ${version}: all four local TUI panels activated and opened.`);
+  } finally {
+    if (running() && child.pid !== undefined) {
+      process.kill(-child.pid, 'SIGTERM');
+      await Promise.race([once(child, 'exit'), delay(2000)]);
+      if (running()) {
+        process.kill(-child.pid, 'SIGKILL');
+        await Promise.race([once(child, 'exit'), delay(2000)]);
+        assert.equal(running(), false, 'Native TUI process did not exit after SIGKILL');
+      }
+    }
+  }
 };
 
 try {
@@ -211,6 +279,7 @@ try {
   console.log(
     `PASS Kilo ${version}: local plugin discovery, custom tools, secret-path rejection, and per-agent denial.`,
   );
+  await panels(binary);
   console.log('Model-assisted execution and lifecycle hooks are not covered by this smoke test.');
 } finally {
   await rm(root, { recursive: true, force: true });
