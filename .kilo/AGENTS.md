@@ -54,9 +54,6 @@ Keep the OpenCode plugin implementations unchanged unless a separate port is aut
 - The six local server plugins use hook and tool shapes present in Kilo's V1 API.
   Retain their OpenCode imports, helper modules, dependencies, and auto-discovery placement.
   Published Lunchbox packages have Node engine requirements, not an `engines.opencode` version gate.
-- `/branches` is retained but unavailable on Kilo: its unchanged safety guard requires `http://opencode.internal`,
-  while Kilo uses `http://kilo.internal` or a daemon transport. Do not weaken that guard to enable the panel.
-  A host-aware branch-panel port requires separate authorization.
 - Config/context panels and bookmarks use shared TUI APIs, but source compatibility does not verify interactive
   rendering. Kilo and this workspace use different OpenTUI versions. The original OpenCode native suite is not a
   Kilo certification, and npm-installed plugin behavior is outside this repository's test scope.
@@ -179,14 +176,6 @@ Their TUI-only entrypoints are registered in `tui.jsonc` and stay outside server
 Keep config/context views read-only and preserve evidence limits. Bookmark storage stays scoped by project,
 workspace, directory, and session; preserve malformed records on errors. Handoff drafts require explicit copy
 and must never submit prompts automatically. Do not add workflow-stage tracking to these panels.
-
-`/branches` is a TUI-only extension in `extensions/branches/`. It requires the embedded local V1 server and a
-worktree-root launch. Attached servers and workspace routing are blocked. Git operations require explicit confirmation.
-Never add automatic stash, discard, force deletion, reset, rebase, push, or remote deletion to this panel.
-Activity checks cover the current directory instance, not other instances or processes. They are warnings, not locks.
-Keep confirmation cancellation, stale-state checks, worktree checks, and ignored-file protection on every mutation path.
-Pull fetches first, then merges the upstream with fast-forward-only and ignored-file protection.
-An interrupted command can leave Git changes or conflicts. Refresh and inspect before retrying. Never auto-abort.
 
 ## Documentation and third-party material
 
