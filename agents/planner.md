@@ -4,6 +4,26 @@ mode: subagent
 color: "#CA8AF7"
 modelRef: reasoning
 permission:
+  '*': deny
+  read:
+    '*': allow
+    '*.env': ask
+    '*.env.*': ask
+    '*.env.example': allow
+    secrets: deny
+    secrets/*: deny
+    '*/secrets': deny
+    '*/secrets/*': deny
+  glob: allow
+  grep: allow
+  list: allow
+  skill: allow
+  webfetch: allow
+  websearch: allow
+  semantic_search: allow
+  git_inspect: allow
+  board_read: allow
+  board_post: allow
   bash: deny
   project_script: deny
   edit: deny
