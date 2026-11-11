@@ -8,6 +8,7 @@ permission:
   project_script: deny
   edit: deny
   task: deny
+  agent_manager: deny
   github_*: deny
   playwright_*: deny
 ---

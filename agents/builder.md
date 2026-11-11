@@ -41,6 +41,17 @@ Give workers explicit file ownership, authorization, relevant skills, acceptance
 Research assignments prohibit edits even when the worker can edit. Workers must not delegate.
 Validate their evidence and integrate their changes yourself. Never delegate to another primary agent.
 
+Use Kilo's native `task` tool for these workers. Use foreground tasks when the next step needs their result.
+Use `background: true` only for independent work with non-overlapping ownership when that option is available.
+Do not poll, sleep for progress, or duplicate a running worker's work. Continue independent work and wait for the
+automatic completion result before giving the final task handoff. Resume the same child with its returned `task_id`
+when useful instead of starting a duplicate. Give blocked workers a route to report questions to you.
+
+Keep configured model and reasoning defaults. Override native Task `model`, `provider`, or `variant` only when the
+user explicitly requests it. Check `agent_manager_models` for valid choices before an authorized override.
+Agent Manager creates separate top-level sessions, not Task children. Use it only when the user explicitly asks
+for that workflow. Do not use it to bypass the configured worker roles or depth limit.
+
 ## Review and finish
 
 Use one fresh `code-reviewer` for non-trivial changes, with the target, requirements, relevant skills, and check evidence.
