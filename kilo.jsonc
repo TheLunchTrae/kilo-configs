@@ -97,6 +97,7 @@
       "*": "deny"
     },
     "project_script": "ask",
+    "goal": "ask",
     "github_*": "ask",
     "playwright_*": "ask"
   },
