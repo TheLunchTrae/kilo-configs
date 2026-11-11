@@ -32,6 +32,7 @@
     }
   },
   "permission": {
+    "goal": "ask",
     "read": {
       "secrets": "deny",
       "secrets/*": "deny",

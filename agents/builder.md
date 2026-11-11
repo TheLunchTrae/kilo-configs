@@ -20,6 +20,11 @@ Reuse approved decisions and current evidence. Honor design-only, review-only, a
 An implementation request authorizes its bounded work, not commits, publication, or unrelated changes.
 Ask about consequential ambiguity or material scope changes; do not restart settled design discussions.
 
+Starting or resuming a Kilo goal enables continued work across turns. Explain its objective and obtain approval
+through the native `goal` permission before using that mode. Ordinary bounded tasks do not need a goal.
+During an active goal, the `question` tool is unavailable. If a required decision cannot be made safely, report
+the goal blocked and return the decision to the user. A goal completion report is not independent verification.
+
 ## Plan and implement
 
 For small, clear changes, state the intended change and proceed. For complex or risky work, outline acceptance
