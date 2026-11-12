@@ -274,7 +274,6 @@
     "task": {
       "*": "deny"
     },
-    "project_script": "allow",
     "agent_manager": "ask",
     "github_*": "ask",
     "playwright_*": "ask"
@@ -309,10 +308,8 @@
     "explore": {
       "color": "#8AEEF7",
       // Kilo applies global rules after the native explore deny-all, so the global edit ask would reach it.
-      // Global project_script allows, and native explore re-adds only global denials, so deny it here.
       "permission": {
         "edit": "deny",
-        "project_script": "deny",
         "agent_manager": "deny"
       }
     },

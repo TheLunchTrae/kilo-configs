@@ -76,14 +76,13 @@ These are release dependencies to remove, not contracts to retain in Kilo implem
 - `modelRef`, `models.jsonc`, and `{{include:...}}` are plugin contracts, not native Kilo features.
   Confirm loaded agents and expanded prompts before relying on their effective models or shared instructions.
   A successful JSON parse does not prove that a plugin loaded or an include expanded.
-- The five local server plugins use Kilo's published plugin API.
+- The four local server plugins use Kilo's published plugin API.
   Use the pinned `@kilocode/plugin` and `@kilocode/sdk` packages for local server and TUI integrations.
   Keep helper modules and auto-discovery placement intact.
 - Config/context panels and bookmarks use shared TUI APIs, but source compatibility does not verify interactive
   rendering. Kilo and this workspace use different OpenTUI versions. Verify source activation on Kilo and report
   rendering checks separately. Npm-installed plugin behavior is outside this repository's test scope.
 - Secret guards are heuristic defenses, not a sandbox. A plugin that fails to load provides no protection.
-  `shell.env` scrubbing does not sanitize subprocesses launched directly by `project_script`.
 
 ### Verification and upstream evidence
 
@@ -110,8 +109,8 @@ These are release dependencies to remove, not contracts to retain in Kilo implem
   skip them. Kilo checks each command in a chain, pipeline, or substitution separately, but it does not parse
   `bash -c` strings, so wrapper denials match the whole string.
   Root `AGENTS.md` Shell Safety carries the written limits.
-  Global `project_script` also allows. Its subprocesses do not receive the scrubbed shell environment.
-  Native `explore` re-adds only global denials after its deny-all, so it needs its explicit `project_script: deny`.
+  Agents run project scripts through the shell, so `shell.env` scrubbing covers them. Do not restore a separate
+  script-runner tool.
 - Read-only agents keep a deny-by-default shell: Git inspection plus filters for its output (`wc`, `sort`, `uniq`,
   `cut`, `tr`, `comm`, `diff`, `jq`). Output files, program-running options, and redirection stay denied.
   File reads and searches use the native `read`, `grep`, and `glob` tools.

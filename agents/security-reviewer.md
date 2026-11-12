@@ -29,7 +29,6 @@ permission:
     'uniq * * *': deny
     'sort *--compress-program*': deny
     '*>*': deny
-  project_script: deny
   edit: deny
   task: deny
   agent_manager: deny
