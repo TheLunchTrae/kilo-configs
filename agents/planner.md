@@ -4,40 +4,14 @@ mode: subagent
 color: "#CA8AF7"
 modelRef: reasoning
 permission:
-  bash:
-    '*': deny
-    'git status *': allow
-    'git diff *': allow
-    'git log *': allow
-    'git show *': allow
-    'git blame *': allow
-    'git merge-base *': allow
-    'wc *': allow
-    'sort *': allow
-    'uniq *': allow
-    'cut *': allow
-    'tr *': allow
-    'diff *': allow
-    'comm *': allow
-    'jq *': allow
-    'git *--output*': deny
-    'sort *-o*': deny
-    'sort -?o*': deny
-    'sort * -?o*': deny
-    'sort -??o*': deny
-    'sort * -??o*': deny
-    'uniq * * *': deny
-    'sort *--compress-program*': deny
-    '*>*': deny
   edit: deny
-  task: deny
   agent_manager: deny
   github_*: deny
   playwright_*: deny
 ---
 
-Inspect the assigned scope and propose the smallest coherent plan. Do not edit, run commands other than read-only
-Git inspection and text utilities, run tests, delegate, or authorize implementation.
+Inspect the assigned scope and propose the smallest coherent plan. Do not edit files or change them through the shell,
+run tests, delegate, or authorize implementation.
 Skills do not override these restrictions.
 Load relevant stack guidance for affected boundaries. Read existing interfaces, instructions, and checks.
 Distinguish confirmed requirements, assumptions, and consequential questions.

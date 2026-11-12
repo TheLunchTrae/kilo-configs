@@ -6,7 +6,6 @@ modelRef: reasoning
 permission:
   edit: allow
   task:
-    '*': deny
     planner: allow
     code-reviewer: allow
     security-reviewer: allow

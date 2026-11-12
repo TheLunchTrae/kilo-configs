@@ -103,17 +103,12 @@ These are release dependencies to remove, not contracts to retain in Kilo implem
   behavior before changing runtime assumptions. Do not infer loading or permissions from JSON parsing alone.
 - Preserve system edit approval, title/compaction `options.reasoningEffort`, the global Task denial,
   ordered shell rules, and secret Read guards. Agent permissions append to global rules; the last matching rule wins.
-- Global shell policy allows by default. Kilo's built-in shell default is `ask`, so keep the `"*": "allow"` fallback
-  first. Do not set other rules that match a Kilo default. Keep the short ask list
-  (push, `sudo`, package publish, PR merge, repository edits), and keep every deny after them so denials win.
-  Do not restore a catch-all ask. Git rules need a `git -* <subcommand>` twin so global options such as `-C` cannot
-  skip them. Kilo checks each command in a chain, pipeline, or substitution separately, but it does not parse
-  `bash -c` strings, so wrapper denials match the whole string.
-  Root `AGENTS.md` Shell Safety carries the written limits.
-  Agents run project scripts through the shell, so `shell.env` scrubbing covers them. Do not restore a separate
-  script-runner tool.
-- Read-only agents keep a deny-by-default shell: Git inspection plus filters for its output (`wc`, `sort`, `uniq`,
-  `cut`, `tr`, `comm`, `diff`, `jq`). Output files, program-running options, and redirection stay denied.
+- Kilo's built-in shell default is `ask`, so keep the `"*": "allow"` fallback first. After it, the shell policy
+  blocks a few whole commands and asks before `git push` and `sudo`. Do not add flag variants or pattern lists; root
+  `AGENTS.md` Shell Safety lists the commands agents must not run. Agents run project scripts through the shell, so
+  `shell.env` scrubbing covers them. Do not set rules that match a Kilo default.
+- Keep permissions minimal. Add a rule only when it changes behavior; never restate a default or an inherited rule.
+- Read-only agents inherit the global shell policy. Their prompts forbid changing files through the shell.
   File reads and searches use the native `read`, `grep`, and `glob` tools.
 - The native `code` agent is the primary integrator. Planner/reviewers are read-only leaves. Built-in general is an
   editing worker; explore retains native restrictions. Native `plan` delegates only to `explore`.
