@@ -10,7 +10,8 @@
   "model": "openai/gpt-6-astra",
   "small_model": "openai/gpt-6-luna",
   "subagent_depth": 1,
-  "default_agent": "builder",
+  // Direct providers do not get the native websearch tool by default.
+  "web_search": true,
   "references": {
     "agent-references": {
       "path": "~/.config/kilo/references/agent",
@@ -94,9 +95,10 @@
       "rm * -r -f*": "deny",
       "rm * -f -r*": "deny"
     },
-    "edit": {
-      "*": "deny"
-    },
+    // Edits ask unless an agent sets its own rule. Do not change this to a global denial: Task children
+    // of the native code agent inherit denials, which would remove the edit tools of general.
+    // Give every new agent an explicit edit rule. Read-only agents need edit: deny.
+    "edit": "ask",
     "task": {
       "*": "deny"
     },
@@ -106,16 +108,20 @@
     "playwright_*": "ask"
   },
   "agent": {
-    "code": {
-      "disable": true
-    },
+    // agents/code.md supplies the prompt and permissions of the native code agent, the default primary agent.
+    // Native plan mode is the only other primary agent. It writes a plan file and hands it off to code.
+    // The code agent answers questions and debugs, so ask and debug stay disabled.
     "plan": {
+      "permission": {
+        "task": {
+          "explore": "allow"
+        }
+      }
+    },
+    "ask": {
       "disable": true
     },
     "debug": {
-      "disable": true
-    },
-    "ask": {
       "disable": true
     },
     "orchestrator": {
@@ -130,7 +136,9 @@
     },
     "explore": {
       "color": "#8AEEF7",
+      // Kilo applies global rules after the native explore deny-all, so the global edit ask would reach it.
       "permission": {
+        "edit": "deny",
         "agent_manager": "deny"
       }
     },

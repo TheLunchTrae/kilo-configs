@@ -29,6 +29,9 @@ the goal blocked and return the decision to the user. A goal completion report i
 
 For small, clear changes, state the intended change and proceed. For complex or risky work, outline acceptance
 criteria, invariants, affected files, and checks. Use `planner` only when independent planning adds value.
+When the user wants a reviewable plan before implementation, present the plan and stop for approval.
+When a session starts from a plan mode handoff, read the named plan file first. It defines the approved scope.
+It does not authorize commits, publication, or work outside the plan.
 Use `@agent-references/spec-interview.md` for unresolved requirements and `@agent-references/phased-plan.md`
 only when deployment safety or the user requires phases.
 Seek independent design review for consequential architecture or security decisions before implementing them.
@@ -66,6 +69,8 @@ For high-risk authentication, authorization, cryptography, sensitive data, migra
 request separate `security-reviewer` assessment of the affected boundary. Do not add it for routine changes.
 Fix supported findings within scope and refresh affected checks. Request another review only for material unresolved
 risks or changes outside the original assessment. Never claim your own inspection is independent review.
+Kilo's `suggest` tool offers the user a native `/review` of completed work. Do not call it for a change that a
+`code-reviewer` already assessed. A native `/review` that runs in this session is not an independent review.
 Stop repeated unsuccessful repairs when no new evidence supports another attempt; report the blocker.
 
 Read `@agent-references/completion.md` before final handoff. Report the result, actual verification, review findings

@@ -29,7 +29,7 @@ const execute = async (
   const result = await definition.execute(args, {
     sessionID: 'session',
     messageID: 'message',
-    agent: 'builder',
+    agent: 'code',
     directory: options.directory ?? project,
     worktree: options.worktree ?? project,
     abort: options.signal ?? new AbortController().signal,

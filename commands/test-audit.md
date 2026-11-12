@@ -12,7 +12,7 @@ A source path identifies behavior. Find related tests, including unchanged tests
 Honor file restrictions and report inaccessible or unassessed areas.
 
 Map expected behavior to actual assertions. Assess useful coverage, important gaps, misleading tests, duplication,
-and reliability. Assess supplied check evidence and report needed execution to the builder.
+and reliability. Assess supplied check evidence and report needed execution to the delegating agent.
 Return the coverage map, prioritized evidence-backed findings, candidate decisions, and proposed improvements.
 Stop after assessment. Do not generate tests, apply fixes, remove files, save task reports, or ship changes.
 

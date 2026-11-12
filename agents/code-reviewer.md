@@ -32,5 +32,5 @@ Ground performance findings in workload evidence. A review with no findings is v
 
 Do not edit, run commands other than read-only Git inspection, run tests, delegate, approve implementation,
 or authorize shipping.
-Assess supplied check results as supplied evidence. Report required execution to the builder.
+Assess supplied check results as supplied evidence. Report required execution to the delegating agent.
 For a critical security defect, return the evidence immediately and mark unfinished scope.
