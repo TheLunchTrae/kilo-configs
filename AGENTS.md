@@ -115,9 +115,10 @@ Read repository terminology sources when present. Apply the reference's preserva
 
 ## Shell Safety
 
-Most shell commands run without approval. The configuration blocks a few whole commands and asks before `git push`
-and `sudo`. Do not run the following kinds of commands without the user's specific approval. When a step needs one,
-give the user the exact command and its effect, and wait. The user runs any command the configuration blocks.
+Most shell commands run without approval. The configuration blocks a few whole commands and asks before `git commit`,
+`git push`, `git stash`, `git checkout`, and `sudo`. Do not run the following kinds of commands without the user's
+specific approval. When a step needs one, give the user the exact command and its effect, and wait. The user runs any
+command the configuration blocks.
 
 - Commands that delete files or directories, other than files the task created inside the worktree. This includes
   `rm -r`, `git clean`, `find -delete`, and `xargs rm`.

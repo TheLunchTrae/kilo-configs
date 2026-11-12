@@ -43,7 +43,10 @@
     "bash": {
       // Kilo's built-in shell default is ask with a short read-only allowlist, so this fallback is needed.
       "*": "allow",
+      "git commit *": "ask",
       "git push*": "ask",
+      "git stash *": "ask",
+      "git checkout *": "ask",
       "sudo *": "ask",
       "rm -rf*": "deny",
       "rm -fr*": "deny",
