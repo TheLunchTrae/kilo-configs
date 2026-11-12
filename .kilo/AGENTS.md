@@ -47,8 +47,17 @@ These are release dependencies to remove, not contracts to retain in Kilo implem
 
 ### Native behavior and plugin limits
 
-- Disable Kilo's native `code` agent with `plan`, `debug`, `ask`, and
-  `orchestrator` so `builder` remains the configured primary workflow. Preserve the explicit leaf delegation rules.
+- Keep Kilo's native `code`, `plan`, `ask`, and `debug` modes enabled. Kilo addresses them by name:
+  the plan follow-up starts implementation in `code`, and `/review` offers fixes in `code` or `debug`.
+  `agents/code.md` supplies the `code` prompt and permissions. Do not add a replacement primary agent.
+  Keep the deprecated `orchestrator` mode disabled. Preserve the explicit leaf delegation rules.
+- Kilo appends a global wildcard `edit` denial after the native plan guard when no later `edit` exception follows it.
+  That order blocks plan files. Keep the `.kilo/plans/*.md` exception after the wildcard in `permission.edit`.
+  Agents that must not save plan files need their own `edit` denial.
+- `web_search: true` supplies the native `websearch` tool for direct providers. Kilo otherwise limits it to its gateway.
+- `plan_enter` is a permission key in the pinned release, not a registered tool. The user selects plan mode.
+- The pinned Model Profiles accepts a built-in ref for `plan` but not for `ask` or `debug`.
+  Those two modes use the model that Kilo selects without a ref.
 - Keep provider/model identifiers, profiles, variants, and permission order unchanged.
   Direct `openai/` and `anthropic/` identifiers do not become Kilo Gateway identifiers.
   Account access and model availability require a separate user-side check.
@@ -86,9 +95,10 @@ These are release dependencies to remove, not contracts to retain in Kilo implem
   behavior before changing runtime assumptions. Do not infer loading or permissions from JSON parsing alone.
 - Preserve system edit approval, title/compaction `options.reasoningEffort`, global edit/Task denials,
   ordered shell rules, and secret Read guards. Agent permissions append to global rules; the last matching rule wins.
-- Builder is the primary integrator. Planner/reviewers are read-only leaves. Built-in general is an editing worker;
-  explore retains native restrictions. Keep delegation exact and deny by default. No routes from reviewers to writers.
-  Keep `subagent_depth` at one so the builder can start workers but workers cannot create another Task layer.
+- The native `code` agent is the primary integrator. Planner/reviewers are read-only leaves. Built-in general is an
+  editing worker; explore retains native restrictions. Native `plan` and `debug` delegate only to `explore`.
+  Keep delegation exact and deny by default. No routes from reviewers to writers.
+  Keep `subagent_depth` at one so a primary agent can start workers but workers cannot create another Task layer.
   `agent_manager` is a separate top-level session route, not a Task child. It asks globally and is denied for workers.
   Verify transitive reachability and both routes without granting tools to make a check pass.
 - Skills are native `skills/<name>/SKILL.md` files with discoverable descriptions. Load stack guidance only for

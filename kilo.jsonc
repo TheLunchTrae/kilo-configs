@@ -10,7 +10,8 @@
   "model": "openai/gpt-6-astra",
   "small_model": "openai/gpt-6-luna",
   "subagent_depth": 1,
-  "default_agent": "builder",
+  // Direct providers do not get the native websearch tool unless this is set.
+  "web_search": true,
   "references": {
     "agent-references": {
       "path": "~/.config/kilo/references/agent",
@@ -91,8 +92,11 @@
       "rm * -r -f*": "deny",
       "rm * -f -r*": "deny"
     },
+    // Kilo applies a global wildcard edit denial without a later exception as a ceiling on native plan mode.
+    // That ceiling also blocks plan files. The plan-file exception keeps edits denied by default elsewhere.
     "edit": {
-      "*": "deny"
+      "*": "deny",
+      ".kilo/plans/*.md": "allow"
     },
     "task": {
       "*": "deny"
@@ -103,18 +107,23 @@
     "playwright_*": "ask"
   },
   "agent": {
-    "code": {
-      "disable": true
-    },
+    // agents/code.md supplies the prompt and permissions of the native code agent.
     "plan": {
-      "disable": true
+      "permission": {
+        "task": {
+          "explore": "allow"
+        }
+      }
     },
     "debug": {
-      "disable": true
+      "permission": {
+        "edit": "allow",
+        "task": {
+          "explore": "allow"
+        }
+      }
     },
-    "ask": {
-      "disable": true
-    },
+    // Kilo deprecates this mode. The code agent owns delegation.
     "orchestrator": {
       "disable": true
     },
@@ -128,6 +137,7 @@
     "explore": {
       "color": "#8AEEF7",
       "permission": {
+        "edit": "deny",
         "agent_manager": "deny"
       }
     },
