@@ -90,10 +90,12 @@ const REDACTIONS: readonly (readonly [string, RegExp])[] = [
 ];
 // Patches of files that block-secrets denies, as printed by `git diff`, `git log -p`, `git show <commit>`, or
 // `diff -ru`. A `diff ` header or a `--- ` and `+++ ` pair names each file. Hunk lines of a denied file are dropped,
-// and so is the text after its hunk headers, because Git copies a nearby file line there. A hunk ends when its header
-// counts run out, or at the first line that cannot belong to it, so a cut or combined (`@@@`) hunk cannot hide the
-// next `diff ` header. A denied hunk instead fails closed and drops other lines until a `diff `, `commit `, or `@@` line. `GIT binary patch` data of a denied file is dropped up to its second blank line. Color codes are
-// ignored when matching. Word diffs, prefixed lines, and escaped text are not recognized.
+// and so is the text after its hunk headers, because Git copies a nearby file line there. An ordinary hunk ends when
+// its header counts run out, or at the first line that cannot belong to it, so a cut or combined (`@@@`) hunk cannot
+// hide the next `diff ` header. A denied hunk fails closed instead: after it, every line is dropped until a new file,
+// commit, or hunk header, so word diffs and cut markers cannot leak its values. `GIT binary patch` data of a denied
+// file is dropped up to its second blank line. Color codes are ignored when matching. Graph prefixes, indented or
+// numbered lines, and escaped text are not recognized.
 const SECRET_DIFF = '[REDACTED:secret-file-diff]';
 const HUNK_HEADER = /^@{2,} [^@]*@{2,}/;
 const HUNK_COUNTS = /^@@ -\d+(?:,(\d+))? \+\d+(?:,(\d+))? @@/;
@@ -121,9 +123,20 @@ const redactSecretDiffs = (text: string): string => {
   let binaryBlanks = 0;
   let changed = false;
   const lines: string[] = [];
-  for (const line of text.split('\n')) {
+  // Set after a denied hunk, until the next unit or a header-less `--- ` and `+++ ` pair.
+  let deniedTail = false;
+  const strip = (line: string): string => (line.endsWith('\r') ? line.slice(0, -1) : line).replace(COLOR, '');
+  const source = text.split('\n');
+  for (const [index, line] of source.entries()) {
     const eol = line.endsWith('\r') ? '\r' : '';
-    const content = (eol === '' ? line : line.slice(0, -1)).replace(COLOR, '');
+    const content = strip(line);
+    if (deniedTail) {
+      const pair = content.startsWith('--- ') && strip(source[index + 1] ?? '').startsWith('+++ ');
+      if (!NEW_UNIT.test(content) && !pair) {
+        continue;
+      }
+      deniedTail = false;
+    }
     if (binaryBlanks > 0) {
       if (BINARY_LINE.test(content)) {
         if (content === '') {
@@ -134,11 +147,12 @@ const redactSecretDiffs = (text: string): string => {
       binaryBlanks = 0;
     }
     if (oldLeft !== undefined && !HUNK_LINE.test(content)) {
-      // A denied hunk fails closed: word diffs, graph prefixes, or a cut marker drop until a new unit starts.
+      // A denied hunk fails closed: word-diff or cut-marker lines drop until a new unit starts.
       if (secret && !NEW_UNIT.test(content)) {
         continue;
       }
       oldLeft = undefined;
+      deniedTail = false;
     }
     if (oldLeft !== undefined) {
       if (!Number.isNaN(oldLeft)) {
@@ -151,6 +165,9 @@ const redactSecretDiffs = (text: string): string => {
         }
         if (oldLeft <= 0 && newLeft <= 0) {
           oldLeft = undefined;
+          if (secret) {
+            deniedTail = true;
+          }
         }
       }
       if (secret) {

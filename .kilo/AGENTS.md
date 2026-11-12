@@ -189,10 +189,10 @@ also checked, so Git `rev:path` reads such as `git show HEAD:.env` are denied. K
 of a long word takes quadratic time. Blob ids, globs, brace expansion, and archives still bypass the check.
 `plugins/scrub-secrets.ts` blanks variables only for session shell calls; keep terminal panels unscrubbed.
 It also drops hunk lines and binary patch data of denied paths from diff output. Keep hunk header counts and the
-non-hunk-line check as the hunk end, so a cut or combined hunk cannot hide the next `diff ` header; a denied hunk
-fails closed until the next `diff `, `commit `, or `@@` line. Not redacted: `--graph`, indented, line-numbered, or
-JSON-escaped patches, normal-format `diff` output, hunks without a file header, and header-less patches after a hunk
-whose counts are too large.
+non-hunk-line check as the hunk end, so a cut or combined hunk cannot hide the next `diff ` header. A denied hunk
+fails closed: lines after it drop until a new file, commit, or hunk header. Not redacted: `--graph`, indented,
+line-numbered, or JSON-escaped patches, normal-format `diff` output, hunks without a file header, and header-less
+patches after a hunk whose counts are too large.
 Use synthetic credential-shaped values in its tests.
 Do not describe the plugin as a sandbox.
 

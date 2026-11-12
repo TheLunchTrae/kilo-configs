@@ -418,14 +418,48 @@ describe('scrub-secrets plugin', () => {
     assert.match(output.output, /-old line\n\+new line$/);
   });
 
+  it('keeps dropping after a denied hunk whose counts run out early', async () => {
+    const { after } = await create();
+    const text = [
+      'diff --git a/.env b/.env',
+      '@@ -1,2 +1,2 @@',
+      ' USER=synthetic-porcelain-user ',
+      '-PASS=synthetic-porcelain-old',
+      '+PASS=synthetic-porcelain-new',
+      '~',
+      '-TOKEN=synthetic-porcelain-t2',
+      '+TOKEN=synthetic-porcelain-t3',
+      '~',
+      '',
+      '--- .env.local\t2026-01-01',
+      '+++ .env.local\t2026-01-02',
+      '@@ -1 +1 @@',
+      '-K=synthetic-headerless-old',
+      '+K=synthetic-headerless-new',
+      '--- app.ts\t2026-01-01',
+      '+++ app.ts\t2026-01-02',
+      '@@ -1 +1 @@',
+      '-old line',
+      '+new line',
+    ].join('\n');
+    const output = { title: '', output: text, metadata: {} };
+    await after({ tool: 'bash', sessionID: 's', callID: 'c', args: {} }, output);
+    assert.doesNotMatch(output.output, /synthetic-/);
+    assert.match(
+      output.output,
+      /--- app\.ts\t2026-01-01\n\+\+\+ app\.ts\t2026-01-02\n@@ -1 \+1 @@\n-old line\n\+new line$/,
+    );
+  });
+
   it('keeps CRLF line endings on redaction markers', async () => {
     const { after } = await create();
-    const text = ['diff --git a/.env b/.env', '@@ -1 +1 @@ K=synthetic-crlf', '-K=a', '+K=b', 'done'].join('\r\n');
+    const next = 'diff --git a/README.md b/README.md';
+    const text = ['diff --git a/.env b/.env', '@@ -1 +1 @@ K=synthetic-crlf', '-K=a', '+K=b', next].join('\r\n');
     const output = { title: '', output: text, metadata: {} };
     await after({ tool: 'bash', sessionID: 's', callID: 'c', args: {} }, output);
     assert.equal(
       output.output,
-      ['diff --git a/.env b/.env', '@@ -1 +1 @@', '[REDACTED:secret-file-diff]', 'done'].join('\r\n'),
+      ['diff --git a/.env b/.env', '@@ -1 +1 @@', '[REDACTED:secret-file-diff]', next].join('\r\n'),
     );
   });
 
