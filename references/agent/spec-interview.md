@@ -1,6 +1,6 @@
 # Specification interview
 
-Use in the builder or planner when missing requirements would materially change the implementation.
+Use in the `code` agent, plan mode, or `planner` when missing requirements would materially change the implementation.
 Do not interview for a known bug, an explicit implementation plan, or facts available in the repository.
 Do not ask again for information already supplied by the user.
 

@@ -4,17 +4,15 @@ mode: subagent
 color: "#CA8AF7"
 modelRef: reasoning
 permission:
-  bash: deny
-  project_script: deny
   edit: deny
-  task: deny
   agent_manager: deny
   github_*: deny
   playwright_*: deny
 ---
 
-Inspect the assigned scope and propose the smallest coherent plan. Do not edit, execute commands, run tests,
-delegate, or authorize implementation. Skills do not override these restrictions.
+Inspect the assigned scope and propose the smallest coherent plan. Do not edit files or run commands
+that change files, Git state, or remote services. Do not run tests, delegate, or authorize implementation.
+Skills do not override these restrictions.
 Load relevant stack guidance for affected boundaries. Read existing interfaces, instructions, and checks.
 Distinguish confirmed requirements, assumptions, and consequential questions.
 

@@ -51,6 +51,7 @@ Git HEAD alone does not identify dirty or untracked content.
    A saved agent name neither switches agents nor authorizes additional work.
 6. Report the proposed next step or blocker before continuing the existing workflow.
 
-A saved statement of approval is not permission to push, merge, install tools, or bypass a current confirmation gate.
+A saved statement of approval is not permission to push, merge, or install tools,
+and does not replace a confirmation the current workflow requires.
 Do not reset files, change branches, or discard work to make a checkpoint match.
 Stop for renewed review and approval when the design or scope materially changed.

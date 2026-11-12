@@ -47,8 +47,26 @@ These are release dependencies to remove, not contracts to retain in Kilo implem
 
 ### Native behavior and plugin limits
 
-- Disable Kilo's native `code` agent with `plan`, `debug`, `ask`, and
-  `orchestrator` so `builder` remains the configured primary workflow. Preserve the explicit leaf delegation rules.
+- The user works mainly through one top-level agent. `code` is the default primary agent.
+  `agents/code.md` supplies its prompt and permissions. Kilo addresses `code` by name: it is the native default,
+  the plan follow-up starts implementation in it, and `/review` fixes target it. Do not add a replacement primary.
+- Native `plan` is the only other primary agent. The user selects it for large tasks. It writes
+  `.kilo/plans/<timestamp>-<slug>.md` in a Git project, or a file under the Kilo data directory otherwise.
+  Its follow-up hands the plan to `code` in a new or the same session.
+  It delegates only to `explore`. `plan_enter` is a permission key in the pinned release, not a registered tool,
+  so `code` cannot switch the user into plan mode.
+- Keep the native `ask`, `debug`, and deprecated `orchestrator` modes disabled. `code` covers their work.
+  `/review` can offer fixes in `debug` or `orchestrator`. Those options are unverified while the modes are disabled.
+- Global `edit` is `ask`. Do not change it to a wildcard denial. Kilo appends a global denial after the native plan
+  guard, which blocks plan files. Task children of a native agent also inherit denials, so `general` would lose its
+  edit tools when `code` starts it. Kilo does not inherit `ask` rules into Task children.
+- Give every agent an explicit `edit` rule: `allow` for writers and `deny` for read-only agents.
+  An agent without one asks before each edit. Native `plan` keeps its own plan-file guard.
+  Kilo applies global rules after the native `explore` deny-all, so `explore` needs its explicit `edit: deny`.
+  The experimental Scout flag adds `scout` and reference agents built the same way. If it is enabled, deny their edits.
+- `web_search: true` supplies the native `websearch` tool for direct providers. Without it, Kilo supplies the tool
+  only for its gateway providers or when a search provider flag is set. The tool sends queries to a hosted search
+  service and follows the default `allow` rule.
 - Keep provider/model identifiers, profiles, variants, and permission order unchanged.
   Direct `openai/` and `anthropic/` identifiers do not become Kilo Gateway identifiers.
   Account access and model availability require a separate user-side check.
@@ -61,14 +79,13 @@ These are release dependencies to remove, not contracts to retain in Kilo implem
 - `modelRef`, `models.jsonc`, and `{{include:...}}` are plugin contracts, not native Kilo features.
   Confirm loaded agents and expanded prompts before relying on their effective models or shared instructions.
   A successful JSON parse does not prove that a plugin loaded or an include expanded.
-- The six local server plugins use Kilo's published plugin API.
+- The four local server plugins use Kilo's published plugin API.
   Use the pinned `@kilocode/plugin` and `@kilocode/sdk` packages for local server and TUI integrations.
   Keep helper modules and auto-discovery placement intact.
 - Config/context panels and bookmarks use shared TUI APIs, but source compatibility does not verify interactive
   rendering. Kilo and this workspace use different OpenTUI versions. Verify source activation on Kilo and report
   rendering checks separately. Npm-installed plugin behavior is outside this repository's test scope.
 - Secret guards are heuristic defenses, not a sandbox. A plugin that fails to load provides no protection.
-  `shell.env` scrubbing does not sanitize subprocesses launched directly by `project_script` or `git_inspect`.
 
 ### Verification and upstream evidence
 
@@ -87,11 +104,20 @@ These are release dependencies to remove, not contracts to retain in Kilo implem
   `models.jsonc` owns model refs, profiles, and refs for built-in agents.
 - Preserve provider/model choices unless explicitly requested. Inspect installed dependencies and current native
   behavior before changing runtime assumptions. Do not infer loading or permissions from JSON parsing alone.
-- Preserve system edit approval, title/compaction `options.reasoningEffort`, global edit/Task denials,
+- Preserve system edit approval, title/compaction `options.reasoningEffort`, the global Task denial,
   ordered shell rules, and secret Read guards. Agent permissions append to global rules; the last matching rule wins.
-- Builder is the primary integrator. Planner/reviewers are read-only leaves. Built-in general is an editing worker;
-  explore retains native restrictions. Keep delegation exact and deny by default. No routes from reviewers to writers.
-  Keep `subagent_depth` at one so the builder can start workers but workers cannot create another Task layer.
+- Kilo's built-in shell default is `ask`, so keep the `"*": "allow"` fallback first. After it, the shell policy
+  blocks a few whole commands and asks before `git push` and `sudo`. Do not add flag variants or pattern lists; root
+  `AGENTS.md` Shell Safety lists the commands agents must not run. Agents run project scripts through the shell, so
+  `shell.env` scrubbing covers them. Do not set rules that match a Kilo default.
+- Keep permissions minimal. Add a rule only when it changes behavior; never restate a default or an inherited rule.
+- Read-only agents inherit the global shell policy. Their prompts forbid commands that change files, Git state, or
+  remote services.
+  File reads and searches use the native `read`, `grep`, and `glob` tools.
+- The native `code` agent is the primary integrator. Planner/reviewers are read-only leaves. Built-in general is an
+  editing worker; explore retains native restrictions. Native `plan` delegates only to `explore`.
+  Keep delegation exact and deny by default. No routes from reviewers to writers.
+  Keep `subagent_depth` at one so a primary agent can start workers but workers cannot create another Task layer.
   `agent_manager` is a separate top-level session route, not a Task child. It asks globally and is denied for workers.
   Verify transitive reachability and both routes without granting tools to make a check pass.
 - Skills are native `skills/<name>/SKILL.md` files with discoverable descriptions. Load stack guidance only for
@@ -164,11 +190,19 @@ failures stop the run; do not silently fall back to a cached binary. Report unav
 ## Plugin contracts
 
 Read `plugins/block-secrets.ts`, `extensions/security/secret-paths.ts`, and their tests before modifying them.
-Secret path patterns are shared with `git_inspect`. Preserve path keys `filePath`, `file_path`, and `path`;
-`pattern` is a path only for glob. Match case-insensitively and normalize backslashes. A complete `secrets` segment
-overrides template basenames. Reject calls even when the error toast fails. Keep denial diagnostics accurate.
+Preserve path keys `filePath`, `file_path`, and `path`; `pattern` is a path only for glob. Match case-insensitively
+and normalize backslashes. A complete `secrets` segment overrides template basenames. Reject calls even when the error
+toast fails. Keep denial diagnostics accurate.
 Bash token checks are heuristic; expansion, aliases, symlinks, and parent-directory searches limit protection.
+Bash words split at whitespace and control operators, and the text after the first few and the last `:` or `=` is
+also checked, so Git `rev:path` reads such as `git show HEAD:.env` are denied. Keep that bound; checking every suffix
+of a long word takes quadratic time. Blob ids, globs, brace expansion, and archives still bypass the check.
 `plugins/scrub-secrets.ts` blanks variables only for session shell calls; keep terminal panels unscrubbed.
+It also drops hunk lines and binary patch data of denied paths from diff output. Keep hunk header counts and the
+non-hunk-line check as the hunk end, so a cut or combined hunk cannot hide the next `diff ` header. A denied hunk
+fails closed: lines after it drop until a new file, commit, or hunk header. Not redacted: `--graph`, indented,
+line-numbered, or JSON-escaped patches, normal-format `diff` output, hunks without a file header, and header-less
+patches after a hunk whose counts are too large.
 Use synthetic credential-shaped values in its tests.
 Do not describe the plugin as a sandbox.
 
