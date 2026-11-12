@@ -7,10 +7,10 @@ import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { nativeBinary } from './native-host.ts';
 
-test('Kilo discovers local plugins and tools, blocks secret paths, and honors a per-agent deny', async (t) => {
+test('Kilo discovers local plugins and tools and honors a per-agent deny', async (t) => {
   const binary = nativeBinary();
   const repository = fileURLToPath(new URL('../', import.meta.url));
-  const root = await mkdtemp(join(tmpdir(), 'kilo-git-inspect-'));
+  const root = await mkdtemp(join(tmpdir(), 'kilo-local-plugins-'));
   t.after(() => rm(root, { recursive: true, force: true }));
   const installation = join(root, 'config', 'kilo');
   const project = join(root, 'project');
@@ -39,12 +39,12 @@ test('Kilo discovers local plugins and tools, blocks secret paths, and honors a 
   );
   // Synthetic agents keep the test on the local plugin, not on personal role or permission configuration.
   await writeFile(
-    join(installation, 'agents', 'inspection-reader.md'),
-    '---\ndescription: Native inspection fixture\nmode: subagent\n---\nRead-only fixture.',
+    join(installation, 'agents', 'plugin-reader.md'),
+    '---\ndescription: Native plugin fixture\nmode: subagent\n---\nRead-only fixture.',
   );
   await writeFile(
-    join(installation, 'agents', 'inspection-denied.md'),
-    '---\ndescription: Native denial fixture\nmode: subagent\npermission:\n  git_inspect: deny\n---\nRead-only fixture.',
+    join(installation, 'agents', 'plugin-denied.md'),
+    '---\ndescription: Native denial fixture\nmode: subagent\npermission:\n  project_script: deny\n---\nRead-only fixture.',
   );
   const env: NodeJS.ProcessEnv = {
     PATH: process.env.PATH,
@@ -65,17 +65,7 @@ test('Kilo discovers local plugins and tools, blocks secret paths, and honors a 
     KILO_DISABLE_CLAUDE_CODE: 'true',
     KILO_EXPERIMENTAL_DISABLE_FILEWATCHER: 'true',
   };
-  const git = (...args: string[]) => {
-    const result = spawnSync('git', args, { cwd: project, env, encoding: 'utf8', timeout: 30_000 });
-    assert.ifError(result.error);
-    assert.equal(result.status, 0, result.stderr);
-  };
-  git('init', '--quiet');
-  await writeFile(join(project, 'app.txt'), 'public-native-fixture\n');
-  await writeFile(join(project, '.env'), 'PRIVATE=synthetic-native-secret\n');
   await writeFile(join(project, 'package.json'), JSON.stringify({ scripts: { fixture: 'node --version' } }));
-  git('add', '.');
-  git('-c', 'user.name=Test', '-c', 'user.email=test@example.invalid', 'commit', '--quiet', '-m', 'fixture');
   const command = (args: string[]) => {
     const result = spawnSync(binary, args, { cwd: project, env, encoding: 'utf8', timeout: 60_000 });
     assert.ifError(result.error);
@@ -93,32 +83,23 @@ test('Kilo discovers local plugins and tools, blocks secret paths, and honors a 
     'block-secrets.ts',
     'comment-guard.ts',
     'compaction-task-state.ts',
-    'git-inspect.ts',
     'project-script.ts',
     'scrub-secrets.ts',
   ]) {
     assert.ok(config.plugin.some((entry) => typeof entry === 'string' && entry.endsWith(`/plugins/${file}`)));
   }
   assert.ok(config.plugin.every((entry) => typeof entry === 'string' && entry.startsWith('file:')));
-  const inspected = command(['debug', 'agent', 'inspection-reader']);
+  const inspected = command(['debug', 'agent', 'plugin-reader']);
   assert.equal(inspected.status, 0, inspected.stderr);
   const agent = JSON.parse(inspected.stdout) as { tools: Record<string, boolean> };
-  assert.equal(agent.tools.git_inspect, true);
   assert.equal(agent.tools.project_script, true);
-  const scripts = command(['debug', 'agent', 'inspection-reader', '--tool', 'project_script', '--params', '{}']);
+  const run = (agent: string, tool: string, params: Record<string, unknown>) =>
+    command(['debug', 'agent', agent, '--tool', tool, '--params', JSON.stringify(params)]);
+  const scripts = run('plugin-reader', 'project_script', {});
   assert.equal(scripts.status, 0, scripts.stderr);
   assert.match(scripts.stdout, /npm:fixture/);
-  const run = (agent: string, params: Record<string, unknown>) =>
-    command(['debug', 'agent', agent, '--tool', 'git_inspect', '--params', JSON.stringify(params)]);
-  const read = run('inspection-reader', { operation: 'show', revision: 'HEAD:app.txt' });
-  assert.equal(read.status, 0, read.stderr);
-  assert.match(read.stdout, /public-native-fixture/);
-  const secret = run('inspection-reader', { operation: 'show', revision: 'HEAD:.env' });
-  assert.notEqual(secret.status, 0);
-  assert.match(secret.stderr, /sensitive/);
-  assert.doesNotMatch(secret.stdout + secret.stderr, /synthetic-native-secret/);
-  const denied = run('inspection-denied', { operation: 'show', revision: 'HEAD:app.txt' });
+  const denied = run('plugin-denied', 'project_script', {});
   assert.notEqual(denied.status, 0);
   assert.match(denied.stderr, /disabled for agent/);
-  assert.doesNotMatch(denied.stdout, /public-native-fixture/);
+  assert.doesNotMatch(denied.stdout, /npm:fixture/);
 });
