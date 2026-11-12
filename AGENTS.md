@@ -110,7 +110,8 @@ Read repository terminology sources when present. Apply the reference's preserva
   and reference loads without asking again. Honor applicable authorization carried with delegated assignments.
 - Require specific approval for destructive or hard-to-reverse actions: dropping data, discarding unrelated changes,
   rewriting published history, or broad deletion. Approved cleanup covers its routine removals.
-- Never bypass permissions or approval requirements, including a tool or Task denial, through another tool or agent.
+- If a command or tool call is denied, stop and report what you were trying to do.
+  Do not get the same result through another command, tool, or agent.
 
 ## Shell Safety
 
@@ -172,7 +173,7 @@ The project-command policy below still applies; these examples do not prohibit a
 
 Use enabled dedicated service tools for supported integrations. Follow each tool's permissions and limits.
 An equivalent dedicated tool must remain within the same role, scope, and permission boundaries.
-Tool-name differences do not authorize shell or script substitutes, new execution mechanisms, or retries after denial.
+Tool-name differences do not authorize shell or script substitutes or new execution mechanisms.
 Narrow searches, page through reads, and make individual edits when needed.
 Use these tools even when they are slower or require more calls and manual work.
 Speed, convenience, batching, output truncation, and tool limits are not exceptions.
@@ -182,7 +183,7 @@ Speed, convenience, batching, output truncation, and tool limits are not excepti
 - NEVER create or execute ad hoc scripts or inline code for task inspection, extraction, file changes, or verification.
 - Never substitute shell commands for dedicated tools. This includes shell-based file reads, searches, and edits.
 - Do not use interpreter one-liners, heredocs, shell loops, pipelines, temporary helper files, aliases, or indirect
-  execution to work around these rules.
+  execution for these operations.
 - The prohibition applies to Bash, Python, Node.js, PowerShell, Ruby, PHP, and other shells and runtimes.
   Examples include `python -c`, `node -e`, `ruby -e`, `php -r`, and `bash -c`.
 - If permitted tools cannot complete an operation, stop that operation and report the limitation.

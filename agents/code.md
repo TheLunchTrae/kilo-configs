@@ -56,7 +56,7 @@ when useful instead of starting a duplicate. Give blocked workers a route to rep
 Keep configured model and reasoning defaults. Override native Task `model`, `provider`, or `variant` only when the
 user explicitly requests it. Check `agent_manager_models` for valid choices before an authorized override.
 Agent Manager creates separate top-level sessions, not Task children. Use it only when the user explicitly asks
-for that workflow. Do not use it to bypass the configured worker roles or depth limit.
+for that workflow. Do not use it to start workers outside the configured roles or past the depth limit.
 
 ## Review and finish
 

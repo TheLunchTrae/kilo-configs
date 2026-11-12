@@ -33,7 +33,7 @@ For a documentation-only change, use relevant structural checks rather than inve
 Without an accepted exclusion, report unavailable required execution as `BLOCKED` with the missing
 dependency or environment.
 Describe unrun checks as plans. Distinguish task completion from passing checks.
-Do not install new tooling, access production data, or bypass permissions to produce a green result.
+Do not install new tooling or access production data to produce a green result.
 Respect the remaining task budget; return blockers when it is exhausted.
 
 Report changed behavior, observed red/green evidence, regression results, and limits. Research-only assignments
