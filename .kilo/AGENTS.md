@@ -63,6 +63,7 @@ These are release dependencies to remove, not contracts to retain in Kilo implem
 - Give every agent an explicit `edit` rule: `allow` for writers and `deny` for read-only agents.
   An agent without one asks before each edit. Native `plan` keeps its own plan-file guard.
   Kilo applies global rules after the native `explore` deny-all, so `explore` needs its explicit `edit: deny`.
+  The experimental Scout flag adds `scout` and reference agents built the same way. If it is enabled, deny their edits.
 - `web_search: true` supplies the native `websearch` tool for direct providers. Without it, Kilo supplies the tool
   only for its gateway providers or when a search provider flag is set. The tool sends queries to a hosted search
   service and follows the default `allow` rule.
