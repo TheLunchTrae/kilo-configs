@@ -57,10 +57,12 @@ These are release dependencies to remove, not contracts to retain in Kilo implem
   so `code` cannot switch the user into plan mode.
 - Keep the native `ask`, `debug`, and deprecated `orchestrator` modes disabled. `code` covers their work.
   `/review` can offer fixes in `debug` or `orchestrator`. Those options are unverified while the modes are disabled.
-- Do not add a global wildcard `edit` denial. Kilo appends it after the native plan guard, which blocks plan files.
-  Task children of a native agent also inherit it, so `general` loses its edit tools when `code` starts it.
-  Edits are therefore allowed by default. Give each read-only custom agent its own `edit: deny`.
-  Native `plan` and `explore` carry their own edit limits.
+- Global `edit` is `ask`. Do not change it to a wildcard denial. Kilo appends a global denial after the native plan
+  guard, which blocks plan files. Task children of a native agent also inherit denials, so `general` would lose its
+  edit tools when `code` starts it. Kilo does not inherit `ask` rules into Task children.
+- Give every agent an explicit `edit` rule: `allow` for writers and `deny` for read-only agents.
+  An agent without one asks before each edit. Native `plan` keeps its own plan-file guard.
+  Kilo applies global rules after the native `explore` deny-all, so `explore` needs its explicit `edit: deny`.
 - `web_search: true` supplies the native `websearch` tool for direct providers. Without it, Kilo supplies the tool
   only for its gateway providers or when a search provider flag is set. The tool sends queries to a hosted search
   service and follows the default `allow` rule.

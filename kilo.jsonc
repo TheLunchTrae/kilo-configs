@@ -92,8 +92,10 @@
       "rm * -r -f*": "deny",
       "rm * -f -r*": "deny"
     },
-    // Do not add a global wildcard edit denial. Task children of the native code agent inherit it,
-    // which removes the edit tools of general. Read-only agents carry their own edit denial.
+    // Edits ask unless an agent sets its own rule. Do not change this to a global denial: Task children
+    // of the native code agent inherit denials, which would remove the edit tools of general.
+    // Give every new agent an explicit edit rule. Read-only agents need edit: deny.
+    "edit": "ask",
     "task": {
       "*": "deny"
     },
@@ -131,7 +133,9 @@
     },
     "explore": {
       "color": "#8AEEF7",
+      // Kilo applies global rules after the native explore deny-all, so the global edit ask would reach it.
       "permission": {
+        "edit": "deny",
         "agent_manager": "deny"
       }
     },
