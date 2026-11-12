@@ -65,7 +65,7 @@ These are release dependencies to remove, not contracts to retain in Kilo implem
   rendering. Kilo and this workspace use different OpenTUI versions. Verify source activation on Kilo and report
   rendering checks separately. Npm-installed plugin behavior is outside this repository's test scope.
 - Secret guards are heuristic defenses, not a sandbox. A plugin that fails to load provides no protection.
-  `shell.env` scrubbing does not sanitize subprocesses launched directly by `project_script` or `git_inspect`.
+  `shell.env` scrubbing does not sanitize subprocesses launched directly by `project_script`.
 
 ### Verification and upstream evidence
 
@@ -161,9 +161,9 @@ failures stop the run; do not silently fall back to a cached binary. Report unav
 ## Plugin contracts
 
 Read `plugins/block-secrets.ts`, `extensions/security/secret-paths.ts`, and their tests before modifying them.
-Secret path patterns are shared with `git_inspect`. Preserve path keys `filePath`, `file_path`, and `path`;
-`pattern` is a path only for glob. Match case-insensitively and normalize backslashes. A complete `secrets` segment
-overrides template basenames. Reject calls even when the error toast fails. Keep denial diagnostics accurate.
+Preserve path keys `filePath`, `file_path`, and `path`; `pattern` is a path only for glob. Match case-insensitively
+and normalize backslashes. A complete `secrets` segment overrides template basenames. Reject calls even when the error
+toast fails. Keep denial diagnostics accurate.
 Bash token checks are heuristic; expansion, aliases, symlinks, and parent-directory searches limit protection.
 `plugins/scrub-secrets.ts` blanks variables only for session shell calls; keep terminal panels unscrubbed.
 Use synthetic credential-shaped values in its tests.
