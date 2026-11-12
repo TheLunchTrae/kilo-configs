@@ -7,7 +7,7 @@ import { test } from 'node:test';
 import { parse } from 'jsonc-parser';
 import { nativeBinary } from './native-host.ts';
 
-test('Kilo shell policy permits bounded dry runs and rejects destructive commands', async (t) => {
+test('Kilo shell policy permits everyday commands and rejects destructive commands', async (t) => {
   if (process.platform !== 'linux') {
     t.skip('The inert /bin/false shell fixture requires Linux.');
     return;
@@ -51,31 +51,26 @@ test('Kilo shell policy permits bounded dry runs and rejects destructive command
     KILO_EXPERIMENTAL_DISABLE_FILEWATCHER: 'true',
   };
   const cases: [string, boolean][] = [
-    ['git clean -n', true],
-    ['git clean --dry-run', true],
-    ['git clean -dn', true],
-    ['git clean -d -n', true],
-    ['git clean -d --dry-run', true],
-    ['git clean -xdn', true],
-    ['git clean -fdn', true],
-    ['git clean -dn -- build', true],
-    ['git clean -d --dry-run build', true],
-    ['git clean', false],
-    ['git clean -f', false],
-    ['git clean -xdf', false],
-    ['git clean --force', false],
-    ['git clean -n --no-dry-run -f', false],
-    ['git clean -dn --no-dry-run -f', false],
-    ['git clean -d --dry-run --no-dry -f', false],
-    ['git clean -f -- -n', false],
-    ['git clean -f -e -n', false],
-    ['git clean -f -e "--dry-run"', false],
-    ['git clean -dn; git clean -f', false],
-    ['git clean -dn && git clean -f', false],
-    ['git branch topic -D', false],
-    ['git branch topic -D another-topic', false],
-    ['git push origin main -f', false],
-    ['git push origin main -f another-ref', false],
+    ['wc -l README.md', true],
+    ['git log --oneline | sort | uniq -c', true],
+    ['git commit -m "Clean up imports and restore parser behavior"', true],
+    ['git checkout -b topic', true],
+    ['git restore --staged README.md', true],
+    ['rm -r dist', true],
+    ['gh pr create --title "Add soft delete" --body "Adds soft delete support"', true],
+    ['rm -rf build', false],
+    ['rm -fr build', false],
+    ['echo done && rm -rf build', false],
+    ['git reset --hard', false],
+    ['git clean -fd', false],
+    ['git filter-branch --all', false],
+    ['git filter-repo --path secrets', false],
+    ['gh pr merge 12 --squash', false],
+    ['gh repo delete example-invalid/does-not-exist --yes', false],
+    ['npm publish', false],
+    ['pnpm publish', false],
+    ['npm unpublish fixture@1.0.0', false],
+    ['kubectl delete pod fixture', false],
   ];
   for (const [command, eligible] of cases) {
     await t.test(command, () => {

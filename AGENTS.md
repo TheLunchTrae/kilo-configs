@@ -112,6 +112,29 @@ Read repository terminology sources when present. Apply the reference's preserva
   rewriting published history, or broad deletion. Approved cleanup covers its routine removals.
 - Never bypass permissions or approval requirements, including a tool or Task denial, through another tool or agent.
 
+## Shell Safety
+
+Most shell commands run without approval. The configuration blocks a few whole commands and asks before `git push`
+and `sudo`. Do not run the following kinds of commands without the user's specific approval. When a step needs one,
+give the user the exact command and its effect, and wait. The user runs any command the configuration blocks.
+
+- Commands that delete files or directories, other than files the task created inside the worktree. This includes
+  `rm -r`, `git clean`, `find -delete`, and `xargs rm`.
+- Commands that discard uncommitted work, such as `git reset --hard`, `git checkout` or `git restore` on worktree
+  paths, `git stash drop`, `git stash clear`, and forced branch switches.
+- Commands that rewrite or remove pushed history, such as force pushes, pushes that delete branches or tags,
+  `git filter-branch`, `git filter-repo`, reflog expiry, and object pruning. Rebase or amend only unpushed commits.
+- Commands that merge, close, or delete pull requests, issues, releases, repositories, or other GitHub resources.
+- Commands that publish or unpublish packages.
+- Commands that drop or reset databases, prune container volumes, or delete cluster or cloud resources.
+- Commands that run downloaded content, such as piping `curl` or `wget` output into a shell or interpreter.
+- Commands that write outside the worktree, including dotfiles, global configuration, global package installs, and
+  other repositories.
+- `sudo`, disk and filesystem tools, recursive permission or ownership changes, shutdowns, restarts, and commands
+  that stop processes the task did not start.
+- Commands that read, print, or copy secret values, credentials, or `.env` contents. Shell reads skip the `read`
+  tool's secret path rules.
+
 ## Tool Selection
 
 Apply this policy to every task, including exploration, implementation, review, and verification.
@@ -169,8 +192,9 @@ Speed, convenience, batching, output truncation, and tool limits are not excepti
 
 Standard build, test, lint, formatter, static-analysis, documentation-generation, and Git commands remain available
 within the agent's role, permissions, and required approvals. Use existing project scripts only for their established
-purpose. Run scripts declared in `package.json`, `composer.json`, or a Makefile with `project_script` when available.
-Never use these commands or scripts as substitutes for dedicated tools or as workarounds for this policy.
+purpose. Run scripts declared in `package.json`, `composer.json`, or a Makefile through the shell with the project's
+own runner, such as `npm run <script>`, `pnpm <script>`, `composer <script>`, or `make <target>`.
+Never use these commands or scripts as substitutes for dedicated tools.
 
 Implement requested application code, tests, and project scripts with the editing tools when authorized.
 Do not create helper files merely to reclassify a prohibited shortcut as an existing project script or deliverable.

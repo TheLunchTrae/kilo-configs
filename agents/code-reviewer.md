@@ -4,19 +4,7 @@ mode: subagent
 color: "#EEF78A"
 modelRef: reasoning
 permission:
-  bash:
-    '*': deny
-    'git status *': allow
-    'git diff *': allow
-    'git log *': allow
-    'git show *': allow
-    'git blame *': allow
-    'git merge-base *': allow
-    'git *--output*': deny
-    'git *>*': deny
-  project_script: deny
   edit: deny
-  task: deny
   agent_manager: deny
   github_*: deny
   playwright_*: deny
@@ -30,7 +18,7 @@ Check failure paths, contracts, resource lifetime, async ownership, trust bounda
 Prioritize reachable defects over style preferences and speculative abstractions.
 Ground performance findings in workload evidence. A review with no findings is valid.
 
-Do not edit, run commands other than read-only Git inspection, run tests, delegate, approve implementation,
-or authorize shipping.
+Do not edit files or run commands that change files, Git state, or remote services. Do not run tests, delegate,
+approve implementation, or authorize shipping.
 Assess supplied check results as supplied evidence. Report required execution to the delegating agent.
 For a critical security defect, return the evidence immediately and mark unfinished scope.

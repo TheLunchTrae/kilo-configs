@@ -1,20 +1,22 @@
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { cp, mkdir, mkdtemp, realpath, rm, writeFile } from 'node:fs/promises';
+import { createServer } from 'node:http';
+import type { AddressInfo } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { nativeBinary } from './native-host.ts';
 
-test('Kilo discovers local plugins and tools and honors a per-agent deny', async (t) => {
+test('Kilo loads the local plugins and runs their tool hooks', async (t) => {
   const binary = nativeBinary();
   const repository = fileURLToPath(new URL('../', import.meta.url));
   const root = await mkdtemp(join(tmpdir(), 'kilo-local-plugins-'));
   t.after(() => rm(root, { recursive: true, force: true }));
   const installation = join(root, 'config', 'kilo');
   const project = join(root, 'project');
-  await mkdir(join(installation, 'agents'), { recursive: true });
+  await mkdir(installation, { recursive: true });
   await mkdir(project);
   for (const path of ['plugins', 'extensions']) {
     await cp(join(repository, path), join(installation, path), { recursive: true });
@@ -23,28 +25,54 @@ test('Kilo discovers local plugins and tools and honors a per-agent deny', async
   for (const path of ['package.json', 'package-lock.json']) {
     await cp(join(repository, path), join(installation, path));
   }
+  const secret = join(project, '.env');
+  await writeFile(secret, 'FIXTURE=synthetic\n');
+  // The mock model asks for one read of the secret file, then ends the turn once a tool result arrives.
+  const model = createServer((request, response) => {
+    let body = '';
+    request.on('data', (chunk: Buffer) => (body += chunk.toString()));
+    request.on('end', () => {
+      const { messages = [] } = JSON.parse(body === '' ? '{}' : body) as { messages?: { role: string }[] };
+      const chunk = (delta: object, finish: string | null) =>
+        `data: ${JSON.stringify({ id: 'fixture', object: 'chat.completion.chunk', created: 1, model: 'fixture', choices: [{ index: 0, delta, finish_reason: finish }] })}\n\n`;
+      const call = { index: 0, id: 'call_fixture', type: 'function' };
+      const first = !messages.some((message) => message.role === 'tool') && !JSON.stringify(messages).includes('title');
+      response.writeHead(200, { 'content-type': 'text/event-stream' });
+      response.write(
+        first
+          ? chunk(
+              {
+                role: 'assistant',
+                tool_calls: [{ ...call, function: { name: 'read', arguments: JSON.stringify({ filePath: secret }) } }],
+              },
+              null,
+            ) + chunk({}, 'tool_calls')
+          : chunk({ role: 'assistant', content: 'done' }, null) + chunk({}, 'stop'),
+      );
+      response.end('data: [DONE]\n\n');
+    });
+  });
+  await new Promise<void>((resolve) => model.listen(0, '127.0.0.1', resolve));
+  t.after(() => new Promise<void>((resolve) => model.close(() => resolve())));
+  const { port } = model.address() as AddressInfo;
   await writeFile(
     join(installation, 'kilo.json'),
     JSON.stringify({
       plugin: [],
-      model: 'openai/native-fixture',
-      enabled_providers: ['openai'],
+      model: 'fixture/native',
+      small_model: 'fixture/native',
+      enabled_providers: ['fixture'],
+      // Allow everything so a block can come only from the local plugin, not from Kilo's own rules.
+      permission: { '*': 'allow' },
       provider: {
-        openai: {
-          options: { apiKey: 'synthetic-test-key', baseURL: 'http://127.0.0.1:1/v1' },
-          models: { 'native-fixture': { name: 'Native fixture', limit: { context: 4096, output: 1024 } } },
+        fixture: {
+          npm: '@ai-sdk/openai-compatible',
+          name: 'Native fixture',
+          options: { apiKey: 'synthetic-test-key', baseURL: `http://127.0.0.1:${port}/v1` },
+          models: { native: { name: 'Native fixture', tool_call: true, limit: { context: 8192, output: 1024 } } },
         },
       },
     }),
-  );
-  // Synthetic agents keep the test on the local plugin, not on personal role or permission configuration.
-  await writeFile(
-    join(installation, 'agents', 'plugin-reader.md'),
-    '---\ndescription: Native plugin fixture\nmode: subagent\n---\nRead-only fixture.',
-  );
-  await writeFile(
-    join(installation, 'agents', 'plugin-denied.md'),
-    '---\ndescription: Native denial fixture\nmode: subagent\npermission:\n  project_script: deny\n---\nRead-only fixture.',
   );
   const env: NodeJS.ProcessEnv = {
     PATH: process.env.PATH,
@@ -65,41 +93,34 @@ test('Kilo discovers local plugins and tools and honors a per-agent deny', async
     KILO_DISABLE_CLAUDE_CODE: 'true',
     KILO_EXPERIMENTAL_DISABLE_FILEWATCHER: 'true',
   };
-  await writeFile(join(project, 'package.json'), JSON.stringify({ scripts: { fixture: 'node --version' } }));
   const command = (args: string[]) => {
     const result = spawnSync(binary, args, { cwd: project, env, encoding: 'utf8', timeout: 60_000 });
     assert.ifError(result.error);
     assert.doesNotMatch(result.stderr, /failed to (?:load|install) plugin|plugin config hook failed/i);
     return result;
   };
-  const help = command(['debug', 'agent', '--help']);
-  assert.equal(help.status, 0, help.stderr);
-  assert.match(help.stdout + help.stderr, /--tool/);
-  assert.match(help.stdout + help.stderr, /--params/);
   const discovered = command(['--print-logs', '--log-level', 'DEBUG', 'debug', 'config']);
   assert.equal(discovered.status, 0, discovered.stderr);
   const config = JSON.parse(discovered.stdout) as { plugin: unknown[] };
-  for (const file of [
-    'block-secrets.ts',
-    'comment-guard.ts',
-    'compaction-task-state.ts',
-    'project-script.ts',
-    'scrub-secrets.ts',
-  ]) {
+  for (const file of ['block-secrets.ts', 'comment-guard.ts', 'compaction-task-state.ts', 'scrub-secrets.ts']) {
     assert.ok(config.plugin.some((entry) => typeof entry === 'string' && entry.endsWith(`/plugins/${file}`)));
   }
   assert.ok(config.plugin.every((entry) => typeof entry === 'string' && entry.startsWith('file:')));
-  const inspected = command(['debug', 'agent', 'plugin-reader']);
-  assert.equal(inspected.status, 0, inspected.stderr);
-  const agent = JSON.parse(inspected.stdout) as { tools: Record<string, boolean> };
-  assert.equal(agent.tools.project_script, true);
-  const run = (agent: string, tool: string, params: Record<string, unknown>) =>
-    command(['debug', 'agent', agent, '--tool', tool, '--params', JSON.stringify(params)]);
-  const scripts = run('plugin-reader', 'project_script', {});
-  assert.equal(scripts.status, 0, scripts.stderr);
-  assert.match(scripts.stdout, /npm:fixture/);
-  const denied = run('plugin-denied', 'project_script', {});
-  assert.notEqual(denied.status, 0);
-  assert.match(denied.stderr, /disabled for agent/);
-  assert.doesNotMatch(denied.stdout, /npm:fixture/);
+  // Discovery does not prove that a plugin loaded, so a full run must show block-secrets rejecting the read.
+  const run = await new Promise<{ status: number | null; stdout: string; stderr: string }>((resolve, reject) => {
+    const child = spawn(binary, ['run', '--format', 'json', 'Read the fixture file.'], { cwd: project, env });
+    let stdout = '';
+    let stderr = '';
+    child.stdout.on('data', (chunk: Buffer) => (stdout += chunk.toString()));
+    child.stderr.on('data', (chunk: Buffer) => (stderr += chunk.toString()));
+    const timer = setTimeout(() => child.kill(), 120_000);
+    child.on('error', reject);
+    child.on('close', (status) => {
+      clearTimeout(timer);
+      resolve({ status, stdout, stderr });
+    });
+  });
+  assert.equal(run.status, 0, run.stderr);
+  assert.match(run.stdout, /blocked by block-secrets plugin: read attempted to access/);
+  assert.doesNotMatch(run.stdout, /FIXTURE=synthetic/);
 });
