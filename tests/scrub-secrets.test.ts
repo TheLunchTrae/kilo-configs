@@ -268,6 +268,218 @@ describe('scrub-secrets plugin', () => {
     assert.doesNotMatch(output.output, /synthetic-url-token/);
   });
 
+  it('drops hunks of denied files from Git and unified diffs', async () => {
+    const { after, showToast } = await create();
+    const text = [
+      'commit 0123456789abcdef0123456789abcdef01234567',
+      'Author: Test <test@example.invalid>',
+      '',
+      '    Update config',
+      '',
+      'diff --git a/.env b/.env',
+      'index 1111111..2222222 100644',
+      '--- a/.env',
+      '+++ b/.env',
+      '@@ -3,2 +3,2 @@ SERVICE_USER=synthetic-diff-user',
+      ' SERVICE_HOST=synthetic-diff-host',
+      '-SERVICE_PASSWORD=synthetic-diff-old',
+      '+SERVICE_PASSWORD=synthetic-diff-new',
+      'diff --git a/src/app.sql b/src/app.sql',
+      '--- a/src/app.sql',
+      '+++ b/src/app.sql',
+      '@@ -1,2 +1,2 @@ select',
+      '--- a/.env kept as SQL',
+      '+-- updated note',
+      ' select 1;',
+      '',
+      'commit fedcba9876543210fedcba9876543210fedcba98',
+      'diff --git a/config/secrets.yaml b/config/secrets.yaml',
+      'new file mode 100644',
+      '--- /dev/null',
+      '+++ b/config/secrets.yaml',
+      '@@ -0,0 +1 @@',
+      '+token: synthetic-diff-yaml',
+      'diff --git a/certs/client.p12 b/certs/client.p12',
+      'GIT binary patch',
+      'literal 12',
+      'TcmZQzU|?WiU|?WiU|?Wi',
+      '',
+      'literal 0',
+      'HcmV?d00001',
+      '',
+      'diff --git a/README.md b/README.md',
+      '--- a/README.md',
+      '+++ b/README.md',
+      '@@ -1 +1 @@',
+      '-old readme',
+      '+new readme',
+    ].join('\n');
+    const output = { title: '', output: text, metadata: { output: text } };
+    await after({ tool: 'bash', sessionID: 's', callID: 'c', args: {} }, output);
+    for (const value of ['synthetic-diff', 'TcmZQzU', 'HcmV?d']) {
+      assert.equal(output.output.includes(value), false, value);
+      assert.equal(output.metadata.output.includes(value), false, value);
+    }
+    for (const kept of [
+      'commit fedcba9876543210fedcba9876543210fedcba98',
+      '    Update config',
+      '@@ -3,2 +3,2 @@\n[REDACTED:secret-file-diff]\ndiff --git a/src/app.sql',
+      '--- a/.env kept as SQL\n+-- updated note\n select 1;',
+      'GIT binary patch\n[REDACTED:secret-file-diff]\ndiff --git a/README.md',
+      '-old readme\n+new readme',
+    ]) {
+      assert.ok(output.output.includes(kept), kept);
+    }
+    assert.equal(showToast.mock.callCount(), 1);
+  });
+
+  it('drops denied files in header-less patches and CRLF output', async () => {
+    const { after } = await create();
+    const text = [
+      '--- app.ts\t2026-01-01',
+      '+++ app.ts\t2026-01-02',
+      '@@ -1 +1 @@',
+      '-old line',
+      '+new line',
+      '--- .env.production\t2026-01-01',
+      '+++ .env.production\t2026-01-02',
+      '@@ -1 +1 @@',
+      '-KEY=synthetic-crlf-old',
+      '+KEY=synthetic-crlf-new',
+    ].join('\r\n');
+    const output = { title: '', output: text, metadata: {} };
+    await after({ tool: 'bash', sessionID: 's', callID: 'c', args: {} }, output);
+    assert.doesNotMatch(output.output, /synthetic-crlf/);
+    assert.match(output.output, /-old line\r\n\+new line/);
+  });
+
+  it('drops combined hunks, no-newline markers, and colored hunks of denied files', async () => {
+    const { after } = await create();
+    const text = [
+      'diff --cc .env',
+      'index 1111111,2222222..3333333',
+      '--- a/.env',
+      '+++ b/.env',
+      '@@@ -1,2 -1,2 +1,2 @@@ K=synthetic-cc-context',
+      '- K=synthetic-cc-ours',
+      ' -K=synthetic-cc-theirs',
+      '++K=synthetic-cc-merged',
+      'diff --git a/.env.local b/.env.local',
+      '--- a/.env.local',
+      '+++ b/.env.local',
+      '@@ -1 +1 @@',
+      '-K=synthetic-eof-old',
+      '\\ No newline at end of file',
+      '+K=synthetic-eof-new',
+      '\x1b[1mdiff --git a/id_rsa b/id_rsa\x1b[m',
+      '\x1b[1m--- a/id_rsa\x1b[m',
+      '\x1b[1m+++ b/id_rsa\x1b[m',
+      '\x1b[36m@@ -1 +1 @@\x1b[m',
+      '\x1b[31m-synthetic-color-old\x1b[m',
+      '\x1b[32m+synthetic-color-new\x1b[m',
+      'diff --git a/certs/client.pfx b/certs/client.pfx',
+      'GIT binary patch',
+      'literal 4',
+      'LcmZQzU|?Wi',
+      '',
+      'literal 0',
+      'HcmV?d00001',
+      '',
+      'abcdef0123456789abcdef0123456789abcdef01',
+    ].join('\n');
+    const output = { title: '', output: text, metadata: {} };
+    await after({ tool: 'bash', sessionID: 's', callID: 'c', args: {} }, output);
+    assert.doesNotMatch(output.output, /synthetic-|LcmZQzU/);
+    assert.match(output.output, /^@@@ -1,2 -1,2 \+1,2 @@@\n\[REDACTED:secret-file-diff\]$/m);
+    assert.match(output.output, /\nabcdef0123456789abcdef0123456789abcdef01$/);
+  });
+
+  it('keeps dropping a denied hunk across word-diff and cut-marker lines', async () => {
+    const { after } = await create();
+    const text = [
+      'diff --git a/.env b/.env',
+      '@@ -1,3 +1,3 @@',
+      ' HOST=synthetic-word-host',
+      '~',
+      '+K=synthetic-porcelain-new',
+      '[-K=synthetic-word-old-]{+K=synthetic-word-new+}',
+      '... 200 lines truncated ...',
+      '+K2=synthetic-after-cut',
+      'commit 0123456789abcdef0123456789abcdef01234567',
+      'diff --git a/app.ts b/app.ts',
+      '@@ -1 +1 @@',
+      '-old line',
+      '+new line',
+    ].join('\n');
+    const output = { title: '', output: text, metadata: {} };
+    await after({ tool: 'bash', sessionID: 's', callID: 'c', args: {} }, output);
+    assert.doesNotMatch(output.output, /synthetic-/);
+    assert.match(output.output, /\ncommit 0123456789abcdef0123456789abcdef01234567\n/);
+    assert.match(output.output, /-old line\n\+new line$/);
+  });
+
+  it('keeps dropping after a denied hunk whose counts run out early', async () => {
+    const { after } = await create();
+    const text = [
+      'diff --git a/.env b/.env',
+      '@@ -1,2 +1,2 @@',
+      ' USER=synthetic-porcelain-user ',
+      '-PASS=synthetic-porcelain-old',
+      '+PASS=synthetic-porcelain-new',
+      '~',
+      '-TOKEN=synthetic-porcelain-t2',
+      '+TOKEN=synthetic-porcelain-t3',
+      '~',
+      '',
+      '--- .env.local\t2026-01-01',
+      '+++ .env.local\t2026-01-02',
+      '@@ -1 +1 @@',
+      '-K=synthetic-headerless-old',
+      '+K=synthetic-headerless-new',
+      '--- app.ts\t2026-01-01',
+      '+++ app.ts\t2026-01-02',
+      '@@ -1 +1 @@',
+      '-old line',
+      '+new line',
+    ].join('\n');
+    const output = { title: '', output: text, metadata: {} };
+    await after({ tool: 'bash', sessionID: 's', callID: 'c', args: {} }, output);
+    assert.doesNotMatch(output.output, /synthetic-/);
+    assert.match(
+      output.output,
+      /--- app\.ts\t2026-01-01\n\+\+\+ app\.ts\t2026-01-02\n@@ -1 \+1 @@\n-old line\n\+new line$/,
+    );
+  });
+
+  it('keeps CRLF line endings on redaction markers', async () => {
+    const { after } = await create();
+    const next = 'diff --git a/README.md b/README.md';
+    const text = ['diff --git a/.env b/.env', '@@ -1 +1 @@ K=synthetic-crlf', '-K=a', '+K=b', next].join('\r\n');
+    const output = { title: '', output: text, metadata: {} };
+    await after({ tool: 'bash', sessionID: 's', callID: 'c', args: {} }, output);
+    assert.equal(
+      output.output,
+      ['diff --git a/.env b/.env', '@@ -1 +1 @@', '[REDACTED:secret-file-diff]', next].join('\r\n'),
+    );
+  });
+
+  it('leaves diffs of ordinary files and other @@ text unchanged', async () => {
+    const { after, showToast } = await create();
+    const text = [
+      '@@ decorator text',
+      'diff --git a/.env.example b/.env.example',
+      '--- a/.env.example',
+      '+++ b/.env.example',
+      '@@ -1 +1 @@ KEY=placeholder',
+      '-KEY=old-placeholder',
+      '+KEY=new-placeholder',
+    ].join('\n');
+    const output = { title: '', output: text, metadata: {} };
+    await after({ tool: 'bash', sessionID: 's', callID: 'c', args: {} }, output);
+    assert.equal(output.output, text);
+    assert.equal(showToast.mock.callCount(), 0);
+  });
+
   it('still redacts when the toast fails', async () => {
     const showToast = mock.fn(async () => Promise.reject(new Error('no tui')));
     const hooks = await ScrubSecretsPlugin({ client: { tui: { showToast } } } as unknown as PluginInput);

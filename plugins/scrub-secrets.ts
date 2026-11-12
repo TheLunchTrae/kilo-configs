@@ -1,6 +1,7 @@
 import type { Plugin, PluginInput } from '@kilocode/plugin';
 import { existsSync } from 'node:fs';
 import { homedir } from 'node:os';
+import { isBlockedPath } from '../extensions/security/secret-paths.ts';
 
 type Client = PluginInput['client'];
 
@@ -87,6 +88,127 @@ const REDACTIONS: readonly (readonly [string, RegExp])[] = [
   ['google-api-key', /\bAIza[\w-]{35}\b/g],
   ['jwt', /\beyJ[\w-]{10,}\.eyJ[\w-]{10,}\.[\w-]{10,}/g],
 ];
+// Patches of files that block-secrets denies, as printed by `git diff`, `git log -p`, `git show <commit>`, or
+// `diff -ru`. A `diff ` header or a `--- ` and `+++ ` pair names each file. Hunk lines of a denied file are dropped,
+// and so is the text after its hunk headers, because Git copies a nearby file line there. An ordinary hunk ends when
+// its header counts run out, or at the first line that cannot belong to it, so a cut or combined (`@@@`) hunk cannot
+// hide the next `diff ` header. A denied hunk fails closed instead: after it, every line is dropped until a new file,
+// commit, or hunk header, so word diffs and cut markers cannot leak its values. `GIT binary patch` data of a denied
+// file is dropped up to its second blank line. Color codes are ignored when matching. Graph prefixes, indented or
+// numbered lines, and escaped text are not recognized.
+const SECRET_DIFF = '[REDACTED:secret-file-diff]';
+const HUNK_HEADER = /^@{2,} [^@]*@{2,}/;
+const HUNK_COUNTS = /^@@ -\d+(?:,(\d+))? \+\d+(?:,(\d+))? @@/;
+const HUNK_LINE = /^[ +\-\\]|^$/;
+const BINARY_PATCH = 'GIT binary patch';
+const NEW_UNIT = /^(?:diff |commit |From [\da-f]{7,} |@@|GIT binary patch|Binary files )/;
+// eslint-disable-next-line no-control-regex -- Terminal color sequences start with ESC.
+const COLOR = /\x1b\[[\d;]*m/g;
+const BINARY_LINE = /^(?:(?:literal|delta) \d+|[A-Za-z][\w!#$%&()*+;<=>?@^`{|}~-]*)?$/;
+const namesBlockedPath = (paths: readonly string[]): boolean =>
+  paths.some((path) => !path.startsWith('-') && isBlockedPath(path.replace(/["']/g, '')) !== undefined);
+// An omitted hunk count means one line.
+const hunkCount = (value: string | undefined): number => (value === undefined ? 1 : Number(value));
+const headerPath = (line: string): string => line.slice(4).split('\t')[0] ?? '';
+const redactSecretDiffs = (text: string): string => {
+  if (!text.includes('@@') && !text.includes(BINARY_PATCH)) {
+    return text;
+  }
+  let secret = false;
+  let headerSecret = false;
+  // Lines left in the current hunk from each side; undefined outside a hunk, and NaN in a combined hunk.
+  let oldLeft: number | undefined;
+  let newLeft = 0;
+  // Blank lines left in a denied binary patch: one after the forward data and one after the reverse data.
+  let binaryBlanks = 0;
+  let changed = false;
+  const lines: string[] = [];
+  // Set after a denied hunk, until the next unit or a header-less `--- ` and `+++ ` pair.
+  let deniedTail = false;
+  const strip = (line: string): string => (line.endsWith('\r') ? line.slice(0, -1) : line).replace(COLOR, '');
+  const source = text.split('\n');
+  for (const [index, line] of source.entries()) {
+    const eol = line.endsWith('\r') ? '\r' : '';
+    const content = strip(line);
+    if (deniedTail) {
+      const pair = content.startsWith('--- ') && strip(source[index + 1] ?? '').startsWith('+++ ');
+      if (!NEW_UNIT.test(content) && !pair) {
+        continue;
+      }
+      deniedTail = false;
+    }
+    if (binaryBlanks > 0) {
+      if (BINARY_LINE.test(content)) {
+        if (content === '') {
+          binaryBlanks--;
+        }
+        continue;
+      }
+      binaryBlanks = 0;
+    }
+    if (oldLeft !== undefined && !HUNK_LINE.test(content)) {
+      // A denied hunk fails closed: word-diff or cut-marker lines drop until a new unit starts.
+      if (secret && !NEW_UNIT.test(content)) {
+        continue;
+      }
+      oldLeft = undefined;
+      deniedTail = false;
+    }
+    if (oldLeft !== undefined) {
+      if (!Number.isNaN(oldLeft)) {
+        const marker = content[0];
+        if (marker !== '+' && marker !== '\\') {
+          oldLeft--;
+        }
+        if (marker !== '-' && marker !== '\\') {
+          newLeft--;
+        }
+        if (oldLeft <= 0 && newLeft <= 0) {
+          oldLeft = undefined;
+          if (secret) {
+            deniedTail = true;
+          }
+        }
+      }
+      if (secret) {
+        continue;
+      }
+      lines.push(line);
+      continue;
+    }
+    const hunk = HUNK_HEADER.exec(content);
+    if (content.startsWith('diff ')) {
+      headerSecret = namesBlockedPath(content.split(/\s+/).slice(1));
+      secret = headerSecret;
+    } else if (content.startsWith('--- ')) {
+      // The first pair after a `diff ` header keeps its verdict; later pairs belong to header-less patches.
+      secret = headerSecret || namesBlockedPath([headerPath(content)]);
+      headerSecret = false;
+    } else if (content.startsWith('+++ ')) {
+      secret ||= namesBlockedPath([headerPath(content)]);
+    } else if (content === BINARY_PATCH && secret) {
+      lines.push(line, SECRET_DIFF + eol);
+      binaryBlanks = 2;
+      changed = true;
+      continue;
+    } else if (hunk !== null) {
+      const counts = HUNK_COUNTS.exec(content);
+      oldLeft = counts === null ? Number.NaN : hunkCount(counts[1]);
+      newLeft = counts === null ? 0 : hunkCount(counts[2]);
+      if (oldLeft === 0 && newLeft === 0) {
+        oldLeft = undefined;
+      }
+      if (secret) {
+        lines.push(hunk[0] + eol, SECRET_DIFF + eol);
+        changed = true;
+        continue;
+      }
+    }
+    lines.push(line);
+  }
+  return changed ? lines.join('\n') : text;
+};
+
 const BEARER = /(authorization:\s*bearer\s+)[\w.~+/-]+=*/gi;
 
 const hasUrlPassword = (value: string): boolean => {
@@ -141,6 +263,11 @@ export const ScrubSecretsPlugin: Plugin = async ({ client }) => {
         result = next;
       }
     };
+    const withoutSecretDiffs = redactSecretDiffs(result);
+    if (withoutSecretDiffs !== result) {
+      kinds.add('secret file diff');
+      result = withoutSecretDiffs;
+    }
     for (const [name, pattern] of literals) {
       apply('environment value', pattern, `[REDACTED:env:${name}]`);
     }
