@@ -1,6 +1,7 @@
 import type { Plugin, PluginInput } from '@kilocode/plugin';
 import { existsSync } from 'node:fs';
 import { homedir } from 'node:os';
+import { isBlockedPath } from '../extensions/security/secret-paths.ts';
 
 type Client = PluginInput['client'];
 
@@ -87,6 +88,97 @@ const REDACTIONS: readonly (readonly [string, RegExp])[] = [
   ['google-api-key', /\bAIza[\w-]{35}\b/g],
   ['jwt', /\beyJ[\w-]{10,}\.eyJ[\w-]{10,}\.[\w-]{10,}/g],
 ];
+// Patches of files that block-secrets denies, as printed by `git diff`, `git log -p`, `git show <commit>`, or
+// `diff -ru`. A `diff ` header or a `--- ` and `+++ ` pair names each file. Hunk lines of a denied file are dropped,
+// and so is the text after its hunk headers, because Git copies a nearby file line there. A hunk ends when its header
+// counts run out, or at the first line that cannot belong to it, so cut or combined (`@@@`) output cannot hide the
+// next file header. `GIT binary patch` data of a denied file is dropped the same way.
+const SECRET_DIFF = '[REDACTED:secret-file-diff]';
+const HUNK_HEADER = /^@{2,} [^@]*@{2,}/;
+const HUNK_COUNTS = /^@@ -\d+(?:,(\d+))? \+\d+(?:,(\d+))? @@/;
+const HUNK_LINE = /^[ +\-\\]|^$/;
+const BINARY_PATCH = 'GIT binary patch';
+const BINARY_LINE = /^(?:(?:literal|delta) \d+|[A-Za-z][\w!#$%&()*+;<=>?@^`{|}~-]*)?$/;
+const namesBlockedPath = (paths: readonly string[]): boolean =>
+  paths.some((path) => !path.startsWith('-') && isBlockedPath(path.replace(/["']/g, '')) !== undefined);
+// An omitted hunk count means one line.
+const hunkCount = (value: string | undefined): number => (value === undefined ? 1 : Number(value));
+const headerPath = (line: string): string => line.slice(4).split('\t')[0] ?? '';
+const redactSecretDiffs = (text: string): string => {
+  if (!text.includes('@@') && !text.includes(BINARY_PATCH)) {
+    return text;
+  }
+  let secret = false;
+  let headerSecret = false;
+  // Lines left in the current hunk from each side; undefined outside a hunk, and NaN in a combined hunk.
+  let oldLeft: number | undefined;
+  let newLeft = 0;
+  let binary = false;
+  let changed = false;
+  const lines: string[] = [];
+  for (const line of text.split('\n')) {
+    const content = line.endsWith('\r') ? line.slice(0, -1) : line;
+    if (binary) {
+      if (BINARY_LINE.test(content)) {
+        continue;
+      }
+      binary = false;
+    }
+    if (oldLeft !== undefined && !HUNK_LINE.test(content)) {
+      oldLeft = undefined;
+    }
+    if (oldLeft !== undefined) {
+      if (!Number.isNaN(oldLeft)) {
+        const marker = content[0];
+        if (marker !== '+' && marker !== '\\') {
+          oldLeft--;
+        }
+        if (marker !== '-' && marker !== '\\') {
+          newLeft--;
+        }
+        if (oldLeft <= 0 && newLeft <= 0) {
+          oldLeft = undefined;
+        }
+      }
+      if (secret) {
+        continue;
+      }
+      lines.push(line);
+      continue;
+    }
+    const hunk = HUNK_HEADER.exec(content);
+    if (content.startsWith('diff ')) {
+      headerSecret = namesBlockedPath(content.split(/\s+/).slice(1));
+      secret = headerSecret;
+    } else if (content.startsWith('--- ')) {
+      // The first pair after a `diff ` header keeps its verdict; later pairs belong to header-less patches.
+      secret = headerSecret || namesBlockedPath([headerPath(content)]);
+      headerSecret = false;
+    } else if (content.startsWith('+++ ')) {
+      secret ||= namesBlockedPath([headerPath(content)]);
+    } else if (content === BINARY_PATCH && secret) {
+      lines.push(line, SECRET_DIFF);
+      binary = true;
+      changed = true;
+      continue;
+    } else if (hunk !== null) {
+      const counts = HUNK_COUNTS.exec(content);
+      oldLeft = counts === null ? Number.NaN : hunkCount(counts[1]);
+      newLeft = counts === null ? 0 : hunkCount(counts[2]);
+      if (oldLeft === 0 && newLeft === 0) {
+        oldLeft = undefined;
+      }
+      if (secret) {
+        lines.push(hunk[0], SECRET_DIFF);
+        changed = true;
+        continue;
+      }
+    }
+    lines.push(line);
+  }
+  return changed ? lines.join('\n') : text;
+};
+
 const BEARER = /(authorization:\s*bearer\s+)[\w.~+/-]+=*/gi;
 
 const hasUrlPassword = (value: string): boolean => {
@@ -141,6 +233,11 @@ export const ScrubSecretsPlugin: Plugin = async ({ client }) => {
         result = next;
       }
     };
+    const withoutSecretDiffs = redactSecretDiffs(result);
+    if (withoutSecretDiffs !== result) {
+      kinds.add('secret file diff');
+      result = withoutSecretDiffs;
+    }
     for (const [name, pattern] of literals) {
       apply('environment value', pattern, `[REDACTED:env:${name}]`);
     }

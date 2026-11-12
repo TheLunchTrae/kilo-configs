@@ -115,6 +115,42 @@ describe('block-secrets plugin', () => {
     assert.equal(safeCommand.showToast.mock.callCount(), 0);
   });
 
+  it('checks paths after a Git revision, index stage, or option separator', async () => {
+    for (const [command, path] of [
+      ['git show HEAD:.env', 'HEAD:.env'],
+      ['git show 1a2b3c4:.env.local', '1a2b3c4:.env.local'],
+      ['git cat-file -p HEAD~2:.netrc', 'HEAD~2:.netrc'],
+      ['git cat-file -p :0:.env', ':0:.env'],
+      ['git show :.env', ':.env'],
+      ['git -C ../app show origin/main:credentials.json', 'origin/main:credentials.json'],
+      ['git show HEAD:secrets', 'HEAD:secrets'],
+      ["git show 'HEAD:.env'", 'HEAD:.env'],
+      ['git show HEAD:".env"', 'HEAD:.env'],
+      ['git show HEAD@{1}:id_ed25519', 'HEAD@{1}:id_ed25519'],
+      ['git show $(git rev-parse HEAD:.env)', 'HEAD:.env'],
+      ['tool --file=.env', '--file=.env'],
+    ]) {
+      await assertBlocked('bash', { command }, path);
+    }
+
+    for (const command of [
+      'git show HEAD:.env.example',
+      'git show HEAD:src/index.ts',
+      'git log --format=%H:%s',
+      "git diff -- ':!.env'",
+      "git diff -- ':(exclude).env'",
+    ]) {
+      const { showToast } = await runTool('bash', { command });
+      assert.equal(showToast.mock.callCount(), 0, command);
+    }
+  });
+
+  it('splits Bash tokens at control operators', async () => {
+    for (const command of ['cat .env|head', 'echo ok;cat .env', 'echo $(cat .env)', 'echo `cat .env`', 'wc<.env']) {
+      await assertBlocked('bash', { command }, '.env');
+    }
+  });
+
   it('ignores missing and non-string arguments', async () => {
     for (const args of [undefined, {}, { filePath: 42 }, { pattern: false }]) {
       const { showToast } = await runTool('read', args);

@@ -268,6 +268,108 @@ describe('scrub-secrets plugin', () => {
     assert.doesNotMatch(output.output, /synthetic-url-token/);
   });
 
+  it('drops hunks of denied files from Git and unified diffs', async () => {
+    const { after, showToast } = await create();
+    const text = [
+      'commit 0123456789abcdef0123456789abcdef01234567',
+      'Author: Test <test@example.invalid>',
+      '',
+      '    Update config',
+      '',
+      'diff --git a/.env b/.env',
+      'index 1111111..2222222 100644',
+      '--- a/.env',
+      '+++ b/.env',
+      '@@ -3,2 +3,2 @@ SERVICE_USER=synthetic-diff-user',
+      ' SERVICE_HOST=synthetic-diff-host',
+      '-SERVICE_PASSWORD=synthetic-diff-old',
+      '+SERVICE_PASSWORD=synthetic-diff-new',
+      'diff --git a/src/app.sql b/src/app.sql',
+      '--- a/src/app.sql',
+      '+++ b/src/app.sql',
+      '@@ -1,2 +1,2 @@ select',
+      '--- a/.env kept as SQL',
+      '+-- updated note',
+      ' select 1;',
+      '',
+      'commit fedcba9876543210fedcba9876543210fedcba98',
+      'diff --git a/config/secrets.yaml b/config/secrets.yaml',
+      'new file mode 100644',
+      '--- /dev/null',
+      '+++ b/config/secrets.yaml',
+      '@@ -0,0 +1 @@',
+      '+token: synthetic-diff-yaml',
+      'diff --git a/certs/client.p12 b/certs/client.p12',
+      'GIT binary patch',
+      'literal 12',
+      'TcmZQzU|?WiU|?WiU|?Wi',
+      '',
+      'literal 0',
+      'HcmV?d00001',
+      '',
+      'diff --git a/README.md b/README.md',
+      '--- a/README.md',
+      '+++ b/README.md',
+      '@@ -1 +1 @@',
+      '-old readme',
+      '+new readme',
+    ].join('\n');
+    const output = { title: '', output: text, metadata: { output: text } };
+    await after({ tool: 'bash', sessionID: 's', callID: 'c', args: {} }, output);
+    for (const value of ['synthetic-diff', 'TcmZQzU', 'HcmV?d']) {
+      assert.equal(output.output.includes(value), false, value);
+      assert.equal(output.metadata.output.includes(value), false, value);
+    }
+    for (const kept of [
+      'commit fedcba9876543210fedcba9876543210fedcba98',
+      '    Update config',
+      '@@ -3,2 +3,2 @@\n[REDACTED:secret-file-diff]\ndiff --git a/src/app.sql',
+      '--- a/.env kept as SQL\n+-- updated note\n select 1;',
+      'GIT binary patch\n[REDACTED:secret-file-diff]\ndiff --git a/README.md',
+      '-old readme\n+new readme',
+    ]) {
+      assert.ok(output.output.includes(kept), kept);
+    }
+    assert.equal(showToast.mock.callCount(), 1);
+  });
+
+  it('drops denied files in header-less patches and CRLF output', async () => {
+    const { after } = await create();
+    const text = [
+      '--- app.ts\t2026-01-01',
+      '+++ app.ts\t2026-01-02',
+      '@@ -1 +1 @@',
+      '-old line',
+      '+new line',
+      '--- .env.production\t2026-01-01',
+      '+++ .env.production\t2026-01-02',
+      '@@ -1 +1 @@',
+      '-KEY=synthetic-crlf-old',
+      '+KEY=synthetic-crlf-new',
+    ].join('\r\n');
+    const output = { title: '', output: text, metadata: {} };
+    await after({ tool: 'bash', sessionID: 's', callID: 'c', args: {} }, output);
+    assert.doesNotMatch(output.output, /synthetic-crlf/);
+    assert.match(output.output, /-old line\r\n\+new line/);
+  });
+
+  it('leaves diffs of ordinary files and other @@ text unchanged', async () => {
+    const { after, showToast } = await create();
+    const text = [
+      '@@ decorator text',
+      'diff --git a/.env.example b/.env.example',
+      '--- a/.env.example',
+      '+++ b/.env.example',
+      '@@ -1 +1 @@ KEY=placeholder',
+      '-KEY=old-placeholder',
+      '+KEY=new-placeholder',
+    ].join('\n');
+    const output = { title: '', output: text, metadata: {} };
+    await after({ tool: 'bash', sessionID: 's', callID: 'c', args: {} }, output);
+    assert.equal(output.output, text);
+    assert.equal(showToast.mock.callCount(), 0);
+  });
+
   it('still redacts when the toast fails', async () => {
     const showToast = mock.fn(async () => Promise.reject(new Error('no tui')));
     const hooks = await ScrubSecretsPlugin({ client: { tui: { showToast } } } as unknown as PluginInput);

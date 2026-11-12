@@ -5,13 +5,32 @@ type Client = PluginInput['client'];
 
 const PATH_TOOL_ARG_KEYS = ['filePath', 'file_path', 'path'] as const;
 
+// Shell control operators end a word, so `cat .env|head` and `$(cat .env)` expose the path as its own token.
+const COMMAND_SEPARATORS = /[\s;|&<>`]+/;
+// Quotes are removed rather than trimmed because the shell joins quoted parts, as in HEAD:".env".
+const QUOTES = /["']/g;
+const SUBSTITUTION_EDGES = /^[$({]+|[)}]+$/g;
+
+// A path can follow `:` or `=` inside a word, as in `git show HEAD:.env`, `git cat-file -p :0:.env`, or
+// `--file=.env`. Ref names cannot contain `:`, so every suffix after a separator is checked as a path.
+const pathCandidates = (token: string): string[] => {
+  const candidates = [token];
+  for (let index = 0; index < token.length; index++) {
+    if (token[index] === ':' || token[index] === '=') {
+      candidates.push(token.slice(index + 1));
+    }
+  }
+  return candidates;
+};
+
 const firstBlockedPathInCommand = (command: string): { path: string; pattern: string } | undefined => {
-  const tokens = command.split(/\s+/).filter(Boolean);
-  for (const raw of tokens) {
-    const cleaned = raw.replace(/^["']|["']$/g, '');
-    const hit = isBlockedPath(cleaned);
-    if (hit !== undefined) {
-      return { path: cleaned, pattern: hit };
+  for (const raw of command.split(COMMAND_SEPARATORS)) {
+    const cleaned = raw.replace(QUOTES, '').replace(SUBSTITUTION_EDGES, '');
+    for (const candidate of pathCandidates(cleaned)) {
+      const hit = isBlockedPath(candidate);
+      if (hit !== undefined) {
+        return { path: cleaned, pattern: hit };
+      }
     }
   }
   return undefined;
