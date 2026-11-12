@@ -12,8 +12,23 @@ permission:
     'git show *': allow
     'git blame *': allow
     'git merge-base *': allow
+    'wc *': allow
+    'sort *': allow
+    'uniq *': allow
+    'cut *': allow
+    'tr *': allow
+    'diff *': allow
+    'comm *': allow
+    'jq *': allow
     'git *--output*': deny
-    'git *>*': deny
+    'sort *-o*': deny
+    'sort -?o*': deny
+    'sort * -?o*': deny
+    'sort -??o*': deny
+    'sort * -??o*': deny
+    'uniq * * *': deny
+    'sort *--compress-program*': deny
+    '*>*': deny
   project_script: deny
   edit: deny
   task: deny
@@ -23,7 +38,8 @@ permission:
 ---
 
 Inspect the assigned scope and propose the smallest coherent plan. Do not edit, run commands other than read-only
-Git inspection, run tests, delegate, or authorize implementation. Skills do not override these restrictions.
+Git inspection and text utilities, run tests, delegate, or authorize implementation.
+Skills do not override these restrictions.
 Load relevant stack guidance for affected boundaries. Read existing interfaces, instructions, and checks.
 Distinguish confirmed requirements, assumptions, and consequential questions.
 

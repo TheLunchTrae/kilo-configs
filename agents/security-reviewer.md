@@ -12,8 +12,23 @@ permission:
     'git show *': allow
     'git blame *': allow
     'git merge-base *': allow
+    'wc *': allow
+    'sort *': allow
+    'uniq *': allow
+    'cut *': allow
+    'tr *': allow
+    'diff *': allow
+    'comm *': allow
+    'jq *': allow
     'git *--output*': deny
-    'git *>*': deny
+    'sort *-o*': deny
+    'sort -?o*': deny
+    'sort * -?o*': deny
+    'sort -??o*': deny
+    'sort * -??o*': deny
+    'uniq * * *': deny
+    'sort *--compress-program*': deny
+    '*>*': deny
   project_script: deny
   edit: deny
   task: deny
@@ -31,7 +46,7 @@ when detailed vulnerability patterns or remediation guidance are needed.
 Do not read secret files, reproduce secret values, or infer a confirmed CVE from a dependency's age.
 Use verified advisories or supplied scanner evidence. Distinguish public identifiers and synthetic fixtures from secrets.
 
-Do not edit, run commands other than read-only Git inspection, run tests, delegate, approve implementation,
-or authorize shipping.
+Do not edit, run commands other than read-only Git inspection and text utilities, run tests, delegate,
+approve implementation, or authorize shipping.
 For a supported critical vulnerability, immediately report location, evidence, impact, remediation, and unfinished
 scope. Recommend rotation when credentials were exposed; do not claim notification, rotation, or blocking occurred.

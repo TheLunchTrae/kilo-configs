@@ -104,6 +104,17 @@ These are release dependencies to remove, not contracts to retain in Kilo implem
   behavior before changing runtime assumptions. Do not infer loading or permissions from JSON parsing alone.
 - Preserve system edit approval, title/compaction `options.reasoningEffort`, the global Task denial,
   ordered shell rules, and secret Read guards. Agent permissions append to global rules; the last matching rule wins.
+- Global shell policy allows by default. Keep the `"*": "allow"` fallback first, keep the short ask list
+  (push, `sudo`, package publish, PR merge, repository edits), and keep every deny after them so denials win.
+  Do not restore a catch-all ask. Git rules need a `git -* <subcommand>` twin so global options such as `-C` cannot
+  skip them. Kilo checks each command in a chain, pipeline, or substitution separately, but it does not parse
+  `bash -c` strings, so wrapper denials match the whole string.
+  Root `AGENTS.md` Shell Safety carries the written limits.
+  Global `project_script` also allows. Its subprocesses do not receive the scrubbed shell environment.
+  Native `explore` re-adds only global denials after its deny-all, so it needs its explicit `project_script: deny`.
+- Read-only agents keep a deny-by-default shell: Git inspection plus filters for its output (`wc`, `sort`, `uniq`,
+  `cut`, `tr`, `comm`, `diff`, `jq`). Output files, program-running options, and redirection stay denied.
+  File reads and searches use the native `read`, `grep`, and `glob` tools.
 - The native `code` agent is the primary integrator. Planner/reviewers are read-only leaves. Built-in general is an
   editing worker; explore retains native restrictions. Native `plan` delegates only to `explore`.
   Keep delegation exact and deny by default. No routes from reviewers to writers.

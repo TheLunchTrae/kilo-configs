@@ -112,6 +112,36 @@ Read repository terminology sources when present. Apply the reference's preserva
   rewriting published history, or broad deletion. Approved cleanup covers its routine removals.
 - Never bypass permissions or approval requirements, including a tool or Task denial, through another tool or agent.
 
+## Shell Safety
+
+Most shell commands run without approval. The shell is not a sandbox, and the configured denials cover only known
+destructive patterns. A command that no denial matches is not authorized by that fact. Follow these rules for every
+shell command, script, and project command. The Task Scope and Authorization rules above still apply.
+
+- Never run a recursive force delete, such as `rm -rf`, and never pipe downloaded content into a shell or interpreter.
+  The configuration denies common forms of both.
+- Never force push, delete remote branches or tags, run `git filter-branch` or `git filter-repo`, expire the reflog,
+  or prune unreachable objects. The configuration denies these.
+- Do not discard uncommitted work without specific approval. This includes `git reset --hard`, `git checkout` or
+  `git restore` on worktree paths, `git clean -f`, `git stash drop`, `git stash clear`, and forced branch switches.
+  Inspect `git status` first.
+- Do not delete files without specific approval, except files and generated output that the task created inside the
+  worktree. Approved cleanup covers its routine removals.
+- Rebase or amend only local commits that were never pushed.
+- Stay inside the worktree. Do not create, change, move, or delete files outside it, including dotfiles, global
+  configuration, global package installs, and other repositories, unless the user names the path.
+- Use `sudo` only when the user asks for it. Do not run disk, partition, or filesystem commands, change permissions or
+  owners recursively, shut down or restart the machine, or stop processes that the task did not start.
+- Do not drop or reset databases, prune container volumes, or delete cluster, cloud, or GitHub resources without
+  specific approval.
+- Do not run remote scripts that you did not inspect.
+- Do not read, print, or copy secret values, credentials, or `.env` contents. Shell reads bypass the `read` tool's
+  secret path rules, and the secret guards are heuristic.
+- Never work around a denial or an approval prompt. Do not reword the command, change flags, wrap it in another shell,
+  move it into a script or alias, or use another tool. If a denial matches only quoted text, such as a commit message,
+  report the blocked command instead of changing the text to pass the check.
+- When a step needs specific approval, stop and give the user the exact command and its effect first.
+
 ## Tool Selection
 
 Apply this policy to every task, including exploration, implementation, review, and verification.
