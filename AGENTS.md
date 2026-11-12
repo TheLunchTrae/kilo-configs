@@ -110,7 +110,7 @@ Read repository terminology sources when present. Apply the reference's preserva
   and reference loads without asking again. Honor applicable authorization carried with delegated assignments.
 - Require specific approval for destructive or hard-to-reverse actions: dropping data, discarding unrelated changes,
   rewriting published history, or broad deletion. Approved cleanup covers its routine removals.
-- If a command or tool call is denied or needs approval, stop and tell the user what you were trying to do.
+- If a command or tool call is denied, stop and report what you were trying to do.
   Do not get the same result through another command, tool, or agent.
 
 ## Tool Selection

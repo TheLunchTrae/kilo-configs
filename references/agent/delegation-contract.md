@@ -14,7 +14,7 @@ Do not repeat full paths or prescribe `cd` or `git -C` on every command when the
 
 Built-in workers do not inherit the parent's prompt. Supply the relevant implementation or research constraints
 explicitly. Workers must not delegate. The configured depth ceiling is one: a primary agent can start leaves,
-but those children cannot start another Task layer. Do not use separate Agent Manager sessions to go past it.
+but those children cannot start another Task layer.
 
 Task children share the parent's project directory and worktree. A separate transcript does not isolate files or
 Git state. Use non-overlapping ownership for concurrent work. Do not switch the shared branch while workers are active.
