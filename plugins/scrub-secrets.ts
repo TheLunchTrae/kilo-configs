@@ -91,13 +91,17 @@ const REDACTIONS: readonly (readonly [string, RegExp])[] = [
 // Patches of files that block-secrets denies, as printed by `git diff`, `git log -p`, `git show <commit>`, or
 // `diff -ru`. A `diff ` header or a `--- ` and `+++ ` pair names each file. Hunk lines of a denied file are dropped,
 // and so is the text after its hunk headers, because Git copies a nearby file line there. A hunk ends when its header
-// counts run out, or at the first line that cannot belong to it, so cut or combined (`@@@`) output cannot hide the
-// next file header. `GIT binary patch` data of a denied file is dropped the same way.
+// counts run out, or at the first line that cannot belong to it, so a cut or combined (`@@@`) hunk cannot hide the
+// next `diff ` header. A denied hunk instead fails closed and drops other lines until a `diff `, `commit `, or `@@` line. `GIT binary patch` data of a denied file is dropped up to its second blank line. Color codes are
+// ignored when matching. Word diffs, prefixed lines, and escaped text are not recognized.
 const SECRET_DIFF = '[REDACTED:secret-file-diff]';
 const HUNK_HEADER = /^@{2,} [^@]*@{2,}/;
 const HUNK_COUNTS = /^@@ -\d+(?:,(\d+))? \+\d+(?:,(\d+))? @@/;
 const HUNK_LINE = /^[ +\-\\]|^$/;
 const BINARY_PATCH = 'GIT binary patch';
+const NEW_UNIT = /^(?:diff |commit |From [\da-f]{7,} |@@|GIT binary patch|Binary files )/;
+// eslint-disable-next-line no-control-regex -- Terminal color sequences start with ESC.
+const COLOR = /\x1b\[[\d;]*m/g;
 const BINARY_LINE = /^(?:(?:literal|delta) \d+|[A-Za-z][\w!#$%&()*+;<=>?@^`{|}~-]*)?$/;
 const namesBlockedPath = (paths: readonly string[]): boolean =>
   paths.some((path) => !path.startsWith('-') && isBlockedPath(path.replace(/["']/g, '')) !== undefined);
@@ -113,18 +117,27 @@ const redactSecretDiffs = (text: string): string => {
   // Lines left in the current hunk from each side; undefined outside a hunk, and NaN in a combined hunk.
   let oldLeft: number | undefined;
   let newLeft = 0;
-  let binary = false;
+  // Blank lines left in a denied binary patch: one after the forward data and one after the reverse data.
+  let binaryBlanks = 0;
   let changed = false;
   const lines: string[] = [];
   for (const line of text.split('\n')) {
-    const content = line.endsWith('\r') ? line.slice(0, -1) : line;
-    if (binary) {
+    const eol = line.endsWith('\r') ? '\r' : '';
+    const content = (eol === '' ? line : line.slice(0, -1)).replace(COLOR, '');
+    if (binaryBlanks > 0) {
       if (BINARY_LINE.test(content)) {
+        if (content === '') {
+          binaryBlanks--;
+        }
         continue;
       }
-      binary = false;
+      binaryBlanks = 0;
     }
     if (oldLeft !== undefined && !HUNK_LINE.test(content)) {
+      // A denied hunk fails closed: word diffs, graph prefixes, or a cut marker drop until a new unit starts.
+      if (secret && !NEW_UNIT.test(content)) {
+        continue;
+      }
       oldLeft = undefined;
     }
     if (oldLeft !== undefined) {
@@ -157,8 +170,8 @@ const redactSecretDiffs = (text: string): string => {
     } else if (content.startsWith('+++ ')) {
       secret ||= namesBlockedPath([headerPath(content)]);
     } else if (content === BINARY_PATCH && secret) {
-      lines.push(line, SECRET_DIFF);
-      binary = true;
+      lines.push(line, SECRET_DIFF + eol);
+      binaryBlanks = 2;
       changed = true;
       continue;
     } else if (hunk !== null) {
@@ -169,7 +182,7 @@ const redactSecretDiffs = (text: string): string => {
         oldLeft = undefined;
       }
       if (secret) {
-        lines.push(hunk[0], SECRET_DIFF);
+        lines.push(hunk[0] + eol, SECRET_DIFF + eol);
         changed = true;
         continue;
       }

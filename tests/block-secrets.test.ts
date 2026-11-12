@@ -145,6 +145,16 @@ describe('block-secrets plugin', () => {
     }
   });
 
+  it('checks long words with many separators in linear time', async () => {
+    const json = `{${Array.from({ length: 20_000 }, (_, index) => `"k${index}":${index}`).join(',')}}`;
+    const started = performance.now();
+    const { showToast } = await runTool('bash', { command: `printf '%s' '${json}' > data.json` });
+    assert.equal(showToast.mock.callCount(), 0);
+    assert.ok(performance.now() - started < 1000);
+
+    await assertBlocked('bash', { command: `echo a:b:c:d:e:f:g:.env` }, 'a:b:c:d:e:f:g:.env');
+  });
+
   it('splits Bash tokens at control operators', async () => {
     for (const command of ['cat .env|head', 'echo ok;cat .env', 'echo $(cat .env)', 'echo `cat .env`', 'wc<.env']) {
       await assertBlocked('bash', { command }, '.env');

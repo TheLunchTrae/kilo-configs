@@ -12,13 +12,23 @@ const QUOTES = /["']/g;
 const SUBSTITUTION_EDGES = /^[$({]+|[)}]+$/g;
 
 // A path can follow `:` or `=` inside a word, as in `git show HEAD:.env`, `git cat-file -p :0:.env`, or
-// `--file=.env`. Ref names cannot contain `:`, so every suffix after a separator is checked as a path.
+// `--file=.env`. Ref names cannot contain `:`, so the text after a separator is checked as a path. Only the first few
+// separators and the last one are used: secret patterns match the end of a path, and checking every suffix of a long
+// word, such as minified JSON, would take quadratic time.
+const MAX_LEADING_SUFFIXES = 4;
 const pathCandidates = (token: string): string[] => {
   const candidates = [token];
+  let last = -1;
   for (let index = 0; index < token.length; index++) {
     if (token[index] === ':' || token[index] === '=') {
-      candidates.push(token.slice(index + 1));
+      if (candidates.length <= MAX_LEADING_SUFFIXES) {
+        candidates.push(token.slice(index + 1));
+      }
+      last = index;
     }
+  }
+  if (last >= 0 && candidates.length > MAX_LEADING_SUFFIXES) {
+    candidates.push(token.slice(last + 1));
   }
   return candidates;
 };

@@ -353,6 +353,82 @@ describe('scrub-secrets plugin', () => {
     assert.match(output.output, /-old line\r\n\+new line/);
   });
 
+  it('drops combined hunks, no-newline markers, and colored hunks of denied files', async () => {
+    const { after } = await create();
+    const text = [
+      'diff --cc .env',
+      'index 1111111,2222222..3333333',
+      '--- a/.env',
+      '+++ b/.env',
+      '@@@ -1,2 -1,2 +1,2 @@@ K=synthetic-cc-context',
+      '- K=synthetic-cc-ours',
+      ' -K=synthetic-cc-theirs',
+      '++K=synthetic-cc-merged',
+      'diff --git a/.env.local b/.env.local',
+      '--- a/.env.local',
+      '+++ b/.env.local',
+      '@@ -1 +1 @@',
+      '-K=synthetic-eof-old',
+      '\\ No newline at end of file',
+      '+K=synthetic-eof-new',
+      '\x1b[1mdiff --git a/id_rsa b/id_rsa\x1b[m',
+      '\x1b[1m--- a/id_rsa\x1b[m',
+      '\x1b[1m+++ b/id_rsa\x1b[m',
+      '\x1b[36m@@ -1 +1 @@\x1b[m',
+      '\x1b[31m-synthetic-color-old\x1b[m',
+      '\x1b[32m+synthetic-color-new\x1b[m',
+      'diff --git a/certs/client.pfx b/certs/client.pfx',
+      'GIT binary patch',
+      'literal 4',
+      'LcmZQzU|?Wi',
+      '',
+      'literal 0',
+      'HcmV?d00001',
+      '',
+      'abcdef0123456789abcdef0123456789abcdef01',
+    ].join('\n');
+    const output = { title: '', output: text, metadata: {} };
+    await after({ tool: 'bash', sessionID: 's', callID: 'c', args: {} }, output);
+    assert.doesNotMatch(output.output, /synthetic-|LcmZQzU/);
+    assert.match(output.output, /^@@@ -1,2 -1,2 \+1,2 @@@\n\[REDACTED:secret-file-diff\]$/m);
+    assert.match(output.output, /\nabcdef0123456789abcdef0123456789abcdef01$/);
+  });
+
+  it('keeps dropping a denied hunk across word-diff and cut-marker lines', async () => {
+    const { after } = await create();
+    const text = [
+      'diff --git a/.env b/.env',
+      '@@ -1,3 +1,3 @@',
+      ' HOST=synthetic-word-host',
+      '~',
+      '+K=synthetic-porcelain-new',
+      '[-K=synthetic-word-old-]{+K=synthetic-word-new+}',
+      '... 200 lines truncated ...',
+      '+K2=synthetic-after-cut',
+      'commit 0123456789abcdef0123456789abcdef01234567',
+      'diff --git a/app.ts b/app.ts',
+      '@@ -1 +1 @@',
+      '-old line',
+      '+new line',
+    ].join('\n');
+    const output = { title: '', output: text, metadata: {} };
+    await after({ tool: 'bash', sessionID: 's', callID: 'c', args: {} }, output);
+    assert.doesNotMatch(output.output, /synthetic-/);
+    assert.match(output.output, /\ncommit 0123456789abcdef0123456789abcdef01234567\n/);
+    assert.match(output.output, /-old line\n\+new line$/);
+  });
+
+  it('keeps CRLF line endings on redaction markers', async () => {
+    const { after } = await create();
+    const text = ['diff --git a/.env b/.env', '@@ -1 +1 @@ K=synthetic-crlf', '-K=a', '+K=b', 'done'].join('\r\n');
+    const output = { title: '', output: text, metadata: {} };
+    await after({ tool: 'bash', sessionID: 's', callID: 'c', args: {} }, output);
+    assert.equal(
+      output.output,
+      ['diff --git a/.env b/.env', '@@ -1 +1 @@', '[REDACTED:secret-file-diff]', 'done'].join('\r\n'),
+    );
+  });
+
   it('leaves diffs of ordinary files and other @@ text unchanged', async () => {
     const { after, showToast } = await create();
     const text = [
