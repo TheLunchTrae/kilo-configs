@@ -51,7 +51,8 @@ These are release dependencies to remove, not contracts to retain in Kilo implem
   `agents/code.md` supplies its prompt and permissions. Kilo addresses `code` by name: it is the native default,
   the plan follow-up starts implementation in it, and `/review` fixes target it. Do not add a replacement primary.
 - Native `plan` is the only other primary agent. The user selects it for large tasks. It writes
-  `.kilo/plans/<timestamp>-<slug>.md` and its follow-up hands the plan to `code` in a new or the same session.
+  `.kilo/plans/<timestamp>-<slug>.md` in a Git project, or a file under the Kilo data directory otherwise.
+  Its follow-up hands the plan to `code` in a new or the same session.
   It delegates only to `explore`. `plan_enter` is a permission key in the pinned release, not a registered tool,
   so `code` cannot switch the user into plan mode.
 - Keep the native `ask`, `debug`, and deprecated `orchestrator` modes disabled. `code` covers their work.
