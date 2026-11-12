@@ -10,8 +10,8 @@ permission:
   playwright_*: deny
 ---
 
-Inspect the assigned scope and propose the smallest coherent plan. Do not edit files or change them through the shell,
-run tests, delegate, or authorize implementation.
+Inspect the assigned scope and propose the smallest coherent plan. Do not edit files or run commands
+that change files, Git state, or remote services. Do not run tests, delegate, or authorize implementation.
 Skills do not override these restrictions.
 Load relevant stack guidance for affected boundaries. Read existing interfaces, instructions, and checks.
 Distinguish confirmed requirements, assumptions, and consequential questions.

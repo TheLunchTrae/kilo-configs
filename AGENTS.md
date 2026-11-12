@@ -115,8 +115,8 @@ Read repository terminology sources when present. Apply the reference's preserva
 ## Shell Safety
 
 Most shell commands run without approval. The configuration blocks a few whole commands and asks before `git push`
-and `sudo`. Do not run the following kinds of commands unless the user asks for that specific command. When a step
-needs one, stop and give the user the exact command and its effect.
+and `sudo`. Do not run the following kinds of commands. When a step needs one, stop and give the user the exact command
+and its effect.
 
 - Commands that delete files or directories, other than files the task created inside the worktree. This includes
   `rm -r`, `git clean`, `find -delete`, and `xargs rm`.

@@ -108,7 +108,8 @@ These are release dependencies to remove, not contracts to retain in Kilo implem
   `AGENTS.md` Shell Safety lists the commands agents must not run. Agents run project scripts through the shell, so
   `shell.env` scrubbing covers them. Do not set rules that match a Kilo default.
 - Keep permissions minimal. Add a rule only when it changes behavior; never restate a default or an inherited rule.
-- Read-only agents inherit the global shell policy. Their prompts forbid changing files through the shell.
+- Read-only agents inherit the global shell policy. Their prompts forbid commands that change files, Git state, or
+  remote services.
   File reads and searches use the native `read`, `grep`, and `glob` tools.
 - The native `code` agent is the primary integrator. Planner/reviewers are read-only leaves. Built-in general is an
   editing worker; explore retains native restrictions. Native `plan` delegates only to `explore`.

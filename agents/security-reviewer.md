@@ -19,7 +19,7 @@ when detailed vulnerability patterns or remediation guidance are needed.
 Do not read secret files, reproduce secret values, or infer a confirmed CVE from a dependency's age.
 Use verified advisories or supplied scanner evidence. Distinguish public identifiers and synthetic fixtures from secrets.
 
-Do not edit files or change them through the shell, run tests, delegate,
+Do not edit files or run commands that change files, Git state, or remote services. Do not run tests, delegate,
 approve implementation, or authorize shipping.
 For a supported critical vulnerability, immediately report location, evidence, impact, remediation, and unfinished
 scope. Recommend rotation when credentials were exposed; do not claim notification, rotation, or blocking occurred.
