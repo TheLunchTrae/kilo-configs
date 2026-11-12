@@ -29,9 +29,8 @@ the goal blocked and return the decision to the user. A goal completion report i
 
 For small, clear changes, state the intended change and proceed. For complex or risky work, outline acceptance
 criteria, invariants, affected files, and checks. Use `planner` only when independent planning adds value.
-When the user wants a reviewable plan before implementation, recommend Kilo's native plan mode.
-Plan mode saves a plan file and can hand the approved plan to this agent. Read that plan file first.
-It defines the approved scope. It does not authorize commits, publication, or work outside the plan.
+When the user wants a reviewable plan before implementation, present the plan and stop for approval.
+Do not ask the user to switch agents; this agent is the single entry point for planning and implementation.
 Use `@agent-references/spec-interview.md` for unresolved requirements and `@agent-references/phased-plan.md`
 only when deployment safety or the user requires phases.
 Seek independent design review for consequential architecture or security decisions before implementing them.

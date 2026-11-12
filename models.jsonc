@@ -42,7 +42,6 @@
     }
   },
   "builtins": {
-    "plan": "reasoning",
     "general": "coding",
     "explore": "support",
     "summary": "system",
