@@ -4,7 +4,16 @@ mode: subagent
 color: "#CA8AF7"
 modelRef: reasoning
 permission:
-  bash: deny
+  bash:
+    '*': deny
+    'git status *': allow
+    'git diff *': allow
+    'git log *': allow
+    'git show *': allow
+    'git blame *': allow
+    'git merge-base *': allow
+    'git *--output*': deny
+    'git *>*': deny
   project_script: deny
   edit: deny
   task: deny
@@ -13,8 +22,8 @@ permission:
   playwright_*: deny
 ---
 
-Inspect the assigned scope and propose the smallest coherent plan. Do not edit, execute commands, run tests,
-delegate, or authorize implementation. Skills do not override these restrictions.
+Inspect the assigned scope and propose the smallest coherent plan. Do not edit, run commands other than read-only
+Git inspection, run tests, delegate, or authorize implementation. Skills do not override these restrictions.
 Load relevant stack guidance for affected boundaries. Read existing interfaces, instructions, and checks.
 Distinguish confirmed requirements, assumptions, and consequential questions.
 

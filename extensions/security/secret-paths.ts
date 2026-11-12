@@ -50,33 +50,3 @@ export const isBlockedPath = (raw: string): string | undefined => {
   }
   return undefined;
 };
-
-/**
- * Git exclude pathspecs approximating the patterns above, for commands that read file contents.
- * Pathspecs cannot re-include template basenames, so `.env.example` and similar files are also excluded.
- */
-export const secretExcludePathspecs: readonly string[] = [
-  '.env',
-  '.env.*',
-  '*.pem',
-  'id_rsa',
-  'id_rsa.*',
-  'id_ed25519',
-  'id_ed25519.*',
-  'id_ecdsa',
-  'id_ecdsa.*',
-  'id_dsa',
-  'id_dsa.*',
-  '*.key',
-  'credentials.json',
-  '.netrc',
-  'secrets.json',
-  'secrets.yaml',
-  'secrets.yml',
-  '*.p12',
-  '*.pfx',
-  '.aws/credentials',
-  '.ssh/**',
-  'secrets',
-  'secrets/**',
-].flatMap((pattern) => [`:(top,exclude,icase,glob)${pattern}`, `:(top,exclude,icase,glob)**/${pattern}`]);
