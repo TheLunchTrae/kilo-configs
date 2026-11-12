@@ -51,10 +51,14 @@ These are release dependencies to remove, not contracts to retain in Kilo implem
   the plan follow-up starts implementation in `code`, and `/review` offers fixes in `code` or `debug`.
   `agents/code.md` supplies the `code` prompt and permissions. Do not add a replacement primary agent.
   Keep the deprecated `orchestrator` mode disabled. Preserve the explicit leaf delegation rules.
-- Kilo appends a global wildcard `edit` denial after the native plan guard when no later `edit` exception follows it.
-  That order blocks plan files. Keep the `.kilo/plans/*.md` exception after the wildcard in `permission.edit`.
-  Agents that must not save plan files need their own `edit` denial.
-- `web_search: true` supplies the native `websearch` tool for direct providers. Kilo otherwise limits it to its gateway.
+  `/review` can also offer `orchestrator` for many mixed findings. That option is unverified while the mode is disabled.
+- Do not add a global wildcard `edit` denial. Kilo appends it after the native plan guard, which blocks plan files.
+  Task children of a native agent also inherit it, so `general` loses its edit tools when `code` starts it.
+  Edits are therefore allowed by default. Give each read-only custom agent its own `edit: deny`.
+  Native `plan`, `ask`, and `explore` carry their own edit limits.
+- `web_search: true` supplies the native `websearch` tool for direct providers. Without it, Kilo supplies the tool
+  only for its gateway providers or when a search provider flag is set. The tool sends queries to a hosted search
+  service and follows the default `allow` rule.
 - `plan_enter` is a permission key in the pinned release, not a registered tool. The user selects plan mode.
 - The pinned Model Profiles accepts a built-in ref for `plan` but not for `ask` or `debug`.
   Those two modes use the model that Kilo selects without a ref.
@@ -93,7 +97,7 @@ These are release dependencies to remove, not contracts to retain in Kilo implem
   `models.jsonc` owns model refs, profiles, and refs for built-in agents.
 - Preserve provider/model choices unless explicitly requested. Inspect installed dependencies and current native
   behavior before changing runtime assumptions. Do not infer loading or permissions from JSON parsing alone.
-- Preserve system edit approval, title/compaction `options.reasoningEffort`, global edit/Task denials,
+- Preserve system edit approval, title/compaction `options.reasoningEffort`, the global Task denial,
   ordered shell rules, and secret Read guards. Agent permissions append to global rules; the last matching rule wins.
 - The native `code` agent is the primary integrator. Planner/reviewers are read-only leaves. Built-in general is an
   editing worker; explore retains native restrictions. Native `plan` and `debug` delegate only to `explore`.

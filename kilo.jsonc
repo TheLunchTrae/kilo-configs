@@ -10,7 +10,7 @@
   "model": "openai/gpt-6-astra",
   "small_model": "openai/gpt-6-luna",
   "subagent_depth": 1,
-  // Direct providers do not get the native websearch tool unless this is set.
+  // Direct providers do not get the native websearch tool by default.
   "web_search": true,
   "references": {
     "agent-references": {
@@ -92,12 +92,8 @@
       "rm * -r -f*": "deny",
       "rm * -f -r*": "deny"
     },
-    // Kilo applies a global wildcard edit denial without a later exception as a ceiling on native plan mode.
-    // That ceiling also blocks plan files. The plan-file exception keeps edits denied by default elsewhere.
-    "edit": {
-      "*": "deny",
-      ".kilo/plans/*.md": "allow"
-    },
+    // Do not add a global wildcard edit denial. Kilo applies it as a ceiling that blocks native plan files,
+    // and Task children of the native code agent inherit it. Read-only agents carry their own edit denial.
     "task": {
       "*": "deny"
     },
@@ -117,7 +113,6 @@
     },
     "debug": {
       "permission": {
-        "edit": "allow",
         "task": {
           "explore": "allow"
         }
@@ -137,7 +132,6 @@
     "explore": {
       "color": "#8AEEF7",
       "permission": {
-        "edit": "deny",
         "agent_manager": "deny"
       }
     },

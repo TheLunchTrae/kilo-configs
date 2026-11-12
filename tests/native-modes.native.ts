@@ -25,8 +25,6 @@ test('Kilo native modes keep their edit boundaries under the configured policy',
   await writeFile(
     join(installation, 'kilo.json'),
     JSON.stringify({
-      // Edit tools do not start a shell. The inert shell prevents accidental command execution.
-      shell: '/bin/false',
       plugin: [],
       permission: config.permission,
       agent: config.agent,
@@ -94,24 +92,17 @@ test('Kilo native modes keep their edit boundaries under the configured policy',
     assert.equal(result.status, 0, result.stderr);
     assert.ok(await written(join('.kilo', 'plans', 'fixture.md')));
   });
-  await t.test('plan mode cannot edit source', async () => {
-    const result = write('plan', 'plan-source.txt');
-    assert.ifError(result.error);
-    assert.notEqual(result.status, 0, 'plan mode edited a source file');
-    assert.equal(await written('plan-source.txt'), false);
-  });
-  await t.test('ask mode cannot edit source', async () => {
-    const result = write('ask', 'ask-source.txt');
-    assert.ifError(result.error);
-    assert.notEqual(result.status, 0, 'ask mode edited a source file');
-    assert.equal(await written('ask-source.txt'), false);
-  });
-  await t.test('explore cannot save a plan file', async () => {
-    const result = write('explore', join('.kilo', 'plans', 'explore.md'));
-    assert.ifError(result.error);
-    assert.notEqual(result.status, 0, 'explore saved a plan file');
-    assert.equal(await written(join('.kilo', 'plans', 'explore.md')), false);
-  });
+  // A missing agent or tool also exits with an error, so each denial must name the permission boundary.
+  const denied = /permission|ruleset|disabled for agent/i;
+  for (const agent of ['plan', 'ask', 'explore']) {
+    await t.test(`${agent} cannot edit source`, async () => {
+      const result = write(agent, `${agent}-source.txt`);
+      assert.ifError(result.error);
+      assert.notEqual(result.status, 0, `${agent} edited a source file`);
+      assert.match(result.stderr, denied);
+      assert.equal(await written(`${agent}-source.txt`), false);
+    });
+  }
   await t.test('code mode edits source', async () => {
     const result = write('code', 'code-source.txt');
     assert.ifError(result.error);
