@@ -41,6 +41,7 @@
       "*/secrets/*": "deny"
     },
     "bash": {
+      // Kilo's built-in shell default is ask with a short read-only allowlist, so this fallback is needed.
       "*": "allow",
       "git push*": "ask",
       "git -* push*": "ask",

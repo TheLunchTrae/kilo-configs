@@ -103,7 +103,8 @@ These are release dependencies to remove, not contracts to retain in Kilo implem
   behavior before changing runtime assumptions. Do not infer loading or permissions from JSON parsing alone.
 - Preserve system edit approval, title/compaction `options.reasoningEffort`, the global Task denial,
   ordered shell rules, and secret Read guards. Agent permissions append to global rules; the last matching rule wins.
-- Global shell policy allows by default. Keep the `"*": "allow"` fallback first, keep the short ask list
+- Global shell policy allows by default. Kilo's built-in shell default is `ask`, so keep the `"*": "allow"` fallback
+  first. Do not set other rules that match a Kilo default. Keep the short ask list
   (push, `sudo`, package publish, PR merge, repository edits), and keep every deny after them so denials win.
   Do not restore a catch-all ask. Git rules need a `git -* <subcommand>` twin so global options such as `-C` cannot
   skip them. Kilo checks each command in a chain, pipeline, or substitution separately, but it does not parse
