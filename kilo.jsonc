@@ -103,10 +103,15 @@
     "playwright_*": "ask"
   },
   "agent": {
-    // agents/code.md supplies the prompt and permissions of the native code agent, the only primary agent.
-    // It plans, answers questions, and debugs in one session, so the other native modes stay disabled.
+    // agents/code.md supplies the prompt and permissions of the native code agent, the default primary agent.
+    // Native plan mode is the only other primary agent. It writes a plan file and hands it off to code.
+    // The code agent answers questions and debugs, so ask and debug stay disabled.
     "plan": {
-      "disable": true
+      "permission": {
+        "task": {
+          "explore": "allow"
+        }
+      }
     },
     "ask": {
       "disable": true

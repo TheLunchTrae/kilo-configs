@@ -47,16 +47,19 @@ These are release dependencies to remove, not contracts to retain in Kilo implem
 
 ### Native behavior and plugin limits
 
-- The user works through a single top-level agent. `code` is the only primary agent.
+- The user works mainly through one top-level agent. `code` is the default primary agent.
   `agents/code.md` supplies its prompt and permissions. Kilo addresses `code` by name: it is the native default,
-  and native handoffs such as `/review` fixes target it. Do not add a replacement primary agent.
-- Keep the native `plan`, `ask`, `debug`, and deprecated `orchestrator` modes disabled. They require the user to
-  switch agents. Planning stays in `code`, with the `planner` subagent when independent planning adds value.
+  the plan follow-up starts implementation in it, and `/review` fixes target it. Do not add a replacement primary.
+- Native `plan` is the only other primary agent. The user selects it for large tasks. It writes
+  `.kilo/plans/<timestamp>-<slug>.md` and its follow-up hands the plan to `code` in a new or the same session.
+  It delegates only to `explore`. `plan_enter` is a permission key in the pinned release, not a registered tool,
+  so `code` cannot switch the user into plan mode.
+- Keep the native `ask`, `debug`, and deprecated `orchestrator` modes disabled. `code` covers their work.
   `/review` can offer fixes in `debug` or `orchestrator`. Those options are unverified while the modes are disabled.
-- Do not add a global wildcard `edit` denial. Task children of a native agent inherit it, so `general` loses its
-  edit tools when `code` starts it. It also blocks plan files if native plan mode is enabled again.
+- Do not add a global wildcard `edit` denial. Kilo appends it after the native plan guard, which blocks plan files.
+  Task children of a native agent also inherit it, so `general` loses its edit tools when `code` starts it.
   Edits are therefore allowed by default. Give each read-only custom agent its own `edit: deny`.
-  Native `explore` carries its own edit limit.
+  Native `plan` and `explore` carry their own edit limits.
 - `web_search: true` supplies the native `websearch` tool for direct providers. Without it, Kilo supplies the tool
   only for its gateway providers or when a search provider flag is set. The tool sends queries to a hosted search
   service and follows the default `allow` rule.
@@ -98,7 +101,7 @@ These are release dependencies to remove, not contracts to retain in Kilo implem
 - Preserve system edit approval, title/compaction `options.reasoningEffort`, the global Task denial,
   ordered shell rules, and secret Read guards. Agent permissions append to global rules; the last matching rule wins.
 - The native `code` agent is the primary integrator. Planner/reviewers are read-only leaves. Built-in general is an
-  editing worker; explore retains native restrictions.
+  editing worker; explore retains native restrictions. Native `plan` delegates only to `explore`.
   Keep delegation exact and deny by default. No routes from reviewers to writers.
   Keep `subagent_depth` at one so a primary agent can start workers but workers cannot create another Task layer.
   `agent_manager` is a separate top-level session route, not a Task child. It asks globally and is denied for workers.

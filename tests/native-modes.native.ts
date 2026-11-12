@@ -57,7 +57,7 @@ test('Kilo native agents keep their edit boundaries under the configured policy'
     KILO_DISABLE_CLAUDE_CODE: 'true',
     KILO_EXPERIMENTAL_DISABLE_FILEWATCHER: 'true',
   };
-  // Edit permission patterns are relative to the worktree, so the project must be a repository.
+  // Plan-file patterns are relative to the worktree, so the project must be a repository.
   const init = spawnSync('git', ['init', '--quiet'], { cwd: project, env, encoding: 'utf8', timeout: 30_000 });
   assert.ifError(init.error);
   assert.equal(init.status, 0, init.stderr);
@@ -88,13 +88,21 @@ test('Kilo native agents keep their edit boundaries under the configured policy'
 
   // A missing agent or tool also exits with an error, so each denial must name the permission boundary.
   const denied = /permission|ruleset|disabled for agent/i;
-  await t.test('explore cannot edit source', async () => {
-    const result = write('explore', 'explore-source.txt');
+  await t.test('plan mode saves a plan file', async () => {
+    const result = write('plan', join('.kilo', 'plans', 'fixture.md'));
     assert.ifError(result.error);
-    assert.notEqual(result.status, 0, 'explore edited a source file');
-    assert.match(result.stderr, denied);
-    assert.equal(await written('explore-source.txt'), false);
+    assert.equal(result.status, 0, result.stderr);
+    assert.ok(await written(join('.kilo', 'plans', 'fixture.md')));
   });
+  for (const agent of ['plan', 'explore']) {
+    await t.test(`${agent} cannot edit source`, async () => {
+      const result = write(agent, `${agent}-source.txt`);
+      assert.ifError(result.error);
+      assert.notEqual(result.status, 0, `${agent} edited a source file`);
+      assert.match(result.stderr, denied);
+      assert.equal(await written(`${agent}-source.txt`), false);
+    });
+  }
   for (const agent of ['code', 'general']) {
     await t.test(`${agent} edits source`, async () => {
       const result = write(agent, `${agent}-source.txt`);
