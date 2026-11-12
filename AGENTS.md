@@ -194,7 +194,7 @@ Standard build, test, lint, formatter, static-analysis, documentation-generation
 within the agent's role, permissions, and required approvals. Use existing project scripts only for their established
 purpose. Run scripts declared in `package.json`, `composer.json`, or a Makefile through the shell with the project's
 own runner, such as `npm run <script>`, `pnpm <script>`, `composer <script>`, or `make <target>`.
-Never use these commands or scripts as substitutes for dedicated tools or as workarounds for this policy.
+Never use these commands or scripts as substitutes for dedicated tools.
 
 Implement requested application code, tests, and project scripts with the editing tools when authorized.
 Do not create helper files merely to reclassify a prohibited shortcut as an existing project script or deliverable.
