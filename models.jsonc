@@ -1,5 +1,5 @@
 {
-  "$schema": "https://cdn.jsdelivr.net/npm/@lunchbox-labs/opencode-model-profiles@0.2.0/schema.json",
+  "$schema": "https://cdn.jsdelivr.net/npm/@lunchbox-labs/kilo-model-profiles@0.3/schema.json",
   "defaultProfile": "openai",
   "defaults": {
     "reasoning": { "model": "openai/gpt-6-astra", "variant": "high" },

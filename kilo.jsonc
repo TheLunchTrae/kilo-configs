@@ -1,10 +1,6 @@
 {
   "$schema": "https://app.kilo.ai/config.json",
-  // Replace these pins only after the Kilo packages are published. See .kilo/AGENTS.md for current limits.
-  "plugin": [
-    ["@lunchbox-labs/opencode-model-profiles@0.2.0", { "configFile": "../kilo/models.jsonc" }],
-    "@lunchbox-labs/opencode-prompt-composer@0.2.4"
-  ],
+  "plugin": ["@lunchbox-labs/kilo-model-profiles@^0.3.0", "@lunchbox-labs/kilo-prompt-composer@^0.3.0"],
   "shell": "C:/Program Files/Git/bin/bash.exe",
   "disabled_providers": ["opencode"],
   "model": "openai/gpt-6-astra",
