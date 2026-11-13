@@ -225,10 +225,11 @@ Do not create helper files merely to reclassify a prohibited shortcut as an exis
 ## Code as source of truth
 
 - The code is always the source of truth. When docs, READMEs, comments, instruction files, skills, or agent guidance
-  disagree with the code, act on what the code does and the conventions it follows.
+  disagree with the code, base claims, plans, and changes on what the code does and the conventions it follows.
 - Report each mismatch in the final reply. Update the stale text when it is in the task's scope.
+  Do not change the code to match the text unless the task requires that change.
 - This rule settles factual disagreements about behavior and conventions. It does not override safety requirements,
-  permissions, approval rules, or explicit user instructions.
+  permissions, approval rules, or instructions the user gives for the current task.
 
 ## Verification Boundaries
 
