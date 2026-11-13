@@ -27,23 +27,19 @@ Use Kilo configuration and state paths. Preserve published API identifiers that 
 - Do not migrate or delete existing sessions, credentials, bookmarks, or saved profile selections as part of setup.
 - Preserve the Windows Git Bash path in `shell`. Other platforms must select an installed shell before use.
 
-### External plugin release dependencies
+### Lunchbox plugin packages
 
-The pinned Lunchbox packages still use OpenCode names and paths. They are not Kilo-native ports.
-Replace them only after the Kilo packages are published and verified, including the schema URL and both plugin lists.
-Do not remove a required option or substitute an unpublished package merely to remove an OpenCode name.
+Model Profiles, Prompt Composer, and Tool Inspector use their Kilo packages.
+None of them reads OpenCode directories or `OPENCODE_*` variables.
 
-- Model Profiles requires `configFile: "../kilo/models.jsonc"` for the default installation.
-  Its published loader resolves this from its OpenCode configuration directory.
-  For another layout, both plugin lists need the absolute `models.jsonc` path. The loader does not expand `~/` there.
-  It also reads OpenCode state, authentication, caches, and `OPENCODE_MODEL_PROFILE`.
-  Kilo provider connections and saved profile choices can therefore disagree with its discovery logic.
-- Prompt Composer searches OpenCode paths. Until its Kilo replacement is available, prompt fragments require
-  `OPENCODE_CONFIG_DIR` scoped to the absolute Kilo configuration directory in the process that launches Kilo.
-  Do not create a persistent system-wide alias or link the configuration trees.
-  This package can still load unique snippets from OpenCode roots, so it does not provide Kilo-only discovery.
-
-These are release dependencies to remove, not contracts to retain in Kilo implementations.
+- Model Profiles reads `models.jsonc` from `KILO_CONFIG_DIR`, else the Kilo XDG configuration directory.
+  The default installation therefore needs no `configFile` option. Set it only for a models file in another place.
+- Prompt Composer discovers `prompts/` in the Kilo XDG configuration directory, project `.kilocode` and `.kilo`
+  directories, the same directories under the home directory, and `KILO_CONFIG_DIR` when set.
+  It takes no plugin options.
+- Kilo installs each npm plugin specifier once into `$XDG_CACHE_HOME/kilo/packages/<specifier>`
+  (else `~/.cache/kilo/packages/`) and does not refresh it. A version range gets a newer release only after that
+  directory is removed or the specifier changes.
 
 ### Native behavior and plugin limits
 
@@ -128,15 +124,15 @@ These are release dependencies to remove, not contracts to retain in Kilo implem
   Built-ins without authored prompts must retain native fallback prompts.
 - Keep utility commands in the selected role. `/test-audit` explicitly invokes a fresh reviewer subtask.
   Preserve `$ARGUMENTS`, the native `/resume` selector, and `/resume-work` handoff behavior.
-- Register pinned Model Profiles and Prompt Composer packages once each in both server/TUI lists, in that order.
-  Register pinned Tool Inspector once, in the TUI list only; it has no server entrypoint.
+- Register Model Profiles and Prompt Composer once each in both server/TUI lists, in that order.
+  Register Tool Inspector once, in the TUI list only; it has no server entrypoint.
   Kilo installs npm plugins from these lists; do not add them to `package.json`.
-  `models.jsonc` uses the published schema of the pinned Model Profiles version; update its URL with the pin.
-  Model Profiles' only plugin option is `configFile`; Prompt Composer uses `prompts/`.
+  Use the same specifier for each package in both lists. The `models.jsonc` `$schema` uses the major.minor of the
+  Model Profiles range (`@0.3` for `^0.3.0`); update it with that range.
   Keep runtime metadata out of provider request options. Model Profiles removes `modelRef` before Kilo builds
   agents; do not add other plugin-only agent keys. Do not add compatibility layers for removed roles.
-- The currently pinned `/model-config` saves defaults only or a named profile per worktree, outside `models.jsonc`.
-  `OPENCODE_MODEL_PROFILE` overrides the saved choice; with neither, `defaultProfile` applies. A profile that
+- `/model-config` saves defaults only or a named profile per worktree, outside `models.jsonc`.
+  `KILO_MODEL_PROFILE` overrides the saved choice; with neither, `defaultProfile` applies. A profile that
   `models.jsonc` does not define falls through to the next source. A profile overrides only the refs it names;
   `system` and `title` stay on defaults.
   A ref whose model no connected provider offers falls back to the model Kilo would use without the ref.

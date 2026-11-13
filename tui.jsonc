@@ -2,9 +2,9 @@
   "$schema": "https://app.kilo.ai/tui.json",
   "theme": "pink",
   "plugin": [
-    ["@lunchbox-labs/opencode-model-profiles@0.2.0", { "configFile": "../kilo/models.jsonc" }],
-    "@lunchbox-labs/opencode-prompt-composer@0.2.4",
-    "@lunchbox-labs/opencode-tool-inspector@0.2.2",
+    "@lunchbox-labs/kilo-model-profiles@^0.3.0",
+    "@lunchbox-labs/kilo-prompt-composer@^0.3.0",
+    "@lunchbox-labs/kilo-tool-inspector@^0.3.0",
     "./extensions/session-tools/config.ts",
     "./extensions/session-tools/context.ts",
     "./extensions/session-tools/bookmarks.tsx"
