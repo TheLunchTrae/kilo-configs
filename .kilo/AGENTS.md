@@ -104,9 +104,9 @@ These are release dependencies to remove, not contracts to retain in Kilo implem
 - Preserve system edit approval, title/compaction `options.reasoningEffort`, the global Task denial,
   ordered shell rules, and secret Read guards. Agent permissions append to global rules; the last matching rule wins.
 - Kilo's built-in shell default is `ask`, so keep the `"*": "allow"` fallback first. After it, the shell policy
-  blocks a few whole commands and asks before `git push` and `sudo`. Do not add flag variants or pattern lists; root
-  `AGENTS.md` Shell Safety lists the commands agents must not run. Agents run project scripts through the shell, so
-  `shell.env` scrubbing covers them. Do not set rules that match a Kilo default.
+  blocks a few whole commands and asks before `git commit`, `git push`, `git stash`, `git checkout`, and `sudo`. Do not
+  add flag variants or pattern lists; root `AGENTS.md` Shell Safety lists the commands agents must not run. Agents run
+  project scripts through the shell, so `shell.env` scrubbing covers them. Do not set rules that match a Kilo default.
 - Keep permissions minimal. Add a rule only when it changes behavior; never restate a default or an inherited rule.
 - Read-only agents inherit the global shell policy. Their prompts forbid commands that change files, Git state, or
   remote services.
