@@ -29,14 +29,16 @@ Validate external data at trust boundaries with the project's existing validatio
 
 ## Names and control flow
 
-Use descriptive names, as verbose as clarity needs, in the language's naming conventions.
-Preserve established project terminology. Avoid acronyms unless their meaning is obvious to any reader of the code.
+Use descriptive names and the language's naming conventions. Preserve established project terminology.
+Make variable, function, and class names as verbose as needed for clarity.
+Avoid acronyms unless their meaning is unmistakably obvious to anyone reading the code.
 Use guard clauses when they simplify nested control flow. Name meaningful thresholds and repeated literal values.
 Do not change naming, file size, or formatting merely to satisfy a generic default.
 
 ## Comments
 
-Prefer clear names and structure to comments; improve names or refactor before adding an explanatory comment.
+Prefer code without comments when clear names and structure convey its meaning.
+Improve names or refactor before adding explanatory comments.
 Use comments for non-obvious rationale, constraints, or workarounds that names and code cannot express.
 Keep license notices, required directives, and existing comments that provide useful context.
 Do not remove comments indiscriminately.

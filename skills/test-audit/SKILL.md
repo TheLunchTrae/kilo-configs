@@ -61,9 +61,9 @@ Report any unavailable validation without claiming that the cleanup is verified.
 
 ## Return the assessment
 
-Report candidate decisions, evidence, coverage gaps, uncertainty, valuable apparent false positives, preserved
-contracts, and necessary follow-up. For cleanup, include changes, test-support changes, and executed checks.
-Separate inspected scope from unassessed suites.
+Report candidate decisions, evidence, coverage gaps, and uncertainty. For cleanup, include changes and verification.
+Separate inspected scope from unassessed suites. Report valuable apparent false positives, preserved contracts,
+test-support changes, executed checks, and necessary follow-up.
 Keep plans and execution logs in conversation or an authorized task location. An audit does not authorize shipping.
 
 ## Assessment guidance

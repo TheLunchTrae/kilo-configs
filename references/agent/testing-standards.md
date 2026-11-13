@@ -24,8 +24,8 @@ Prefer public behavior and established interfaces. Do not expose private functio
 incidental implementation details. Explicitly propose needed testability changes and preserve production contracts.
 Legitimate dependency boundaries and stable test identifiers are not inherently bad test seams.
 
-Report the effects of approved exclusions and verification limits in the coverage map and handoff.
-Do not invent checklist infrastructure work.
+Honor approved exclusions and verification limits; report their effects in the coverage map and handoff.
+Do not invent checklist infrastructure work or report excluded checks as passing.
 
 ## Inspect the test's claim
 
@@ -54,8 +54,9 @@ Slowness, age, count, or resemblance to implementation alone does not justify re
 
 ## Keep evidence trustworthy
 
-Keep tested application behavior real. Substitute only dependencies outside the claimed boundary and state evidence
-limits. A mocked service response does not prove that service's integration.
+Keep tested application behavior real. Substitute only dependencies outside the claimed boundary and
+state evidence limits.
+A mocked service response does not prove that service's integration.
 Use isolated synthetic data, controlled nondeterminism, bounded synchronization, and cleanup after failures.
 Do not add retries or broad tolerances to conceal flaky assertions. Report initial failures and retry results.
 

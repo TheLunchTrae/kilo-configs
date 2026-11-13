@@ -8,9 +8,9 @@ description: Design and generate reusable verification tests for existing reposi
 Apply only the assigned portion within scope, authorization, review requirements, and budget.
 This skill does not expand roles, permissions, or read-only assignments.
 Read `@agent-references/verification-scope.md` before discovery. Apply its limits separately to coverage design,
-test generation, execution, and infrastructure changes.
-Before writing tests, read applicable project and language guidance.
-The implementation guidance below applies only when writing tests within approved scope:
+test generation, execution, and infrastructure changes throughout this procedure.
+Before writing tests, read applicable project and language guidance and apply the implementation guidance below.
+The following implementation guidance applies only when writing tests within approved scope:
 
 {{include:implementation-standards.md}}
 
@@ -51,7 +51,8 @@ Create a compact coverage map. For each behavior, include:
 - Fixtures, environment prerequisites, setup, cleanup, isolation, and execution command with working directory.
 - Dependencies, risks, and behavior that will remain unverified.
 
-Choose the smallest test level that exercises the contract.
+Choose the smallest test level that exercises the contract. Use integration or end-to-end coverage when unit
+tests are insufficient.
 Use `end-to-end-tests` for complete journeys; include its boundaries and fixtures in this map.
 Load relevant stack skills for provider and runtime guidance.
 For missing in-scope harnesses, propose the smallest suitable setup using the project's language and available tools.

@@ -15,10 +15,9 @@ Before implementation, reuse a matching issue or create one within the user's au
 Keep scope, plan, decisions, review dispositions, and useful verification evidence there so other agents can resume.
 Read another agent's issue and changes before duplicating work. Preserve concurrent edits and identify remaining scope.
 If issue creation is unavailable or unauthorized, report the traceability blocker before starting new implementation.
-Use existing `test-first`, `test-audit`, and `verify` skills for their assigned scopes,
-without duplicate test procedures.
+Use existing `test-first`, `test-audit`, and `verify` skills for their assigned scopes, without duplicate test procedures.
 Test observable behavior and public contracts. Reuse meaningful existing coverage; avoid tests that merely repeat
-the implementation or freeze incidental wording and counts.
+the implementation or freeze incidental wording and counts. Report unavailable native checks and their limits.
 
 ## Prepare the PR
 
@@ -35,6 +34,6 @@ Have a separate reviewer inspect the final changes and supported fixes. Later ch
 Before marking ready, verify the remote head matches the reviewed source, refresh affected checks,
 and inspect current CI, base changes, conflicts, and unresolved findings. Earlier evidence covers only unchanged scope.
 If the head moved, reconcile it and review/check the affected changes before reporting readiness.
-Report unavailable checks, their limits, and required unmet gates; do not treat absent CI as a passing run.
+Report unavailable checks and required unmet gates; do not treat absent CI as a passing run.
 Hand the PR link and any prerequisites to the user. The user merges unless explicitly authorized otherwise.
 Review completion does not authorize approval reviews, merges, releases, or deployment.
