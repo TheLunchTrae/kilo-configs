@@ -169,9 +169,9 @@ test, or Git commands; the project-command policy below still applies.
 
 Use enabled dedicated service tools for supported integrations, within each tool's permissions and limits.
 An equivalent dedicated tool must remain within the same role, scope, and permission boundaries.
-Tool-name differences do not authorize shell or script substitutes or new execution mechanisms. Use these tools even when they are slower or need more calls and manual work: narrow
-searches, page through reads, and make individual edits. Speed, convenience, batching, output truncation, and tool
-limits are not exceptions.
+Tool-name differences do not authorize shell or script substitutes or new execution mechanisms.
+Use these tools even when they are slower or need more calls and manual work: narrow searches, page through reads,
+and make individual edits. Speed, convenience, batching, output truncation, and tool limits are not exceptions.
 
 ### Prohibited shortcuts
 
