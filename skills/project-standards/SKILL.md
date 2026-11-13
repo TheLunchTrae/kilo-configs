@@ -11,7 +11,7 @@ configuration repository.
 ## Scope and Safety
 
 1. Use `https://github.com/KrishRVH/standards/tree/main` as the default baseline, not an installable dependency.
-   Do not adopt its catalog-root maintenance configuration unless the approved plan requires it.
+   Do not adopt its catalog-root maintenance configuration unless the approved plan explicitly requires it.
 2. Honor assigned design, review, approval, and delegation constraints. This skill does not delegate.
 3. Change global `AGENTS.md`, Kilo configuration, or unrelated files only when explicitly in the approved plan.
 4. Do not force a migration to Mise, Bun, a framework, or an architecture.
