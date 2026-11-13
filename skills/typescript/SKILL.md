@@ -13,10 +13,8 @@ Inspect `package.json`, lockfiles, and `tsconfig.json` for dependencies, scripts
 and strictness.
 Check framework configuration before using framework-specific APIs.
 
-Prefer the repository's existing scripts and dev tools, such as `package.json` scripts and workspace task runners,
-run with the project's package manager, over generic commands.
-Use configured type, lint, and test checks. Examples, if the project configures that tool and command:
-`tsc --noEmit`, ESLint, Vitest, Jest, Mocha, and `node:test`.
+Run type, lint, and test checks through the repository's existing scripts and dev tools, such as `package.json`
+scripts and workspace task runners, with the project's package manager.
 
 ## Types and contracts
 
