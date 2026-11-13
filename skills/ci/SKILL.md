@@ -42,7 +42,7 @@ Use the target project's supported mechanisms; do not impose a provider, runner 
 - Prefer scoped OIDC federation to long-lived cloud credentials when supported. Verify audience, subject, environment,
   and deployment gates. Changes to trust policy require explicit authorization.
 - Use artifacts for required job handoffs and caches only for acceleration. Bound retention, key caches appropriately,
-  and ensure cache poisoning cannot cross trust levels. Set concurrency/cancellation only where cancellation is safe.
+  and ensure cache poisoning cannot cross trust levels.
 - Use configured local validation and existing tests. Do not push or trigger hosted CI merely to obtain evidence.
   Local checks do not prove hosted permissions, runner isolation, or branch protection.
 

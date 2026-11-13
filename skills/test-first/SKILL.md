@@ -6,7 +6,8 @@ description: Observe a meaningful failing test, implement a bounded behavior cha
 # Test-first change
 
 Use this skill for a behavior fix or feature with an available test seam.
-Follow the assigned scope, authorization, task budget, and role boundaries.
+Follow the assigned scope, authorization, and role boundaries. Respect the remaining task budget; return blockers
+when it is exhausted.
 Read `@agent-references/verification-scope.md` before applying the steps below. Honor separate limits on test generation
 and execution. Report excluded red/green checks as `SKIP`; continue the approved implementation without claiming
 an observed red/green cycle. An execution-only exclusion still permits assigned test generation.
@@ -22,7 +23,8 @@ evidence; do not add a second test solely to satisfy both procedures.
 5. Implement the smallest coherent change in the assigned scope.
 6. Run the same test and observe green. Then run adjacent regression checks.
 7. Simplify only within scope. Re-run affected checks after simplification.
-8. Return the diff, red/green evidence, regression results, and unresolved limitations for independent review.
+8. Return the diff, changed behavior, observed red/green evidence, regression results, and unresolved limitations
+   for independent review.
 
 Keep the acceptance oracle independent. Do not skip, weaken, or rewrite an assertion merely to make the patch pass.
 When a requirement genuinely changes, surface the proposed oracle change for approval and re-review.
@@ -34,7 +36,5 @@ Without an accepted exclusion, report unavailable required execution as `BLOCKED
 dependency or environment.
 Describe unrun checks as plans. Distinguish task completion from passing checks.
 Do not install new tooling or access production data to produce a green result.
-Respect the remaining task budget; return blockers when it is exhausted.
 
-Report changed behavior, observed red/green evidence, regression results, and limits. Research-only assignments
-return findings without edits. Execution-only assignments do not authorize repairs.
+Research-only assignments return findings without edits. Execution-only assignments do not authorize repairs.

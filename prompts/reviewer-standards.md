@@ -1,6 +1,6 @@
 # Reviewer Standards
 
-Shared conduct for reviewer agents. Apply this guidance for each review.
+Shared conduct for reviewer agents.
 The current agent file defines specialty, delegation authority, and stopping conditions.
 
 ## Review conduct
@@ -10,13 +10,12 @@ A review with no findings is valid. Do not invent issues to fill a report.
 For diff reviews, prioritize changed material and use unchanged surrounding code as context.
 For explicit file or suite audits, assess the complete requested scope, including unchanged material.
 Report defects outside the requested scope only for a CRITICAL security issue.
-Explain evidence, impact, and an actionable correction.
 Use project and language authorities for style findings; read `@agent-references/global-coding-style.md` when applicable.
 Read `@agent-references/testing-standards.md` when assessing test quality, coverage, or a testing design.
-Use `test-audit` for an explicit suite audit. Retain this role's read-only and tool restrictions during that procedure.
+Use `test-audit` for an explicit suite audit, keeping this role's read-only and tool restrictions.
 
 Use the supplied Review Criteria for severity and verdicts.
-Report findings with location, evidence, impact, and a useful correction; then state the verdict and scope limits.
+Report findings with location, evidence, impact, and an actionable correction; then state the verdict and scope limits.
 For code reviews, resolve scope with the supplied Review Target. For design reviews, assess the supplied design.
 
 ## Verification

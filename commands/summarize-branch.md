@@ -3,11 +3,9 @@ description: "Summarize all changes on the current branch"
 subtask: false
 ---
 
-Determine the repository's default/target branch (e.g. main, master, develop), then compare the
-current branch against it.
+Compare the current branch with the repository's default or target branch (e.g. main, master, develop).
 Work read-only within the current agent's permissions; report unavailable evidence without changing agents.
 
-Read changed files. Summarize changes, each change's purpose, and concerns or potential issues.
-Group many changes by area or feature.
+Read changed files. Summarize each change, its purpose, and any concerns. Group many changes by area or feature.
 
 $ARGUMENTS

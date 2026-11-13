@@ -13,6 +13,6 @@ Assign severity from actual impact. Domain-specific examples do not override imp
 Set the review verdict to `BLOCKED` for any CRITICAL or HIGH finding. Otherwise use `NOT ASSESSED` when required
 review scope remains unassessed, or `PASSED` when the assessment is complete.
 A passed review does not prove unrun checks, authorize implementation or shipping, or waive another required review.
-Report verification and scope limits separately from the finding-based verdict.
-Missing or failing checks do not alone prevent a completed manual assessment. Explain their effect on supported
-findings and identify any review scope that could not be assessed. Task completion and review verdict remain separate.
+Report verification and scope limits, including unassessed review scope, separately from the finding-based verdict.
+Missing or failing checks do not alone prevent a completed manual assessment; explain their effect on supported
+findings. Task completion and review verdict remain separate.

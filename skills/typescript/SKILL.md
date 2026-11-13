@@ -9,11 +9,12 @@ Apply project conventions and the installed language, runtime, and framework ver
 
 ## Context and checks
 
-Inspect `package.json`, lockfiles, and `tsconfig.json` for dependencies, scripts, module format, runtime, and strictness.
+Inspect `package.json`, lockfiles, and `tsconfig.json` for dependencies, scripts, module format, runtime,
+and strictness.
 Check framework configuration before using framework-specific APIs.
 
-Use configured type, lint, and test checks. Examples include `tsc --noEmit`, ESLint, Vitest, Jest, Mocha, and `node:test`.
-These examples do not imply that the tools are installed or that those exact commands suit the project.
+Use configured type, lint, and test checks. Examples, if the project configures that tool and command:
+`tsc --noEmit`, ESLint, Vitest, Jest, Mocha, and `node:test`.
 
 ## Types and contracts
 
@@ -47,6 +48,6 @@ data, and framework libraries before choosing patterns. Use existing accessible 
 ## Security-sensitive boundaries
 
 Inspect credentials, cookies, cryptographic material, user-controlled HTML, SQL, shell arguments, and filesystem paths.
-Pay particular attention to `eval`, `new Function`, dynamic loading, unsafe object merges, and prototype pollution.
+Check especially `eval`, `new Function`, dynamic loading, unsafe object merges, and prototype pollution.
 Use context-appropriate validation and output encoding. Use text rendering when HTML is not required.
 A typed value alone does not establish that untrusted input is safe.

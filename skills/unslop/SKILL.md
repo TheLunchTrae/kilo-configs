@@ -25,8 +25,8 @@ Preserve functionality, factual meaning, required disclosures, navigation, secti
 unless the request explicitly permits changing them. Redundant text and decoration can be removed within an authorized
 cleanup. Removing useful information or a capability requires separate scope agreement.
 
-Use the current session's tools. This skill needs no external examples, downloaded instructions, or bundled scripts.
-If a required tool is unavailable, state the resulting limit and complete the work that remains possible.
+Use the current session's tools; this skill needs no external examples, downloaded instructions, or bundled scripts.
+If a required tool is unavailable, state the resulting limit and complete what remains possible.
 
 ## Understand the screen
 
@@ -34,7 +34,7 @@ If a required tool is unavailable, state the resulting limit and complete the wo
 2. Read the relevant source and inspect the rendered interface when available. Include nearby controls and the states
    that change their meaning: loading, empty, populated, invalid, failed, disabled, and completed.
 3. Check the current design tokens, components, terminology, content requirements, and localization conventions.
-4. Record concrete problems with their locations and effects. Distinguish observed defects from preferences and
+4. Record concrete problems with locations and effects. Distinguish observed defects from preferences and
    unverified assumptions. Do not infer that a feature is unnecessary because it is unfamiliar.
 5. Choose the smallest set of changes that resolves those problems. A sound interface may need no change.
 
@@ -43,8 +43,8 @@ authorize editing the live site. If an authorized reproduction is needed, distin
 
 ## Decide what the copy contributes
 
-Evaluate a string in context before rewriting it. Check its consumers and the behavior it describes. Shorter wording
-is useful only when people retain the information needed to understand, choose, act, and recover.
+Evaluate a string in context before rewriting it: check its consumers and the behavior it describes. Shorter wording
+helps only when people keep the information needed to understand, choose, act, and recover.
 
 Choose one outcome for each problem:
 
@@ -62,7 +62,7 @@ Choose one outcome for each problem:
 - Keep units, formats, comparison periods, and scope where a value or action would otherwise be ambiguous.
 - Give unfamiliar features enough context for the intended audience. Do not assume expertise from a short label.
 - Distinguish an empty result from loading, failure, filtering, and lack of access. Offer an available next step when
-  it helps. Do not invent one.
+  it helps; do not invent one.
 - Preserve visible labels, accessible names, descriptions, and status announcements. A placeholder is not a label.
   Information may be necessary to assistive technology even when the visual interface conveys it elsewhere.
 - Preserve required legal, privacy, security, and safety information. Flag questionable requirements rather than
@@ -70,8 +70,8 @@ Choose one outcome for each problem:
 
 ### Remove repetition and unsupported reassurance
 
-Check whether a caption merely repeats its heading, a hint restates its field, or several messages make the same point.
-Remove the duplicate statement rather than replacing it with a shorter duplicate.
+Check whether a caption repeats its heading, a hint restates its field, or several messages make the same point.
+Remove the duplicate rather than replacing it with a shorter duplicate.
 
 Separate present behavior from development history. Verify that an old limitation is gone before removing its warning.
 Keep a current consequence or restriction even when a past defect prompted the explanation. Remove obsolete commentary
@@ -103,7 +103,7 @@ Examples of decisions, with behavior verified first:
 
 ## Improve the visual presentation
 
-Apply only the areas implicated by the audit. Do not run unrelated visual changes for a copy-only task.
+Apply only the areas implicated by the audit.
 
 ### Hierarchy and layout
 
@@ -115,8 +115,8 @@ Choose density for the task. A monitoring view may need compact, comparable rows
 for explanation. Do not replace every layout with equal cards, a centered hero, or a fixed sidebar recipe. Preserve
 reading order and all required actions when adapting the layout to narrow screens.
 
-Reduce competing emphasis. Reserve the strongest treatment for the most important decision or information. Use borders,
-backgrounds, and spacing to communicate structure, not to make every container look equally important.
+Reserve the strongest treatment for the most important decision or information. Use borders, backgrounds, and spacing
+to communicate structure, not to make every container look equally important.
 
 ### Type, color, and controls
 
@@ -156,7 +156,7 @@ and release their resources when the component is removed.
 ## Verify and report
 
 Compare the changed interface with the original task and audit. Check that removed text carried no unique requirement
-or meaning, rewritten text still describes the implementation, and moved text appears before it is needed.
+or meaning, rewritten text still matches the implementation, and moved text appears before it is needed.
 
 Inspect the affected render and states with the available tools. Check responsive layout, text expansion, keyboard
 navigation, accessible names, focus, contrast, and motion preferences where relevant. Exercise changed actions and

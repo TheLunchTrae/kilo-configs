@@ -14,9 +14,9 @@ Seek design review when consequential integration risks warrant it.
 
 1. Inspect the feature contract, existing suites, manifests, installed tools, configuration, CI, and run instructions.
    Reuse the existing runner and fixtures. Do not assume a browser application or select a framework without evidence.
-2. Trace the user or system entry point through components producing the outcome.
-   State the verified boundary: browser through API and persistence, CLI through saved state, or
-   request through worker completion. An in-process handler test does not prove deployment or transport behavior.
+2. Trace the user or system entry point through components producing the outcome. State the verified boundary:
+   browser through API and persistence, CLI through saved state, or request through worker completion.
+   An in-process handler test does not prove deployment or transport behavior.
 3. Derive a few independent journeys from requirements. Identify each actor, initial state, action, observable outcome,
    credible failure, existing coverage, and risk requiring this execution level.
 4. Cover the important success path and consequential failure or recovery paths. Consider authorization, invalid input,
@@ -63,9 +63,8 @@ Report unavailable harness execution and establish meaningful failure evidence a
 Do not reconstruct an unobserved failure. Existing-behavior baselines can pass on their first run.
 
 Use `verify` for focused journeys and relevant adjacent tests. Confirm expected test collection and discovery by the
-configured command or CI job. Check isolation or repeatability for concrete risks. Do not hide
-failures with retry loops,
-unconditional waits, or optional assertions. Record retry-only passes and unresolved reliability implications.
+configured command or CI job. Check isolation or repeatability for concrete risks. Do not hide failures with retry
+loops, unconditional waits, or optional assertions. Record retry-only passes and unresolved reliability implications.
 
 Return the coverage map, real and substituted boundaries, commands, source state, results, and remaining gaps.
 Separate authored tests from executed proof. Unavailable integrations and approved exclusions do not count as passes.

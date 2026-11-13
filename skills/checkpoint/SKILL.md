@@ -36,8 +36,8 @@ Attempts used; remaining budget:
 Blockers and next bounded action:
 ```
 
-Include relevant facts and brief evidence, not terminal history, credentials, tokens, private
-datasets, or unredacted logs.
+Include relevant facts and brief evidence, not terminal history, credentials, tokens, private datasets, or
+unredacted logs.
 Preserve uncertainty. Without hashes, identify captured content and require re-reading those files on resume.
 Git HEAD alone does not identify dirty or untracked content.
 

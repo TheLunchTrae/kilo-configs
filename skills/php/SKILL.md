@@ -13,7 +13,7 @@ Inspect `composer.json`, `composer.lock`, and framework configuration before ass
 Follow the project's PSR conventions, autoloading, dependency injection, and error handling.
 
 Use configured Composer scripts and tools such as PHPUnit, Pest, PHPStan, Psalm, or PHP CS Fixer.
-Framework commands such as `php artisan test` or `bin/phpunit` apply only when the project provides them.
+Use framework commands such as `php artisan test` or `bin/phpunit` only when the project provides them.
 Use static analysis and formatting in check mode during review.
 
 ## Types and contracts
@@ -37,7 +37,7 @@ Use static analysis and formatting in check mode during review.
 ## Boundary handling
 
 - Use prepared statements or parameterized ORM queries for untrusted SQL values.
-- Use framework-native escaping for HTML, with encoding appropriate to each output context.
+- Use framework-native HTML escaping with the encoding each output context needs.
 - Prefer process APIs that separate executable and arguments.
   If a shell is required, validate arguments and quote them correctly; escaping alone does not prevent option injection.
 - Do not expand untrusted keys into local variables with `extract` or related convenience patterns.
@@ -51,6 +51,6 @@ pipeline. Preserve PSR-7/PSR-15 boundaries and project container/factory convent
 InputFilter or form layer, and keep authentication, session, and CSRF handling in established framework facilities.
 
 Inspect credentials, cryptographic operations, request-controlled paths, dynamic inclusion, and raw output.
-Use established password and cryptographic APIs rather than custom schemes.
+Use established password and cryptographic APIs, not custom schemes.
 Avoid `unserialize` on untrusted input and verify serialization settings at trust boundaries.
-Check deprecated APIs against the target PHP version rather than assuming a particular major version.
+Check deprecated APIs against the target PHP version.

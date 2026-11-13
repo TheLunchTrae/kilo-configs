@@ -1,8 +1,7 @@
 # Shared implementation guidance
 
 Use this reference for implementation technique within the assigned scope, permissions, and authorization.
-Before selecting tests or checks, read `@agent-references/verification-scope.md`.
-Apply its boundary to the guidance below.
+Before selecting tests or checks, read `@agent-references/verification-scope.md` and apply its boundary below.
 
 ## Ground the change
 
@@ -29,9 +28,9 @@ Apply its boundary to the guidance below.
 
 ## Simplify when useful
 
-After complex or exploratory work functions, make one bounded simplification pass before final independent review.
-Use what you learned to identify temporary scaffolding, duplicate logic, unnecessary state or layers,
-and opportunities to reuse existing code. Change only what has a concrete benefit within the approved scope.
+Once complex or exploratory work functions, make one bounded simplification pass before final independent review.
+Look for temporary scaffolding, duplicate logic, unnecessary state or layers, and chances to reuse existing code.
+Change only what has a concrete benefit within the approved scope.
 No change is a valid result; do not require a rewrite or repeat the pass indefinitely.
 Preserve a recoverable baseline without unauthorized commits or destructive Git operations.
 Preserve behavior, interfaces, security boundaries, and meaningful tests. Rerun affected checks after changes,
@@ -43,4 +42,4 @@ Report changed behavior, inspected scope, source state, actual check results, an
 For research-only work, return source-grounded findings and do not imply implementation occurred.
 
 Implementation evidence does not authorize a commit, push, deployment, or other external action.
-Honor the task's authorization boundaries and report unmet prerequisites without expanding the assignment.
+Report unmet prerequisites without expanding the assignment.

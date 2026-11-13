@@ -12,9 +12,8 @@ Audits are read-only unless approved scope explicitly includes cleanup.
 ## Establish the scope
 
 Resolve the requested suite, capability, package, or repository. Suite audits include unchanged tests.
-Without scope, inventory suites and propose bounded batches. Do not silently sample convenient files
-or claim completeness
-from a sample.
+Without scope, inventory suites and propose bounded batches. Do not silently sample convenient files or claim
+completeness from a sample.
 
 Read test configuration, CI selection, setup, fixtures, relevant production entry points, and existing test commands.
 Identify tests that run in each relevant environment. Record source state and inspected scope.
@@ -62,9 +61,9 @@ Report any unavailable validation without claiming that the cleanup is verified.
 
 ## Return the assessment
 
-Report candidate decisions, evidence, coverage gaps, and uncertainty. For cleanup, include changes and verification.
-Separate inspected scope from unassessed suites. Report valuable apparent false positives, preserved contracts,
-test-support changes, executed checks, and necessary follow-up.
+Report candidate decisions, evidence, coverage gaps, uncertainty, valuable apparent false positives, preserved
+contracts, and necessary follow-up. For cleanup, include changes, test-support changes, and executed checks.
+Separate inspected scope from unassessed suites.
 Keep plans and execution logs in conversation or an authorized task location. An audit does not authorize shipping.
 
 ## Assessment guidance

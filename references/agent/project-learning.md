@@ -1,9 +1,8 @@
 # Project learning
 
 Assess explicitly requested failure prevention, evidenced recurring mistakes, or repeated attempts stopped by a blocker.
-Primary agents and specialists use available evidence within their task, role, stopping conditions,
-and remaining budget.
-Do not delay required immediate reporting to complete this assessment.
+Primary agents and specialists use available evidence within their task, role, stopping conditions, and remaining
+budget. Do not delay required immediate reporting to complete this assessment.
 Apply `@agent-references/verification-scope.md`. An accepted verification limitation alone is not a recurring mistake
 or a reason to propose verification infrastructure. Preserve separately evidenced failures and defects.
 
@@ -13,7 +12,6 @@ or a reason to propose verification infrastructure. Preserve separately evidence
    Separate personally observed evidence from supplied results and assumptions.
 2. Distinguish unclear requirements, missing or stale context, unavailable access, missing tools or coverage,
    and implementation or reasoning errors. State unknown causes explicitly.
-   Do not assume every failure needs documentation or tooling changes.
 3. When evidence supports durable prevention, propose at most one targeted improvement to the project.
    Prefer an existing test, lint rule, or interface contract over a long global prompt.
    Reuse existing project documentation and tools when they address the cause.
