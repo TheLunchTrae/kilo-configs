@@ -36,6 +36,7 @@ None of them reads OpenCode directories or `OPENCODE_*` variables.
   The default installation therefore needs no `configFile` option. Set it only for a models file in another place.
 - Prompt Composer discovers `prompts/` in the Kilo XDG configuration directory, project `.kilocode` and `.kilo`
   directories, the same directories under the home directory, and `KILO_CONFIG_DIR` when set.
+  It takes no plugin options.
 - Kilo installs each npm plugin specifier once into `$XDG_CACHE_HOME/kilo/packages/<specifier>`
   (else `~/.cache/kilo/packages/`) and does not refresh it. A version range gets a newer release only after that
   directory is removed or the specifier changes.
