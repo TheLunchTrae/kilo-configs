@@ -13,8 +13,9 @@ Inspect `*.csproj`, `Directory.Build.props`, `global.json`, and relevant package
 Confirm target framework, language version, nullable settings, application model, and installed packages.
 
 Run build, analyzer, format, and test checks through the repository's existing scripts and dev tools, such as
-Makefile or task targets, build scripts, and local tools in `.config/dotnet-tools.json`.
-Use `--warnaserror` only when the project requires it. Follow the existing xUnit, NUnit, or MSTest setup.
+Makefile or task runner targets, build scripts, and local tools in `.config/dotnet-tools.json`.
+Use formatting in check mode during review. Do not add `--warnaserror` unless the project requires it.
+Follow the existing xUnit, NUnit, or MSTest setup.
 
 ## Async and cancellation
 

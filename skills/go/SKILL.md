@@ -13,7 +13,8 @@ Inspect `go.mod`, `go.sum`, and any workspace configuration before assuming a fe
 Follow existing package layout, receiver conventions, logging, and error handling.
 
 Run build, format, test, race, and analysis checks for the affected packages through the repository's existing
-scripts and dev tools, such as Makefile or task targets, scripts in the repository, and `tool` directives in `go.mod`.
+scripts and dev tools, such as Makefile or task runner targets and `tool` directives in `go.mod`.
+Use formatting in check mode during review.
 
 ## Errors and context
 

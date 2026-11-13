@@ -13,7 +13,7 @@ Inspect `composer.json`, `composer.lock`, and framework configuration before ass
 Follow the project's PSR conventions, autoloading, dependency injection, and error handling.
 
 Run checks through the repository's existing scripts and dev tools, such as Composer scripts, Makefile or task
-targets, and tools in `vendor/bin`. Tools include PHPUnit, Pest, PHPStan, Psalm, or PHP CS Fixer.
+runner targets, and tools in `vendor/bin` such as PHPUnit, Pest, PHPStan, Psalm, and PHP CS Fixer.
 Use static analysis and formatting in check mode during review.
 
 ## Types and contracts

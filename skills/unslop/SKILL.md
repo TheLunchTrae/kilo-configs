@@ -84,9 +84,9 @@ unverified, flag it; remove it only within an authorized editing scope.
 ### Write and place the remaining text
 
 - Name actions and outcomes precisely. Make destructive actions distinguishable from reversible ones.
-- Use the target platform's native casing, such as Title Case on macOS and sentence case on Windows, unless
-  established terminology or brand rules require another form. Use punctuation for sentences, not decorative emphasis
-  on short controls.
+- Use the target platform's native casing, such as Title Case on macOS and sentence case on Windows, and sentence
+  case elsewhere, unless established terminology or brand rules require another form. Use punctuation for sentences,
+  not decorative emphasis on short controls.
 - Keep conditions, uncertainty, negation, and time relationships intact. Do not turn a possibility into a promise.
 - Put a requirement before the affected action. Show state-specific help when the state occurs, without hiding
   essential information behind hover-only controls or an undiscoverable help icon.
