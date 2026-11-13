@@ -29,15 +29,16 @@ Use Kilo configuration and state paths. Preserve published API identifiers that 
 
 ### Lunchbox plugin packages
 
-Model Profiles, Prompt Composer, and Tool Inspector use their Kilo packages. Each reads only Kilo directories
-and `KILO_*` variables.
+Model Profiles, Prompt Composer, and Tool Inspector use their Kilo packages.
+None of them reads OpenCode directories or `OPENCODE_*` variables.
 
 - Model Profiles reads `models.jsonc` from `KILO_CONFIG_DIR`, else the Kilo XDG configuration directory.
   The default installation therefore needs no `configFile` option. Set it only for a models file in another place.
-- Prompt Composer discovers `prompts/` in the same configuration directory and in project `.kilocode` and `.kilo`
-  directories. It takes no plugin options.
-- Kilo installs each npm plugin specifier once into its package cache and does not refresh it.
-  A version range gets a newer release only after that cache entry is removed or the specifier changes.
+- Prompt Composer discovers `prompts/` in the Kilo XDG configuration directory, project `.kilocode` and `.kilo`
+  directories, the same directories under the home directory, and `KILO_CONFIG_DIR` when set.
+- Kilo installs each npm plugin specifier once into `$XDG_CACHE_HOME/kilo/packages/<specifier>`
+  (else `~/.cache/kilo/packages/`) and does not refresh it. A version range gets a newer release only after that
+  directory is removed or the specifier changes.
 
 ### Native behavior and plugin limits
 
@@ -125,9 +126,8 @@ and `KILO_*` variables.
 - Register Model Profiles and Prompt Composer once each in both server/TUI lists, in that order.
   Register Tool Inspector once, in the TUI list only; it has no server entrypoint.
   Kilo installs npm plugins from these lists; do not add them to `package.json`.
-  Use the same version range for the three packages in both lists. `models.jsonc` uses the Model Profiles schema
-  for that minor version; update its URL with the range.
-  Model Profiles' only plugin option is `configFile`; Prompt Composer uses `prompts/`.
+  Use the same specifier for each package in both lists. The `models.jsonc` `$schema` uses the major.minor of the
+  Model Profiles range (`@0.3` for `^0.3.0`); update it with that range.
   Keep runtime metadata out of provider request options. Model Profiles removes `modelRef` before Kilo builds
   agents; do not add other plugin-only agent keys. Do not add compatibility layers for removed roles.
 - `/model-config` saves defaults only or a named profile per worktree, outside `models.jsonc`.
