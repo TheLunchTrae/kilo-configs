@@ -12,8 +12,10 @@ Apply project conventions and the installed PHP, framework, and package versions
 Inspect `composer.json`, `composer.lock`, and framework configuration before assuming a helper or package is present.
 Follow the project's PSR conventions, autoloading, dependency injection, and error handling.
 
-Use configured Composer scripts and tools such as PHPUnit, Pest, PHPStan, Psalm, or PHP CS Fixer.
-Use framework commands such as `php artisan test` or `bin/phpunit` only when the project provides them.
+Prefer the repository's existing scripts and dev tools, such as Composer scripts, Makefile or task targets, and tools
+in `vendor/bin`, over generic commands. Tools include PHPUnit, Pest, PHPStan, Psalm, or PHP CS Fixer.
+Use commands such as `composer check`, `vendor/bin/phpunit`, or `vendor/bin/laminas` only when the project provides
+them.
 Use static analysis and formatting in check mode during review.
 
 ## Types and contracts

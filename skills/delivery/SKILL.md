@@ -24,7 +24,7 @@ the implementation or freeze incidental wording and counts. Report unavailable n
 Use `commit` and `push` for authorized Git operations. Open a draft against the intended base.
 Write the body in this order: purpose and resulting behavior, meaningful final changes, linked issue,
 brief validation and material limits. Use closing keywords only when the issue is completed by this PR.
-Keep it concise and current after scope changes. Omit session links, AI attribution, work logs, and test transcripts.
+Keep it concise and current after scope changes. Omit session links, work logs, and test transcripts.
 Keep detailed evidence in the issue. Follow an applicable repository template without adding empty sections.
 
 ## Check the final head
