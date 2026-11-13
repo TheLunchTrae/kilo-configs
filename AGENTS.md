@@ -48,10 +48,6 @@
 Read `@agent-references/global-coding-style.md` before code-related analysis, design, planning, implementation, or review.
 Also read it for code examples and docstrings. Do not apply coding-style rules to documentation prose.
 
-When an instruction file and the existing code disagree, follow the conventions in the code, and point out each mismatch
-in your final reply.
-This applies to code conventions, not safety requirements, permissions, or explicit user instructions.
-
 ## Conditional stack guidance
 
 For implementation, planning, or review, load the relevant native skill with the `skill` tool:
@@ -219,6 +215,15 @@ Do not create helper files merely to reclassify a prohibited shortcut as an exis
 - Reuse current, complete evidence for the same source state and scope. Refresh affected evidence after source,
   scope, or requirements change. Repeat unchanged checks only with a concrete reason.
 - Keep task completion, review verdicts, check results, approval, and merge readiness distinct.
+
+## Code as source of truth
+
+- The code is always the source of truth. When docs, READMEs, comments, instruction files, skills, or agent guidance
+  disagree with the code, base claims, plans, and changes on what the code does and the conventions it follows.
+- Report each mismatch in the final reply. Update the stale text when it is in the task's scope.
+  Do not change the code to match the text unless the task requires that change.
+- This rule settles factual disagreements about behavior and conventions. It does not override safety requirements,
+  permissions, approval rules, or instructions the user gives for the current task.
 
 ## Verification Boundaries
 
