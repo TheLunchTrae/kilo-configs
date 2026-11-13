@@ -33,7 +33,7 @@ Run `staticcheck`, `golangci-lint`, or `govulncheck` only when available and app
   Use `errgroup` only if the dependency is available, or suitable standard-library primitives.
 - Define channel ownership and closure rules. Handle closed receives where needed.
 - Protect shared mutable state. Check lock release on every path and avoid channel or lock deadlocks.
-- Choose cancellation and timeout mechanisms for the operation.
+- Choose cancellation and timeout mechanisms that suit the operation.
   Verify timer behavior against the installed Go version before asserting a leak.
 - Do not introduce package-level mutable state without a clear lifetime and synchronization model.
 
@@ -45,6 +45,6 @@ Use useful zero values where practical. Avoid unnecessary `init` side effects an
 ## Security-sensitive boundaries
 
 Inspect credentials, crypto, SQL, process arguments, filesystem paths, and untrusted decoding.
-Use parameterized queries and safe process argument APIs, while also checking option injection.
+Use parameterized queries and safe process argument APIs, and check option injection.
 Path validation must respect directory boundaries and relevant symlink behavior; a string prefix alone is insufficient.
 Check TLS configuration, unsafe operations, and data races in the affected path.

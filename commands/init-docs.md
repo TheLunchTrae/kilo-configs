@@ -13,13 +13,12 @@ If the role cannot initialize, return the proposed setup within its scope.
 
 ## Resolve the destination
 
-1. Establish the work repository's root and requested scope with available read-only tools.
+1. Establish the work repository's root and requested scope with read-only tools.
    Do not initialize an installed global configuration directory or a repository that supplies global configuration.
    Resolve unclear repository boundaries before proposing writes.
-2. With no destination argument, use `AGENTS.md` at the repository root.
-   Add or update documentation rules in the existing file, or create it if missing.
+2. With no destination argument, use `AGENTS.md` at the repository root, creating it if missing.
 3. Use a user-supplied file instead of the default, or `AGENTS.md` inside a supplied directory.
-   Resolve relative paths from the repository root. Absolute paths must remain inside the same repository.
+   Resolve relative paths from the repository root.
    Treat a non-existent path with a trailing slash as a directory. Clarify other ambiguous destinations before writing.
 4. Treat remaining arguments as scope or preferences. Keep every resolved destination inside the work repository,
    including symlink targets. Do not interpret arguments as shell commands.
@@ -32,9 +31,8 @@ without competing copies.
 
 Inspect manifests, representative source, public APIs, and documentation for the requested areas.
 Use current evidence for languages, frameworks, naming, and domain terms. Do not infer stacks solely from filenames
-or populate generic language dictionaries. Report conflicts and gaps. Preserve definitions,
-exclusions, and local overrides.
-Scope different meanings by language, package, path, or domain.
+or populate generic language dictionaries. Report conflicts and gaps. Preserve definitions, exclusions, and local
+overrides. Scope different meanings by language, package, path, or domain.
 
 Before creating an `AGENTS.md`, check existing `CLAUDE.md` or other fallback instructions that it could mask.
 Preserve their effect with an explicit read instruction when needed. Do not replace them with a partial policy.
@@ -73,9 +71,8 @@ Inferred terms remain proposals until reviewed. Leave unsupported definitions un
 Preserve established technical terms beyond plain-language vocabulary. Do not turn prose alternatives into code renames
 or import ASD's full dictionary.
 
-For custom destinations, verify how agents read them and report required read instructions. Do not
-assume automatic loading.
-Edit other instruction files only within the approved setup.
+For custom destinations, verify how agents read them and report required read instructions; do not assume automatic
+loading. Edit other instruction files only within the approved setup.
 
 Before setup, present destination, proposed rules, terminology, supporting-file changes, and conflicts.
 Reuse valid same-scope approval or obtain missing approval required by the task or repository.
@@ -86,7 +83,7 @@ After the setup is approved, create missing files and merge approved additions i
 Do not alter global configuration, install tools, or rewrite application documentation as part of initialization.
 Do not stage, commit, push, or publish the generated files.
 
-On later runs, retain definitions and overrides. Make only supported updates or approved additions.
+On later runs, make only supported updates or approved additions.
 Report when the existing setup needs no changes.
 
 Verify terminology evidence, scope, literal preservation, and the intended instruction-loading path.

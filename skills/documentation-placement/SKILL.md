@@ -11,9 +11,11 @@ for writing and preservation rules. User and repository exceptions take preceden
 
 Keep the README to orientation, essential setup/use, and links. When available and permitted, prefer the wiki for depth,
 with User and Developer sections where useful. Preserve minimal-documentation exclusions for personal config repos.
-Keep machine-consumed instructions, licenses, and build assets in the repository. Keep task plans and evidence in issues.
+Keep machine-consumed instructions, licenses, and build assets in the repository.
+Keep task plans and evidence in issues.
 Maintain one authoritative home per topic. Verify destination content and links before removing originals.
 Keep durable maintainer and release procedures in one discoverable existing destination; document setup, never secrets.
-If the wiki is unavailable, retain existing documentation and report the limit; do not enable it or change access settings.
+If the wiki is unavailable, retain existing documentation and report the limit;
+do not enable it or change access settings.
 Use `/init-docs` only for requested documentation-policy setup, not for routine edits.
 This skill does not authorize publication, migration, deletion, or unrelated documentation expansion.

@@ -17,7 +17,7 @@ The following implementation guidance applies only when writing tests within app
 The preceding implementation guidance does not authorize edits during design-only or inspection assignments.
 Read `@agent-references/testing-standards.md` for coverage design and authoring decisions.
 
-Build executable coverage for established behavior. Use `test-first` when implementing a new behavior or fixing a bug.
+Build executable coverage for established behavior. Use `test-first` for new behavior or bug fixes.
 A verification suite can combine unit, integration, contract, CLI, API, or end-to-end tests as the scope requires.
 Full verification covers agreed behavior and boundaries, with explicit exclusions and gaps.
 
@@ -51,7 +51,7 @@ Create a compact coverage map. For each behavior, include:
 - Fixtures, environment prerequisites, setup, cleanup, isolation, and execution command with working directory.
 - Dependencies, risks, and behavior that will remain unverified.
 
-Choose the smallest level exercising the contract. Use integration or end-to-end coverage when unit
+Choose the smallest test level that exercises the contract. Use integration or end-to-end coverage when unit
 tests are insufficient.
 Use `end-to-end-tests` for complete journeys; include its boundaries and fixtures in this map.
 Load relevant stack skills for provider and runtime guidance.
@@ -71,7 +71,7 @@ Design-only assignments return the design and unresolved decisions.
 - Exercise application behavior or the actual declarative contract. Avoid assertions that merely echo the input,
   repeat the implementation algorithm, inspect incidental source text, or verify a mock's configured answer.
 - Assert relevant outputs, errors, persisted state, and observable side effects. Prefer public interfaces over private
-  helpers unless the project has an established reason to test those helpers directly.
+  helpers unless the project has an established reason to test them directly.
 - Keep the subject and tested behavior real. Substitute dependencies only at justified boundaries;
   state integration claims the substitutes cannot establish.
 - Control time, randomness, fixture state, and external services affecting repeatability. Isolate mutable test data.
@@ -111,6 +111,6 @@ project task location. Do not add process reports to global configuration or com
 For later changes, map changed behavior and affected integrations to suite assertions. Reuse tests covering intended
 contracts. Extend meaningful gaps only through approved implementation; `verify` remains evidence-only.
 Update expectations only for a reviewed requirement change, never simply because the implementation changed.
-Rerun affected checks on current source and environment. Passing baselines verify only behavior
-exercised by their assertions.
+Rerun affected checks on current source and environment.
+Passing baselines verify only behavior exercised by their assertions.
 Report uncovered changes and stale evidence; do not claim full verification.

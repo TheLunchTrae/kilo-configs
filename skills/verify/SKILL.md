@@ -29,8 +29,8 @@ paths, to actual assertions. Reuse applicable coverage on current source. A pass
 contracts, not uncovered behavior or another environment.
 
 Separate coverage gaps and follow-up from command results. Report test-generation needs for a separate
-`verification-tests` implementation assignment. Do not generate tests, fix code, or install a
-harness during verification.
+`verification-tests` implementation assignment. Do not generate tests, fix code, or install a harness during
+verification.
 Changed requirements need reviewed expectations before tests can verify them.
 
 ## Results

@@ -3,13 +3,13 @@
 Use this reference in `planner` with [its planning procedure](../../agents/planner.md).
 Add the analysis below when the user requests phases or safe deployment requires them.
 Typical reasons include serving traffic during a schema change, data backfills, or a consumer deprecation window.
-Otherwise, recommend the immediate-change plan. Do not pad a plan with unnecessary phases.
+Otherwise, recommend the immediate-change plan.
 
 ## Phase analysis
 
 Use as few independently mergeable phases as the change requires.
-Each phase must leave the system working, including its error handling, validation, and relevant edge cases.
-Do not postpone basic correctness to a later polish phase.
+Each phase must leave the system working, including its error handling, validation, and relevant edge cases;
+do not postpone basic correctness to a later polish phase.
 
 For each phase, state:
 

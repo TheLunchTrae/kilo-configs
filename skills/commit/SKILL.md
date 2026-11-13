@@ -14,8 +14,9 @@ or committing. For an authorized commit, stage and commit the specified changes:
    and do not commit until it is clean.
 4. Inspect local contribution rules and recent relevant commit messages. Follow the repository's actual conventions;
    do not impose Conventional Commits or issue prefixes without evidence. Keep each commit focused on a coherent change.
-   Write a concise message explaining the intent and why. Pass it through a permitted Git argument or dedicated tool field,
-   preserving literal text and line breaks. Follow the tool-selection policy; do not use a HEREDOC.
+   Write a concise message explaining the intent and why.
+   Pass it through a permitted Git argument or dedicated tool field, preserving literal text and line breaks.
+   Follow the tool-selection policy; do not use a HEREDOC.
 5. Commit, then confirm success with `git status`.
    If a pre-commit hook fails, inspect its result and working-tree effects.
    Repair only within the authorized implementation scope and remaining budget. Otherwise report the unmet prerequisite.

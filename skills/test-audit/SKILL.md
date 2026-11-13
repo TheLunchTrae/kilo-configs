@@ -12,9 +12,8 @@ Audits are read-only unless approved scope explicitly includes cleanup.
 ## Establish the scope
 
 Resolve the requested suite, capability, package, or repository. Suite audits include unchanged tests.
-Without scope, inventory suites and propose bounded batches. Do not silently sample convenient files
-or claim completeness
-from a sample.
+Without scope, inventory suites and propose bounded batches. Do not silently sample convenient files or claim
+completeness from a sample.
 
 Read test configuration, CI selection, setup, fixtures, relevant production entry points, and existing test commands.
 Identify tests that run in each relevant environment. Record source state and inspected scope.
