@@ -12,9 +12,9 @@ Apply project conventions and the installed Go version.
 Inspect `go.mod`, `go.sum`, and any workspace configuration before assuming a feature or package is available.
 Follow existing package layout, receiver conventions, logging, and error handling.
 
-Use the configured build, format, test, race, and analysis checks for the affected packages.
-Examples include `go build ./...`, `go vet ./...`, `go test -race ./...`, `gofmt -l .`, and configured linters.
-Run `staticcheck`, `golangci-lint`, or `govulncheck` only when available and appropriate.
+Run build, format, test, race, and analysis checks for the affected packages through the repository's existing
+scripts and dev tools, such as Makefile or task runner targets and `tool` directives in `go.mod`.
+Use formatting in check mode during review.
 
 ## Errors and context
 

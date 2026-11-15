@@ -12,9 +12,10 @@ Apply project conventions and the installed language, framework, and package ver
 Inspect `*.csproj`, `Directory.Build.props`, `global.json`, and relevant package configuration.
 Confirm target framework, language version, nullable settings, application model, and installed packages.
 
-Use configured build, analyzer, format, and test checks, such as `dotnet build`, `dotnet test`, and
-`dotnet format --verify-no-changes`.
-Use `--warnaserror` only when the project requires it. Follow the existing xUnit, NUnit, or MSTest setup.
+Run build, analyzer, format, and test checks through the repository's existing scripts and dev tools, such as
+Makefile or task runner targets, build scripts, and local tools in `.config/dotnet-tools.json`.
+Use formatting in check mode during review. Do not add `--warnaserror` unless the project requires it.
+Follow the existing xUnit, NUnit, or MSTest setup.
 
 ## Async and cancellation
 
