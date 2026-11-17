@@ -58,7 +58,7 @@ None of them reads OpenCode directories or `OPENCODE_*` variables.
   edit tools when `code` starts it. Kilo does not inherit `ask` rules into Task children.
 - Give every agent an explicit `edit` rule: `allow` for writers and `deny` for read-only agents.
   An agent without one asks before each edit. Native `plan` keeps its own plan-file guard.
-  Kilo applies global rules after the native `explore` deny-all, so `explore` needs its explicit `edit: deny`.
+  Kilo applies global rules after the native `explore` deny-all, so `explore` needs its explicit `edit: { "*": deny }`.
   The experimental Scout flag adds `scout` and reference agents built the same way. If it is enabled, deny their edits.
 - `web_search: true` supplies the native `websearch` tool for direct providers. Without it, Kilo supplies the tool
   only for its gateway providers or when a search provider flag is set. The tool sends queries to a hosted search
@@ -67,7 +67,7 @@ None of them reads OpenCode directories or `OPENCODE_*` variables.
   Direct `openai/` and `anthropic/` identifiers do not become Kilo Gateway identifiers.
   Account access and model availability require a separate user-side check.
 - Kilo forcibly denies tools for `summary`, `compaction`, and `title`.
-  Their retained `edit: ask` settings express the source policy but do not override that native restriction.
+  Their retained `edit: { "*": ask }` settings express the source policy but do not override that native restriction.
   Kilo also enforces a read-only shell allowlist for `explore`.
 - `modelRef`, `models.jsonc`, and `{{include:...}}` are plugin contracts, not native Kilo features.
   Confirm loaded agents and expanded prompts before relying on their effective models or shared instructions.
@@ -99,6 +99,8 @@ None of them reads OpenCode directories or `OPENCODE_*` variables.
   behavior before changing runtime assumptions. Do not infer loading or permissions from JSON parsing alone.
 - Preserve system edit approval, title/compaction `options.reasoningEffort`, the global Task denial,
   ordered shell rules, and secret Read guards. Agent permissions append to global rules; the last matching rule wins.
+- Keep object-valued permissions in object form across global defaults, JSON agent overrides, and agent frontmatter.
+  Use `edit: { "*": allow }` in YAML to override `"edit": { "*": "ask" }`; do not use `edit: allow`.
 - Kilo's built-in shell default is `ask`, so keep the `"*": "allow"` fallback first. After it, the shell policy
   blocks a few whole commands and asks before `git commit`, `git push`, `git stash`, `git checkout`, and `sudo`. Do not
   add flag variants or pattern lists; root `AGENTS.md` Shell Safety lists the commands agents must not run. Agents run
