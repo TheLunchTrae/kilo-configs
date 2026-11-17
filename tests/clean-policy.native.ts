@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
@@ -15,11 +15,14 @@ test('Kilo shell policy permits everyday commands and rejects destructive comman
   const binary = nativeBinary();
   const root = await mkdtemp(join(tmpdir(), 'kilo-clean-policy-'));
   t.after(() => rm(root, { recursive: true, force: true }));
+  const installation = join(root, 'config', 'kilo');
+  await mkdir(installation, { recursive: true });
+  await cp(new URL('../kilo.json', import.meta.url), join(installation, 'kilo.json'));
   const config = parse(await readFile(new URL('../kilo.jsonc', import.meta.url), 'utf8')) as {
     permission: Record<string, unknown>;
   };
   await writeFile(
-    join(root, 'kilo.json'),
+    join(installation, 'kilo.jsonc'),
     JSON.stringify({
       // The native parser and permission evaluator run, but no command can execute.
       shell: '/bin/false',

@@ -18,7 +18,8 @@ Use Kilo configuration and state paths. Preserve published API identifiers that 
 ### Configuration paths
 
 - The default installation is `~/.config/kilo/`. Keep the full repository layout together.
-  Kilo reads `kilo.jsonc`, `tui.jsonc`, `AGENTS.md`, agents, commands, skills, and local plugins from that directory.
+  Kilo reads `kilo.json`, `kilo.jsonc`, `tui.jsonc`, `AGENTS.md`, agents, commands, skills, and local plugins there.
+  Global config merges `kilo.json` before `kilo.jsonc`. Keep both files in the installation.
   The nested `.kilo/` directory contains maintenance rules only.
 - `references.agent-references.path` uses the default installation's absolute home-relative path.
   Kilo resolves ordinary relative reference paths against the work project, not this configuration directory.
@@ -93,7 +94,9 @@ None of them reads OpenCode directories or `OPENCODE_*` variables.
 ## Configuration and prompts
 
 - Native agent files own prompts, modes, colors, `modelRef`, and agent permissions.
-  `kilo.jsonc` owns global defaults, built-in agent settings, plugin registrations, and native boundaries.
+  `kilo.json` owns starter Bash allows. `kilo.jsonc` owns the main settings, explicit denies, and permanent approvals.
+  Kilo writes permanent approvals to `kilo.jsonc` when it exists. Keep its rules after the starter allows.
+  File substitution inserts text. It cannot include permission objects.
   `models.jsonc` owns model refs, profiles, and refs for built-in agents.
 - Preserve provider/model choices unless explicitly requested. Inspect installed dependencies and current native
   behavior before changing runtime assumptions. Do not infer loading or permissions from JSON parsing alone.
@@ -174,7 +177,8 @@ Use Node 22.18 or newer. Rendered bookmark tests need Bun on PATH.
 Kilo native installation supports x64 Linux/Windows. Source TUI activation needs Linux `script`; report other skips.
 Set `npm_config_cache` to a writable task-local directory when necessary.
 
-Test only what lives in this repository: `plugins/`, `extensions/`, their native loading, and `kilo.jsonc` policy.
+Test only what lives in this repository: `plugins/`, `extensions/`, their native loading, and the layered Kilo policy.
+Permission fixtures must install both `kilo.json` and a synthetic `kilo.jsonc` in the global Kilo config directory.
 Never test npm-installed or other third-party plugins here, including Model Profiles, Tool Inspector,
 and Prompt Composer. Do not add unit or native tests that load, configure, or assert their behavior,
 and do not install them as dependencies to make such tests possible. Their behavior belongs in their owning

@@ -18,12 +18,13 @@ test('Kilo native agents keep their edit boundaries under the configured policy'
   await mkdir(installation, { recursive: true });
   await mkdir(project);
   await cp(join(repository, 'agents'), join(installation, 'agents'), { recursive: true });
+  await cp(join(repository, 'kilo.json'), join(installation, 'kilo.json'));
   const config = parse(await readFile(join(repository, 'kilo.jsonc'), 'utf8')) as {
     permission: Record<string, unknown>;
     agent: Record<string, unknown>;
   };
   await writeFile(
-    join(installation, 'kilo.json'),
+    join(installation, 'kilo.jsonc'),
     JSON.stringify({
       plugin: [],
       permission: config.permission,
