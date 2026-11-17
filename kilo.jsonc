@@ -94,8 +94,10 @@
     },
     // Edits ask unless an agent sets its own rule. Do not change this to a global denial: Task children
     // of the native code agent inherit denials, which would remove the edit tools of general.
-    // Give every new agent an explicit edit rule. Read-only agents need edit: deny.
-    "edit": "ask",
+    // Give every new agent an explicit edit object. Read-only agents need "*": "deny".
+    "edit": {
+      "*": "ask"
+    },
     "task": {
       "*": "deny"
     },

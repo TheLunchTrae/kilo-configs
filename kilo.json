@@ -47,20 +47,26 @@
     "general": {
       "color": "#8AF793",
       "permission": {
-        "edit": "allow",
+        "edit": {
+          "*": "allow"
+        },
         "agent_manager": "deny"
       }
     },
     "explore": {
       "color": "#8AEEF7",
       "permission": {
-        "edit": "deny",
+        "edit": {
+          "*": "deny"
+        },
         "agent_manager": "deny"
       }
     },
     "summary": {
       "permission": {
-        "edit": "ask"
+        "edit": {
+          "*": "ask"
+        }
       }
     },
     "compaction": {
@@ -68,7 +74,9 @@
         "reasoningEffort": "medium"
       },
       "permission": {
-        "edit": "ask"
+        "edit": {
+          "*": "ask"
+        }
       }
     },
     "title": {
@@ -76,7 +84,9 @@
         "reasoningEffort": "low"
       },
       "permission": {
-        "edit": "ask"
+        "edit": {
+          "*": "ask"
+        }
       }
     }
   },

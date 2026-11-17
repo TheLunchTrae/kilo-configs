@@ -4,7 +4,8 @@ mode: primary
 color: "#F78AEE"
 modelRef: reasoning
 permission:
-  edit: allow
+  edit:
+    "*": allow
   task:
     planner: allow
     code-reviewer: allow

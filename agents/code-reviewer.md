@@ -4,7 +4,8 @@ mode: subagent
 color: "#EEF78A"
 modelRef: reasoning
 permission:
-  edit: deny
+  edit:
+    "*": deny
   agent_manager: deny
   github_*: deny
   playwright_*: deny

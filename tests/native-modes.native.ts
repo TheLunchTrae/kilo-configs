@@ -92,7 +92,7 @@ test('Kilo native agents keep their edit boundaries under the configured policy'
     assert.equal(result.status, 0, result.stderr);
     assert.ok(await written(join('.kilo', 'plans', 'fixture.md')));
   });
-  for (const agent of ['plan', 'explore']) {
+  for (const agent of ['plan', 'explore', 'planner', 'code-reviewer', 'security-reviewer']) {
     await t.test(`${agent} cannot edit source`, async () => {
       const result = write(agent, `${agent}-source.txt`);
       assert.ifError(result.error);
