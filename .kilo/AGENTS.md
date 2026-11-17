@@ -93,7 +93,9 @@ None of them reads OpenCode directories or `OPENCODE_*` variables.
 ## Configuration and prompts
 
 - Native agent files own prompts, modes, colors, `modelRef`, and agent permissions.
-  `kilo.jsonc` owns global defaults, built-in agent settings, plugin registrations, and native boundaries.
+  `kilo.jsonc` owns the main settings, built-in agent settings, and complete global permission block.
+  Keep starter allows, explicit denies, and permanent approvals in that file.
+  Keep personal JSON and JSONC configs free of explanatory code comments.
   `models.jsonc` owns model refs, profiles, and refs for built-in agents.
 - Preserve provider/model choices unless explicitly requested. Inspect installed dependencies and current native
   behavior before changing runtime assumptions. Do not infer loading or permissions from JSON parsing alone.
@@ -101,14 +103,22 @@ None of them reads OpenCode directories or `OPENCODE_*` variables.
   ordered shell rules, and secret Read guards. Agent permissions append to global rules; the last matching rule wins.
 - Keep object-valued permissions in object form across global defaults, JSON agent overrides, and agent frontmatter.
   Use `edit: { "*": allow }` in YAML to override `"edit": { "*": "ask" }`; do not use `edit: allow`.
-- Kilo's built-in shell default is `ask`, so keep the `"*": "allow"` fallback first. After it, the shell policy
-  blocks a few whole commands and asks before `git commit`, `git push`, `git stash`, `git checkout`, and `sudo`. Do not
-  add flag variants or pattern lists; root `AGENTS.md` Shell Safety lists the commands agents must not run. Agents run
-  project scripts through the shell, so `shell.env` scrubbing covers them. Do not set rules that match a Kilo default.
+- Keep Kilo's built-in shell default `ask` and permitted helper allows.
+  Do not add a wildcard fallback or redundant asks.
+  Add generally safe commands only when authorized. Prefer simple prefixes such as `git status*` over flag variants.
+  Use a command boundary for short helper names: `comm *` must not allow `command <program>`.
+  Keep `git diff *` separate from `git difftool`, which can execute custom commands.
+  Deny shell substitutes for the native read, grep, glob, edit, and web tools. Keep native tools available.
+  Preserve helper use such as `head`, `tail`, and output-processing pipelines. Reuse built-in allows when possible.
+  Keep explicit destructive-command denies after allows. Permanent approvals save additional allows in global config.
+  Root `AGENTS.md` Shell Safety lists commands agents must not run without specific approval.
+  Agents run project scripts through the shell, so `shell.env` scrubbing covers them.
+  Do not set rules that match a Kilo default.
 - Keep permissions minimal. Add a rule only when it changes behavior; never restate a default or an inherited rule.
 - Read-only agents inherit the global shell policy. Their prompts forbid commands that change files, Git state, or
   remote services.
-  File reads and searches use the native `read`, `grep`, and `glob` tools.
+  Complete file reads, listings, and searches use the native `read`, `grep`, and `glob` tools.
+  Native read-only modes retain their stricter shell ceilings.
 - The native `code` agent is the primary integrator. Planner/reviewers are read-only leaves. Built-in general is an
   editing worker; explore retains native restrictions. Native `plan` delegates only to `explore`.
   Keep delegation exact and deny by default. No routes from reviewers to writers.

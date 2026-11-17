@@ -6,7 +6,6 @@
   "model": "openai/gpt-6-astra",
   "small_model": "openai/gpt-6-luna",
   "subagent_depth": 1,
-  // Direct providers do not get the native websearch tool by default.
   "web_search": true,
   "references": {
     "agent-references": {
@@ -37,13 +36,74 @@
       "*/secrets/*": "deny"
     },
     "bash": {
-      // Kilo's built-in shell default is ask with a short read-only allowlist, so this fallback is needed.
-      "*": "allow",
-      "git commit *": "ask",
-      "git push*": "ask",
-      "git stash *": "ask",
-      "git checkout *": "ask",
-      "sudo *": "ask",
+      "printf *": "allow",
+      "basename *": "allow",
+      "dirname *": "allow",
+      "realpath *": "allow",
+      "readlink *": "allow",
+      "stat *": "allow",
+      "cmp *": "allow",
+      "comm *": "allow",
+      "sha256sum *": "allow",
+      "sha512sum *": "allow",
+      "cksum *": "allow",
+      "command -v*": "allow",
+      "git status*": "allow",
+      "git diff *": "allow",
+      "git log*": "allow",
+      "git show*": "allow",
+      "git blame*": "allow",
+      "git merge-base*": "allow",
+      "git rev-parse*": "allow",
+      "git rev-list*": "allow",
+      "git ls-files*": "allow",
+      "git ls-tree*": "allow",
+      "git ls-remote*": "allow",
+      "git shortlog*": "allow",
+      "git describe*": "allow",
+      "git cat-file*": "allow",
+      "git name-rev*": "allow",
+      "git stash list*": "allow",
+      "gh pr view*": "allow",
+      "gh pr list*": "allow",
+      "gh pr status*": "allow",
+      "gh pr diff*": "allow",
+      "gh pr checks*": "allow",
+      "gh issue view*": "allow",
+      "gh issue list*": "allow",
+      "gh issue status*": "allow",
+      "gh repo view*": "allow",
+      "gh run list*": "allow",
+      "gh run view*": "allow",
+      "gh release list*": "allow",
+      "gh release view*": "allow",
+      "gh search*": "allow",
+      "cat *": "deny",
+      "less *": "deny",
+      "ls *": "deny",
+      "dir *": "deny",
+      "tree *": "deny",
+      "find *": "deny",
+      "fd *": "deny",
+      "fdfind *": "deny",
+      "glob *": "deny",
+      "grep *": "deny",
+      "egrep *": "deny",
+      "fgrep *": "deny",
+      "rg *": "deny",
+      "ag *": "deny",
+      "ack *": "deny",
+      "git grep*": "deny",
+      "findstr *": "deny",
+      "Select-String *": "deny",
+      "touch *": "deny",
+      "sed *": "deny",
+      "awk *": "deny",
+      "gawk *": "deny",
+      "mawk *": "deny",
+      "tee *": "deny",
+      "curl *": "deny",
+      "wget *": "deny",
       "rm -rf*": "deny",
       "rm -fr*": "deny",
       "git reset --hard*": "deny",
@@ -57,9 +117,6 @@
       "npm unpublish*": "deny",
       "kubectl delete*": "deny"
     },
-    // Edits ask unless an agent sets its own rule. Do not change this to a global denial: Task children
-    // of the native code agent inherit denials, which would remove the edit tools of general.
-    // Give every new agent an explicit edit object. Read-only agents need "*": "deny".
     "edit": {
       "*": "ask"
     },
@@ -71,9 +128,6 @@
     "playwright_*": "ask"
   },
   "agent": {
-    // agents/code.md supplies the prompt and permissions of the native code agent, the default primary agent.
-    // Native plan mode is the only other primary agent. It writes a plan file and hands it off to code.
-    // The code agent answers questions and debugs, so ask and debug stay disabled.
     "plan": {
       "permission": {
         "task": {
@@ -101,7 +155,6 @@
     },
     "explore": {
       "color": "#8AEEF7",
-      // Kilo applies global rules after the native explore deny-all, so the global edit ask would reach it.
       "permission": {
         "edit": {
           "*": "deny"

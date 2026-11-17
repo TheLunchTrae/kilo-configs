@@ -9,7 +9,6 @@
     "title": { "model": "openai/gpt-6-luna", "variant": "low" }
   },
   "profiles": {
-    // Uses every ref from defaults.
     "openai": {},
     "openai-menial": {
       "reasoning": { "model": "openai/gpt-5.4-mini", "variant": "none" },

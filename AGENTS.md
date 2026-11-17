@@ -110,10 +110,12 @@ requirements.
 
 ## Shell Safety
 
-Most shell commands run without approval. The configuration blocks a few whole commands and asks before `git commit`,
-`git push`, `git stash`, `git checkout`, and `sudo`. Do not run the following kinds of commands without the user's
-specific approval. When a step needs one, give the user the exact command and its effect, and wait. The user runs any
-command the configuration blocks.
+Shell commands use Kilo's default `ask`, built-in helper allows, and explicit allows for common inspection commands.
+The configuration denies shell substitutes for dedicated tools and retains destructive-command denies.
+Global permissions and other settings live in `kilo.jsonc`. Permanent approvals update that file.
+Do not run the following kinds of commands without the user's specific approval.
+When a step needs one, give the user the exact command and its effect, and wait. The user runs any command the
+configuration blocks.
 
 - Commands that delete files or directories, other than files the task created inside the worktree. This includes
   `rm -r`, `git clean`, `find -delete`, and `xargs rm`.
@@ -157,11 +159,16 @@ Names can differ between hosts; the names below identify the corresponding Kilo 
 
 | Operation | Use this tool | Do not use shell substitutes |
 | --- | --- | --- |
-| Read files or list directories | `read` | `cat`, `head`, `tail`, `less`, `ls`, `dir` |
-| Find file paths | `glob` | `find`, `ls -R`, `dir /s` |
-| Search file contents | `grep` | Shell `grep`, `rg`, `ag`, `findstr`, `Select-String` |
+| Read complete files or list directories | `read` | `cat`, `less`, `ls`, `dir`, `tree` |
+| Find file paths | `glob` | `find`, `fd`, `fdfind`, shell `glob` |
+| Search file contents | `grep` | Shell `grep`, `egrep`, `fgrep`, `rg`, `ag`, `ack`, `git grep` |
+| Search file contents on Windows | `grep` | `findstr`, `Select-String` |
 | Create or modify files | `write`, `edit`, `apply_patch` | `sed`, `awk`, `tee`, `>`, `>>` |
 | Retrieve web information | `webfetch`, `websearch` | `curl`, `wget`, `Invoke-WebRequest` |
+
+Shell helpers such as `head`, `tail`, `wc`, `sort`, `cut`, and `jq` may inspect excerpts or process command output.
+Pipelines of permitted commands and helpers are allowed, such as `git log --oneline | head -n 20`.
+Do not use helpers to replace dedicated search, edit, or web tools. Secret-access restrictions still apply.
 
 The table gives examples, not an exhaustive list; the restriction applies to the operation, not just the command name.
 The `grep` tool is distinct from the shell command with the same name. The table does not prohibit authorized build,
@@ -176,9 +183,9 @@ and make individual edits. Speed, convenience, batching, output truncation, and 
 ### Prohibited shortcuts
 
 - NEVER create or execute ad hoc scripts or inline code for task inspection, extraction, file changes, or verification.
-  Never substitute shell commands for dedicated tools, including for file reads, searches, and edits.
-- Do not use interpreter one-liners, heredocs, shell loops, pipelines, temporary helper files, aliases, or indirect
-  execution for these operations.
+  Never use scripts or prohibited shell commands to replace dedicated file reads, searches, or edits.
+- Do not use interpreter one-liners, heredocs, shell loops, temporary helper files, aliases, or indirect execution
+  for these operations. Do not use pipelines to bypass this policy.
 - The prohibition applies to Bash, Python, Node.js, PowerShell, Ruby, PHP, and other shells and runtimes.
   Examples include `python -c`, `node -e`, `ruby -e`, `php -r`, and `bash -c`.
 - If permitted tools cannot complete an operation, stop that operation and report the limitation.
