@@ -18,8 +18,7 @@ Use Kilo configuration and state paths. Preserve published API identifiers that 
 ### Configuration paths
 
 - The default installation is `~/.config/kilo/`. Keep the full repository layout together.
-  Kilo reads `kilo.json`, `kilo.jsonc`, `tui.jsonc`, `AGENTS.md`, agents, commands, skills, and local plugins there.
-  Global config merges `kilo.json` before `kilo.jsonc`. Keep both files in the installation.
+  Kilo reads `kilo.jsonc`, `tui.jsonc`, `AGENTS.md`, agents, commands, skills, and local plugins from that directory.
   The nested `.kilo/` directory contains maintenance rules only.
 - `references.agent-references.path` uses the default installation's absolute home-relative path.
   Kilo resolves ordinary relative reference paths against the work project, not this configuration directory.
@@ -94,10 +93,9 @@ None of them reads OpenCode directories or `OPENCODE_*` variables.
 ## Configuration and prompts
 
 - Native agent files own prompts, modes, colors, `modelRef`, and agent permissions.
-  `kilo.json` owns the main settings and built-in agent settings. Agent-specific permissions stay with those agents.
-  `kilo.jsonc` owns the complete global permission block, including starter allows, denies, and permanent approvals.
-  Kilo writes permanent approvals to `kilo.jsonc` when it exists. Keep both global allows and denies in that file.
-  File substitution inserts text. It cannot include permission objects.
+  `kilo.jsonc` owns the main settings, built-in agent settings, and complete global permission block.
+  Keep starter allows, explicit denies, and permanent approvals in that file.
+  Keep personal JSON and JSONC configs free of explanatory code comments.
   `models.jsonc` owns model refs, profiles, and refs for built-in agents.
 - Preserve provider/model choices unless explicitly requested. Inspect installed dependencies and current native
   behavior before changing runtime assumptions. Do not infer loading or permissions from JSON parsing alone.
@@ -109,6 +107,7 @@ None of them reads OpenCode directories or `OPENCODE_*` variables.
   Do not add a wildcard fallback or redundant asks.
   Add generally safe commands only when authorized. Prefer simple prefixes such as `git status*` over flag variants.
   Use a command boundary for short helper names: `comm *` must not allow `command <program>`.
+  Keep `git diff *` separate from `git difftool`, which can execute custom commands.
   Deny shell substitutes for the native read, grep, glob, edit, and web tools. Keep native tools available.
   Preserve helper use such as `head`, `tail`, and output-processing pipelines. Reuse built-in allows when possible.
   Keep explicit destructive-command denies after allows. Permanent approvals save additional allows in global config.
@@ -180,8 +179,7 @@ Use Node 22.18 or newer. Rendered bookmark tests need Bun on PATH.
 Kilo native installation supports x64 Linux/Windows. Source TUI activation needs Linux `script`; report other skips.
 Set `npm_config_cache` to a writable task-local directory when necessary.
 
-Test only what lives in this repository: `plugins/`, `extensions/`, their native loading, and the layered Kilo policy.
-Permission fixtures must install the real `kilo.jsonc` and a synthetic `kilo.json` in the global Kilo config directory.
+Test only what lives in this repository: `plugins/`, `extensions/`, their native loading, and `kilo.jsonc` policy.
 Never test npm-installed or other third-party plugins here, including Model Profiles, Tool Inspector,
 and Prompt Composer. Do not add unit or native tests that load, configure, or assert their behavior,
 and do not install them as dependencies to make such tests possible. Their behavior belongs in their owning

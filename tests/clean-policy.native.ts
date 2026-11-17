@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { cp, mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
+import { parse } from 'jsonc-parser';
 import { nativeBinary } from './native-host.ts';
 
 test('Kilo shell policy permits everyday commands and rejects destructive commands', async (t) => {
@@ -14,14 +15,15 @@ test('Kilo shell policy permits everyday commands and rejects destructive comman
   const binary = nativeBinary();
   const root = await mkdtemp(join(tmpdir(), 'kilo-clean-policy-'));
   t.after(() => rm(root, { recursive: true, force: true }));
-  const installation = join(root, 'config', 'kilo');
-  await mkdir(installation, { recursive: true });
-  await cp(new URL('../kilo.jsonc', import.meta.url), join(installation, 'kilo.jsonc'));
+  const config = parse(await readFile(new URL('../kilo.jsonc', import.meta.url), 'utf8')) as {
+    permission: Record<string, unknown>;
+  };
   await writeFile(
-    join(installation, 'kilo.json'),
+    join(root, 'kilo.json'),
     JSON.stringify({
       // The native parser and permission evaluator run, but no command can execute.
       shell: '/bin/false',
+      permission: config.permission,
       model: 'openai/native-fixture',
       enabled_providers: ['openai'],
       provider: {

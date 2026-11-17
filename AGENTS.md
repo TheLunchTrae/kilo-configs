@@ -112,8 +112,7 @@ requirements.
 
 Shell commands use Kilo's default `ask`, built-in helper allows, and explicit allows for common inspection commands.
 The configuration denies shell substitutes for dedicated tools and retains destructive-command denies.
-Global permissions live in `kilo.jsonc`, including starter allows, denies, and additional permanent approvals.
-Kilo merges that file after the main settings in `kilo.json`.
+Global permissions and other settings live in `kilo.jsonc`. Permanent approvals update that file.
 Do not run the following kinds of commands without the user's specific approval.
 When a step needs one, give the user the exact command and its effect, and wait. The user runs any command the
 configuration blocks.

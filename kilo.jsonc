@@ -1,5 +1,32 @@
 {
   "$schema": "https://app.kilo.ai/config.json",
+  "plugin": ["@lunchbox-labs/kilo-model-profiles@^0.3.0", "@lunchbox-labs/kilo-prompt-composer@^0.3.0"],
+  "shell": "C:/Program Files/Git/bin/bash.exe",
+  "disabled_providers": ["opencode"],
+  "model": "openai/gpt-6-astra",
+  "small_model": "openai/gpt-6-luna",
+  "subagent_depth": 1,
+  "web_search": true,
+  "references": {
+    "agent-references": {
+      "path": "~/.config/kilo/references/agent",
+      "description": "Conditional coding, testing, verification, delegation, documentation, and task guidance.",
+      "hidden": true
+    }
+  },
+  "mcp": {
+    "github": {
+      "type": "remote",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "enabled": false,
+      "oauth": false
+    },
+    "playwright": {
+      "type": "local",
+      "command": ["npx", "@playwright/mcp@latest"],
+      "enabled": false
+    }
+  },
   "permission": {
     "goal": "ask",
     "read": {
@@ -9,7 +36,6 @@
       "*/secrets/*": "deny"
     },
     "bash": {
-      // Keep Kilo's default ask. Built-in helper allows include head, tail, wc, sort, cut, and jq.
       "printf *": "allow",
       "basename *": "allow",
       "dirname *": "allow",
@@ -23,7 +49,7 @@
       "cksum *": "allow",
       "command -v*": "allow",
       "git status*": "allow",
-      "git diff*": "allow",
+      "git diff *": "allow",
       "git log*": "allow",
       "git show*": "allow",
       "git blame*": "allow",
@@ -52,7 +78,6 @@
       "gh release list*": "allow",
       "gh release view*": "allow",
       "gh search*": "allow",
-      // Use the dedicated read, grep, glob, edit, and webfetch tools for these operations.
       "cat *": "deny",
       "less *": "deny",
       "ls *": "deny",
@@ -92,9 +117,6 @@
       "npm unpublish*": "deny",
       "kubectl delete*": "deny"
     },
-    // Edits ask unless an agent sets its own rule. Do not change this to a global denial: Task children
-    // of the native code agent inherit denials, which would remove the edit tools of general.
-    // Give every new agent an explicit edit object. Read-only agents need "*": "deny".
     "edit": {
       "*": "ask"
     },
@@ -104,5 +126,71 @@
     "agent_manager": "ask",
     "github_*": "ask",
     "playwright_*": "ask"
+  },
+  "agent": {
+    "plan": {
+      "permission": {
+        "task": {
+          "explore": "allow"
+        }
+      }
+    },
+    "ask": {
+      "disable": true
+    },
+    "debug": {
+      "disable": true
+    },
+    "orchestrator": {
+      "disable": true
+    },
+    "general": {
+      "color": "#8AF793",
+      "permission": {
+        "edit": {
+          "*": "allow"
+        },
+        "agent_manager": "deny"
+      }
+    },
+    "explore": {
+      "color": "#8AEEF7",
+      "permission": {
+        "edit": {
+          "*": "deny"
+        },
+        "agent_manager": "deny"
+      }
+    },
+    "summary": {
+      "permission": {
+        "edit": {
+          "*": "ask"
+        }
+      }
+    },
+    "compaction": {
+      "options": {
+        "reasoningEffort": "medium"
+      },
+      "permission": {
+        "edit": {
+          "*": "ask"
+        }
+      }
+    },
+    "title": {
+      "options": {
+        "reasoningEffort": "low"
+      },
+      "permission": {
+        "edit": {
+          "*": "ask"
+        }
+      }
+    }
+  },
+  "watcher": {
+    "ignore": ["node_modules/**", "dist/**", ".git/**", ".idea/**"]
   }
 }
