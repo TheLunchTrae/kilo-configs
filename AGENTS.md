@@ -112,8 +112,8 @@ requirements.
 
 Shell commands use Kilo's default `ask`, built-in helper allows, and explicit allows for common inspection commands.
 The configuration denies shell substitutes for dedicated tools and retains destructive-command denies.
-Starter Bash allows live in `kilo.json`. Kilo merges global `kilo.jsonc` after it.
-That file contains the denies and receives additional permanent approvals.
+Global permissions live in `kilo.jsonc`, including starter allows, denies, and additional permanent approvals.
+Kilo merges that file after the main settings in `kilo.json`.
 Do not run the following kinds of commands without the user's specific approval.
 When a step needs one, give the user the exact command and its effect, and wait. The user runs any command the
 configuration blocks.

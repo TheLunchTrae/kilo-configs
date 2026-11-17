@@ -1,49 +1,86 @@
 {
   "$schema": "https://app.kilo.ai/config.json",
-  "permission": {
-    "bash": {
-      "printf *": "allow",
-      "basename *": "allow",
-      "dirname *": "allow",
-      "realpath *": "allow",
-      "readlink *": "allow",
-      "stat *": "allow",
-      "cmp *": "allow",
-      "comm *": "allow",
-      "sha256sum *": "allow",
-      "sha512sum *": "allow",
-      "cksum *": "allow",
-      "command -v*": "allow",
-      "git status*": "allow",
-      "git diff*": "allow",
-      "git log*": "allow",
-      "git show*": "allow",
-      "git blame*": "allow",
-      "git merge-base*": "allow",
-      "git rev-parse*": "allow",
-      "git rev-list*": "allow",
-      "git ls-files*": "allow",
-      "git ls-tree*": "allow",
-      "git ls-remote*": "allow",
-      "git shortlog*": "allow",
-      "git describe*": "allow",
-      "git cat-file*": "allow",
-      "git name-rev*": "allow",
-      "git stash list*": "allow",
-      "gh pr view*": "allow",
-      "gh pr list*": "allow",
-      "gh pr status*": "allow",
-      "gh pr diff*": "allow",
-      "gh pr checks*": "allow",
-      "gh issue view*": "allow",
-      "gh issue list*": "allow",
-      "gh issue status*": "allow",
-      "gh repo view*": "allow",
-      "gh run list*": "allow",
-      "gh run view*": "allow",
-      "gh release list*": "allow",
-      "gh release view*": "allow",
-      "gh search*": "allow"
+  "plugin": ["@lunchbox-labs/kilo-model-profiles@^0.3.0", "@lunchbox-labs/kilo-prompt-composer@^0.3.0"],
+  "shell": "C:/Program Files/Git/bin/bash.exe",
+  "disabled_providers": ["opencode"],
+  "model": "openai/gpt-6-astra",
+  "small_model": "openai/gpt-6-luna",
+  "subagent_depth": 1,
+  "web_search": true,
+  "references": {
+    "agent-references": {
+      "path": "~/.config/kilo/references/agent",
+      "description": "Conditional coding, testing, verification, delegation, documentation, and task guidance.",
+      "hidden": true
     }
+  },
+  "mcp": {
+    "github": {
+      "type": "remote",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "enabled": false,
+      "oauth": false
+    },
+    "playwright": {
+      "type": "local",
+      "command": ["npx", "@playwright/mcp@latest"],
+      "enabled": false
+    }
+  },
+  "agent": {
+    "plan": {
+      "permission": {
+        "task": {
+          "explore": "allow"
+        }
+      }
+    },
+    "ask": {
+      "disable": true
+    },
+    "debug": {
+      "disable": true
+    },
+    "orchestrator": {
+      "disable": true
+    },
+    "general": {
+      "color": "#8AF793",
+      "permission": {
+        "edit": "allow",
+        "agent_manager": "deny"
+      }
+    },
+    "explore": {
+      "color": "#8AEEF7",
+      "permission": {
+        "edit": "deny",
+        "agent_manager": "deny"
+      }
+    },
+    "summary": {
+      "permission": {
+        "edit": "ask"
+      }
+    },
+    "compaction": {
+      "options": {
+        "reasoningEffort": "medium"
+      },
+      "permission": {
+        "edit": "ask"
+      }
+    },
+    "title": {
+      "options": {
+        "reasoningEffort": "low"
+      },
+      "permission": {
+        "edit": "ask"
+      }
+    }
+  },
+  "watcher": {
+    "ignore": ["node_modules/**", "dist/**", ".git/**", ".idea/**"]
   }
 }

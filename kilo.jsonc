@@ -1,33 +1,5 @@
 {
   "$schema": "https://app.kilo.ai/config.json",
-  "plugin": ["@lunchbox-labs/kilo-model-profiles@^0.3.0", "@lunchbox-labs/kilo-prompt-composer@^0.3.0"],
-  "shell": "C:/Program Files/Git/bin/bash.exe",
-  "disabled_providers": ["opencode"],
-  "model": "openai/gpt-6-astra",
-  "small_model": "openai/gpt-6-luna",
-  "subagent_depth": 1,
-  // Direct providers do not get the native websearch tool by default.
-  "web_search": true,
-  "references": {
-    "agent-references": {
-      "path": "~/.config/kilo/references/agent",
-      "description": "Conditional coding, testing, verification, delegation, documentation, and task guidance.",
-      "hidden": true
-    }
-  },
-  "mcp": {
-    "github": {
-      "type": "remote",
-      "url": "https://api.githubcopilot.com/mcp/",
-      "enabled": false,
-      "oauth": false
-    },
-    "playwright": {
-      "type": "local",
-      "command": ["npx", "@playwright/mcp@latest"],
-      "enabled": false
-    }
-  },
   "permission": {
     "goal": "ask",
     "read": {
@@ -37,8 +9,49 @@
       "*/secrets/*": "deny"
     },
     "bash": {
-      // Global config loads the starter Bash allows from kilo.json before this file.
       // Keep Kilo's default ask. Built-in helper allows include head, tail, wc, sort, cut, and jq.
+      "printf *": "allow",
+      "basename *": "allow",
+      "dirname *": "allow",
+      "realpath *": "allow",
+      "readlink *": "allow",
+      "stat *": "allow",
+      "cmp *": "allow",
+      "comm *": "allow",
+      "sha256sum *": "allow",
+      "sha512sum *": "allow",
+      "cksum *": "allow",
+      "command -v*": "allow",
+      "git status*": "allow",
+      "git diff*": "allow",
+      "git log*": "allow",
+      "git show*": "allow",
+      "git blame*": "allow",
+      "git merge-base*": "allow",
+      "git rev-parse*": "allow",
+      "git rev-list*": "allow",
+      "git ls-files*": "allow",
+      "git ls-tree*": "allow",
+      "git ls-remote*": "allow",
+      "git shortlog*": "allow",
+      "git describe*": "allow",
+      "git cat-file*": "allow",
+      "git name-rev*": "allow",
+      "git stash list*": "allow",
+      "gh pr view*": "allow",
+      "gh pr list*": "allow",
+      "gh pr status*": "allow",
+      "gh pr diff*": "allow",
+      "gh pr checks*": "allow",
+      "gh issue view*": "allow",
+      "gh issue list*": "allow",
+      "gh issue status*": "allow",
+      "gh repo view*": "allow",
+      "gh run list*": "allow",
+      "gh run view*": "allow",
+      "gh release list*": "allow",
+      "gh release view*": "allow",
+      "gh search*": "allow",
       // Use the dedicated read, grep, glob, edit, and webfetch tools for these operations.
       "cat *": "deny",
       "less *": "deny",
@@ -89,65 +102,5 @@
     "agent_manager": "ask",
     "github_*": "ask",
     "playwright_*": "ask"
-  },
-  "agent": {
-    // agents/code.md supplies the prompt and permissions of the native code agent, the default primary agent.
-    // Native plan mode is the only other primary agent. It writes a plan file and hands it off to code.
-    // The code agent answers questions and debugs, so ask and debug stay disabled.
-    "plan": {
-      "permission": {
-        "task": {
-          "explore": "allow"
-        }
-      }
-    },
-    "ask": {
-      "disable": true
-    },
-    "debug": {
-      "disable": true
-    },
-    "orchestrator": {
-      "disable": true
-    },
-    "general": {
-      "color": "#8AF793",
-      "permission": {
-        "edit": "allow",
-        "agent_manager": "deny"
-      }
-    },
-    "explore": {
-      "color": "#8AEEF7",
-      // Kilo applies global rules after the native explore deny-all, so the global edit ask would reach it.
-      "permission": {
-        "edit": "deny",
-        "agent_manager": "deny"
-      }
-    },
-    "summary": {
-      "permission": {
-        "edit": "ask"
-      }
-    },
-    "compaction": {
-      "options": {
-        "reasoningEffort": "medium"
-      },
-      "permission": {
-        "edit": "ask"
-      }
-    },
-    "title": {
-      "options": {
-        "reasoningEffort": "low"
-      },
-      "permission": {
-        "edit": "ask"
-      }
-    }
-  },
-  "watcher": {
-    "ignore": ["node_modules/**", "dist/**", ".git/**", ".idea/**"]
   }
 }

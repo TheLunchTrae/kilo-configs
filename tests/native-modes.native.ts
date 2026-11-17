@@ -5,7 +5,6 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { parse } from 'jsonc-parser';
 import { nativeBinary } from './native-host.ts';
 
 test('Kilo native agents keep their edit boundaries under the configured policy', async (t) => {
@@ -18,16 +17,14 @@ test('Kilo native agents keep their edit boundaries under the configured policy'
   await mkdir(installation, { recursive: true });
   await mkdir(project);
   await cp(join(repository, 'agents'), join(installation, 'agents'), { recursive: true });
-  await cp(join(repository, 'kilo.json'), join(installation, 'kilo.json'));
-  const config = parse(await readFile(join(repository, 'kilo.jsonc'), 'utf8')) as {
-    permission: Record<string, unknown>;
+  await cp(join(repository, 'kilo.jsonc'), join(installation, 'kilo.jsonc'));
+  const config = JSON.parse(await readFile(join(repository, 'kilo.json'), 'utf8')) as {
     agent: Record<string, unknown>;
   };
   await writeFile(
-    join(installation, 'kilo.jsonc'),
+    join(installation, 'kilo.json'),
     JSON.stringify({
       plugin: [],
-      permission: config.permission,
       agent: config.agent,
       model: 'openai/native-fixture',
       enabled_providers: ['openai'],

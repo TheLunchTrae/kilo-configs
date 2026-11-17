@@ -94,8 +94,9 @@ None of them reads OpenCode directories or `OPENCODE_*` variables.
 ## Configuration and prompts
 
 - Native agent files own prompts, modes, colors, `modelRef`, and agent permissions.
-  `kilo.json` owns starter Bash allows. `kilo.jsonc` owns the main settings, explicit denies, and permanent approvals.
-  Kilo writes permanent approvals to `kilo.jsonc` when it exists. Keep its rules after the starter allows.
+  `kilo.json` owns the main settings and built-in agent settings. Agent-specific permissions stay with those agents.
+  `kilo.jsonc` owns the complete global permission block, including starter allows, denies, and permanent approvals.
+  Kilo writes permanent approvals to `kilo.jsonc` when it exists. Keep both global allows and denies in that file.
   File substitution inserts text. It cannot include permission objects.
   `models.jsonc` owns model refs, profiles, and refs for built-in agents.
 - Preserve provider/model choices unless explicitly requested. Inspect installed dependencies and current native
@@ -178,7 +179,7 @@ Kilo native installation supports x64 Linux/Windows. Source TUI activation needs
 Set `npm_config_cache` to a writable task-local directory when necessary.
 
 Test only what lives in this repository: `plugins/`, `extensions/`, their native loading, and the layered Kilo policy.
-Permission fixtures must install both `kilo.json` and a synthetic `kilo.jsonc` in the global Kilo config directory.
+Permission fixtures must install the real `kilo.jsonc` and a synthetic `kilo.json` in the global Kilo config directory.
 Never test npm-installed or other third-party plugins here, including Model Profiles, Tool Inspector,
 and Prompt Composer. Do not add unit or native tests that load, configure, or assert their behavior,
 and do not install them as dependencies to make such tests possible. Their behavior belongs in their owning
