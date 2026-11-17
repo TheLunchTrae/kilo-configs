@@ -99,10 +99,12 @@ None of them reads OpenCode directories or `OPENCODE_*` variables.
   behavior before changing runtime assumptions. Do not infer loading or permissions from JSON parsing alone.
 - Preserve system edit approval, title/compaction `options.reasoningEffort`, the global Task denial,
   ordered shell rules, and secret Read guards. Agent permissions append to global rules; the last matching rule wins.
-- Kilo's built-in shell default is `ask`, so keep the `"*": "allow"` fallback first. After it, the shell policy
-  blocks a few whole commands and asks before `git commit`, `git push`, `git stash`, `git checkout`, and `sudo`. Do not
-  add flag variants or pattern lists; root `AGENTS.md` Shell Safety lists the commands agents must not run. Agents run
-  project scripts through the shell, so `shell.env` scrubbing covers them. Do not set rules that match a Kilo default.
+- Keep Kilo's built-in shell default `ask` and built-in allows. Do not add a wildcard fallback or redundant asks.
+  Add generally safe commands only when authorized. Prefer simple prefixes such as `git status*` over flag variants.
+  Keep explicit destructive-command denies after allows. Permanent approvals save additional allows in global config.
+  Root `AGENTS.md` Shell Safety lists commands agents must not run without specific approval.
+  Agents run project scripts through the shell, so `shell.env` scrubbing covers them.
+  Do not set rules that match a Kilo default.
 - Keep permissions minimal. Add a rule only when it changes behavior; never restate a default or an inherited rule.
 - Read-only agents inherit the global shell policy. Their prompts forbid commands that change files, Git state, or
   remote services.
