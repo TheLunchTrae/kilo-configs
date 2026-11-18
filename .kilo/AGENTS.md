@@ -44,7 +44,9 @@ None of them reads OpenCode directories or `OPENCODE_*` variables.
 ### Native behavior and plugin limits
 
 - The user works mainly through one top-level agent. `code` is the default primary agent.
-  `agents/code.md` supplies its prompt and permissions. Kilo addresses `code` by name: it is the native default,
+  `agents/code.md` supplies its prompt. `kilo.jsonc` supplies its permissions through `agent.code.permission`.
+  Keep `agent.code.mode` set to `primary` so Markdown merging preserves its routing.
+  Kilo addresses `code` by name: it is the native default,
   the plan follow-up starts implementation in it, and `/review` fixes target it. Do not add a replacement primary.
 - Native `plan` is the only other primary agent. The user selects it for large tasks. It writes
   `.kilo/plans/<timestamp>-<slug>.md` in a Git project, or a file under the Kilo data directory otherwise.
@@ -92,8 +94,8 @@ None of them reads OpenCode directories or `OPENCODE_*` variables.
 
 ## Configuration and prompts
 
-- Native agent files own prompts, modes, colors, `modelRef`, and agent permissions.
-  `kilo.jsonc` owns the main settings, built-in agent settings, and complete global permission block.
+- Native agent files own prompts, modes, colors, `modelRef`, and custom agent permissions.
+  `kilo.jsonc` owns the main settings, built-in agent settings and permissions, and complete global permission block.
   Keep starter allows, explicit denies, and permanent approvals in that file.
   Keep personal JSON and JSONC configs free of explanatory code comments.
   `models.jsonc` owns model refs, profiles, and refs for built-in agents.

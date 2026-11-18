@@ -153,6 +153,21 @@
     "playwright_*": "ask"
   },
   "agent": {
+    "code": {
+      "mode": "primary",
+      "permission": {
+        "edit": {
+          "*": "allow"
+        },
+        "task": {
+          "code-reviewer": "allow",
+          "explore": "allow",
+          "general": "allow",
+          "planner": "allow",
+          "security-reviewer": "allow"
+        }
+      }
+    },
     "plan": {
       "permission": {
         "task": {
