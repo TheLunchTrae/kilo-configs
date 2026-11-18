@@ -58,6 +58,19 @@ test('sessions keep separate files during concurrent first writes', async (t) =>
   await assert.rejects(read.execute({ filename: 'other.txt' }, context('session-b')));
 });
 
+test('concurrent overwrites leave one complete value', async (t) => {
+  const { read, write } = await fixture(t);
+  const session = context('session-a');
+  const filename = 'shared.txt';
+  const contents = ['A'.repeat(1024 * 1024), 'B'.repeat(1024), 'C'.repeat(512 * 1024), 'D'.repeat(2048)];
+  await Promise.all(contents.map((content) => write.execute({ filename, content }, session)));
+  const result = await read.execute({ filename }, session);
+  assert.ok(
+    typeof result === 'string' && contents.includes(result),
+    'Expected one complete write without mixed content',
+  );
+});
+
 test('both tools reject paths, traversal, empty names, and reserved Windows names', async (t) => {
   const { read, write } = await fixture(t);
   const readArgs = tool.schema.object(read.args);

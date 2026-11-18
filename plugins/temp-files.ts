@@ -1,6 +1,6 @@
 import { type Plugin, tool } from '@kilocode/plugin';
 import { createHash } from 'node:crypto';
-import { mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -45,7 +45,15 @@ export const TempFilesPlugin: Plugin = async () => {
         args: { filename: filenameSchema, content: tool.schema.string() },
         async execute({ filename, content }, { sessionID }) {
           try {
-            await writeFile(await filePath(filename, sessionID), content, { encoding: 'utf8', mode: 0o600 });
+            const target = await filePath(filename, sessionID);
+            const staging = await mkdtemp(join(root, 'write-'));
+            try {
+              const source = join(staging, 'content');
+              await writeFile(source, content, { encoding: 'utf8', mode: 0o600 });
+              await rename(source, target);
+            } finally {
+              await rm(staging, { recursive: true, force: true });
+            }
             return `Wrote ${filename}.`;
           } catch {
             throw new Error('Could not write the temporary file.');
