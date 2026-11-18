@@ -126,6 +126,19 @@ export interface Fact {
   label: string;
   value: string;
 }
+
+function parameterText(name: string, value: unknown): string {
+  const credential = (key: string) =>
+    /api[_-]?key|secret|password|authorization|cookie|private[_-]?key|^token$|(?:access|refresh|auth|session|bearer|security|id)[_-]?token$/i.test(
+      key,
+    );
+  return JSON.stringify(
+    credential(name) ? '[redacted]' : value,
+    (key, item: unknown) => (credential(key) ? '[redacted]' : typeof item === 'string' ? clean(item, 30_000) : item),
+    2,
+  );
+}
+
 export function configFacts(
   agent: Omit<Agent, 'model'> & { model?: Agent['model'] | null },
   config: Config,
@@ -136,7 +149,17 @@ export function configFacts(
   const model = hasResponseData(agent.model) ? `${agent.model.providerID}/${agent.model.modelID}` : undefined;
   const facts: Fact[] = [
     { label: 'Agent default (server-resolved)', value: model ?? 'No agent model; Kilo selects a fallback' },
+    { label: 'Provider', value: agent.model?.providerID ?? 'Kilo fallback' },
+    { label: 'Model', value: agent.model?.modelID ?? 'Kilo fallback' },
     { label: 'Configured variant', value: cleanOr(agent.variant, 'Model default') },
+    ...(agent.temperature === undefined
+      ? []
+      : [{ label: 'Configured temperature', value: parameterText('temperature', agent.temperature) }]),
+    ...(agent.topP === undefined ? [] : [{ label: 'Configured top_p', value: parameterText('top_p', agent.topP) }]),
+    ...Object.entries(agent.options).map(([key, value]) => ({
+      label: `options.${clean(key)}`,
+      value: parameterText(key, value),
+    })),
     { label: 'Workspace default (merged)', value: cleanOr(config.model, 'Kilo fallback') },
     {
       label: 'Global file default',
@@ -159,7 +182,7 @@ export function configFacts(
     },
     { label: 'Origin file', value: 'V1 returns merged settings; exact file provenance is not exposed' },
   ];
-  return facts.map((fact) => ({ label: fact.label, value: clean(fact.value, 800) }));
+  return facts.map((fact) => ({ label: fact.label, value: clean(fact.value, 30_000) }));
 }
 
 export const bookmarkKinds = ['Note', 'Plan', 'Decision', 'Question'] as const;

@@ -6,7 +6,7 @@
     "test": "node --experimental-strip-types --test tests/*.test.mjs tests/*.test.ts",
     "test:native": "node tests/run-native.mjs",
     "test:kilo": "npm run test:native",
-    "test:render": "bun test --preload @opentui/solid/preload ./tests/bookmarks-view.native.ts",
+    "test:render": "bun test --preload @opentui/solid/preload ./tests/bookmarks-view.native.ts ./tests/value-view.native.ts",
     "typecheck": "tsc --project tsconfig.json",
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "npm run lint -- --fix",

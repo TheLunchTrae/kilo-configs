@@ -139,8 +139,8 @@ None of them reads OpenCode directories or `OPENCODE_*` variables.
 - Register Model Profiles and Prompt Composer once each in both server/TUI lists, in that order.
   Register Tool Inspector once, in the TUI list only; it has no server entrypoint.
   Kilo installs npm plugins from these lists; do not add them to `package.json`.
-  Use the same specifier for each package in both lists. The `models.jsonc` `$schema` uses the major.minor of the
-  Model Profiles range (`@0.3` for `^0.3.0`); update it with that range.
+  Use the same specifier for each package in both lists. The `models.jsonc` `$schema` uses the published
+  Model Profiles schema at `@latest` for IDE validation.
   Keep runtime metadata out of provider request options. Model Profiles removes `modelRef` before Kilo builds
   agents; do not add other plugin-only agent keys. Do not add compatibility layers for removed roles.
 - `/model-config` saves defaults only or a named profile per worktree, outside `models.jsonc`.

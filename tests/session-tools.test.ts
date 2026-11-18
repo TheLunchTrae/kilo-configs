@@ -96,7 +96,18 @@ test('config inspection separates global, merged, agent, and observed settings w
     name: 'reviewer',
     model: { providerID: 'fixture', modelID: 'pinned' },
     variant: 'high',
-    options: { agent_group: 'reviewers', apiKey: 'DO_NOT_DISPLAY' },
+    temperature: 0,
+    topP: 0.9,
+    options: {
+      reasoningEffort: 'high',
+      store: false,
+      futureParameter: { budget: 0, labels: ['one', 'two'], optional: null, apiKey: 'DO_NOT_DISPLAY' },
+      empty: '',
+      apiKey: 'DO_NOT_DISPLAY',
+      sessionToken: 'DO_NOT_DISPLAY',
+      headers: { 'X-Auth-Token': 'DO_NOT_DISPLAY', 'X-Amz-Security-Token': 'DO_NOT_DISPLAY' },
+      budgetTokens: 16000,
+    },
   } as unknown as Agent;
   const config = {
     model: 'fixture/project',
@@ -110,6 +121,26 @@ test('config inspection separates global, merged, agent, and observed settings w
   ]);
   const value = (label: string) => facts.find((item) => item.label === label)?.value;
   assert.equal(value('Agent default (server-resolved)'), 'fixture/pinned');
+  assert.equal(value('Provider'), 'fixture');
+  assert.equal(value('Model'), 'pinned');
+  assert.equal(value('Configured temperature'), '0');
+  assert.equal(value('Configured top_p'), '0.9');
+  assert.equal(value('options.reasoningEffort'), '"high"');
+  assert.equal(value('options.store'), 'false');
+  assert.equal(value('options.empty'), '""');
+  assert.deepEqual(JSON.parse(value('options.futureParameter')!), {
+    budget: 0,
+    labels: ['one', 'two'],
+    optional: null,
+    apiKey: '[redacted]',
+  });
+  assert.equal(value('options.apiKey'), '"[redacted]"');
+  assert.equal(value('options.sessionToken'), '"[redacted]"');
+  assert.deepEqual(JSON.parse(value('options.headers')!), {
+    'X-Auth-Token': '[redacted]',
+    'X-Amz-Security-Token': '[redacted]',
+  });
+  assert.equal(value('options.budgetTokens'), '16000');
   assert.equal(value('Workspace default (merged)'), 'fixture/project');
   assert.equal(value('Global file default'), 'fixture/global');
   assert.equal(value('Last recorded model for this agent'), 'fixture/observed');
