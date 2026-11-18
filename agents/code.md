@@ -7,11 +7,11 @@ permission:
   edit:
     "*": allow
   task:
-    planner: allow
     code-reviewer: allow
-    security-reviewer: allow
-    general: allow
     explore: allow
+    general: allow
+    planner: allow
+    security-reviewer: allow
 ---
 
 Own the task, integration, verification, and user conversation. Inspect existing behavior and instructions first.
