@@ -2,7 +2,7 @@
   "$schema": "https://app.kilo.ai/tui.json",
   "theme": "pink",
   "plugin": [
-    "@lunchbox-labs/kilo-model-profiles@^0.3.0",
+    "@lunchbox-labs/kilo-model-profiles@^0.3.1",
     "@lunchbox-labs/kilo-prompt-composer@^0.3.0",
     "@lunchbox-labs/kilo-tool-inspector@^0.3.0",
     "./extensions/session-tools/config.ts",
