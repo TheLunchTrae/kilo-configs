@@ -72,7 +72,7 @@ None of them reads OpenCode directories or `OPENCODE_*` variables.
 - `modelRef`, `models.jsonc`, and `{{include:...}}` are plugin contracts, not native Kilo features.
   Confirm loaded agents and expanded prompts before relying on their effective models or shared instructions.
   A successful JSON parse does not prove that a plugin loaded or an include expanded.
-- The four local server plugins use Kilo's published plugin API.
+- Local server plugins use Kilo's published plugin API.
   Use the pinned `@kilocode/plugin` and `@kilocode/sdk` packages for local server and TUI integrations.
   Keep helper modules and auto-discovery placement intact.
 - Config/context panels and bookmarks use shared TUI APIs, but source compatibility does not verify interactive

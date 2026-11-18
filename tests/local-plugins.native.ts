@@ -102,10 +102,27 @@ test('Kilo loads the local plugins and runs their tool hooks', async (t) => {
   const discovered = command(['--print-logs', '--log-level', 'DEBUG', 'debug', 'config']);
   assert.equal(discovered.status, 0, discovered.stderr);
   const config = JSON.parse(discovered.stdout) as { plugin: unknown[] };
-  for (const file of ['block-secrets.ts', 'comment-guard.ts', 'compaction-task-state.ts', 'scrub-secrets.ts']) {
+  for (const file of [
+    'block-secrets.ts',
+    'comment-guard.ts',
+    'compaction-task-state.ts',
+    'scrub-secrets.ts',
+    'temp-files.ts',
+  ]) {
     assert.ok(config.plugin.some((entry) => typeof entry === 'string' && entry.endsWith(`/plugins/${file}`)));
   }
   assert.ok(config.plugin.every((entry) => typeof entry === 'string' && entry.startsWith('file:')));
+  const scratch = command([
+    'debug',
+    'agent',
+    'code',
+    '--tool',
+    'temp_write',
+    '--params',
+    JSON.stringify({ filename: 'native.txt', content: 'temporary fixture' }),
+  ]);
+  assert.equal(scratch.status, 0, scratch.stderr);
+  assert.match(scratch.stdout, /Wrote native\.txt\./);
   // Discovery does not prove that a plugin loaded, so a full run must show block-secrets rejecting the read.
   const run = await new Promise<{ status: number | null; stdout: string; stderr: string }>((resolve, reject) => {
     const child = spawn(binary, ['run', '--format', 'json', 'Read the fixture file.'], { cwd: project, env });
