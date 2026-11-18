@@ -42,8 +42,8 @@ export default {
               ...facts.map((fact, index) => ({
                 title: fact.label,
                 value: `fact:${index}`,
-                description: fact.value,
-                run: () => view.alert(fact.label, fact.value),
+                description: fact.value.replace(/\n[\t ]*/g, ' '),
+                run: () => view.value(fact.label, fact.value),
               })),
               {
                 title: 'Effective permission rules',

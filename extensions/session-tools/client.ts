@@ -93,6 +93,29 @@ export function ui(api: TuiPluginApi) {
     }
     navigation.alert({ title, message: clean(message, 30_000) });
   };
+  const value = async (title: string, message: string) => {
+    const revision = navigation.revision;
+    const client = api.client;
+    const route = api.route.current;
+    const sessionID = route.name === 'session' ? route.params?.sessionID : undefined;
+    const directory = api.state.path.directory;
+    const worktree = api.state.path.worktree;
+    const { valueViewer } = await import('../tui/value-view.ts');
+    const render = await valueViewer(api);
+    const current = api.route.current;
+    if (
+      api.lifecycle.signal.aborted ||
+      revision !== navigation.revision ||
+      client !== api.client ||
+      directory !== api.state.path.directory ||
+      worktree !== api.state.path.worktree ||
+      current.name !== route.name ||
+      (current.name === 'session' && current.params?.sessionID !== sessionID)
+    ) {
+      return;
+    }
+    navigation.show(() => render(title, message));
+  };
   const prompt = (title: string, value: string, save: (text: string) => void | Promise<void>) => {
     if (api.lifecycle.signal.aborted) {
       return;
@@ -129,7 +152,7 @@ export function ui(api: TuiPluginApi) {
       ],
     });
   };
-  return { run, menu, alert, prompt, command, navigation };
+  return { run, menu, alert, value, prompt, command, navigation };
 }
 
 export function historyNote(value: Snapshot): string {
