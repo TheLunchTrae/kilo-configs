@@ -77,7 +77,7 @@ None of them reads OpenCode directories or `OPENCODE_*` variables.
 - Local server plugins use Kilo's published plugin API.
   Use the pinned `@kilocode/plugin` and `@kilocode/sdk` packages for local server and TUI integrations.
   Keep helper modules and auto-discovery placement intact.
-- Config/context panels and bookmarks use shared TUI APIs, but source compatibility does not verify interactive
+- Config/context panels use shared TUI APIs, but source compatibility does not verify interactive
   rendering. Kilo and this workspace use different OpenTUI versions. Verify source activation on Kilo and report
   rendering checks separately. Npm-installed plugin behavior is outside this repository's test scope.
 - Secret guards are heuristic defenses, not a sandbox. A plugin that fails to load provides no protection.
@@ -175,9 +175,9 @@ Keep npm, pinned dependencies, loader-required exports, and Promise-returning ho
 | `npm run format` | Format plugin/extension code, tests, and tooling configuration. |
 | `npm run test:native` | Install pinned Kilo and check local integrations with isolated synthetic fixtures. |
 | `npm run test:kilo` | Run the same Kilo native integration suite. |
-| `npm run test:render` | Render the bookmark panel with Bun. |
+| `npm run test:render` | Render the value view with Bun. |
 
-Use Node 22.18 or newer. Rendered bookmark tests need Bun on PATH.
+Use Node 22.18 or newer. Rendered view tests need Bun on PATH.
 Kilo native installation supports x64 Linux/Windows. Source TUI activation needs Linux `script`; report other skips.
 Set `npm_config_cache` to a writable task-local directory when necessary.
 
@@ -221,9 +221,8 @@ blocks only leaks. Comment detection is heuristic, not a parser.
 
 Session tools live in `extensions/session-tools/` with shared UI helpers outside auto-discovered plugin directories.
 Their TUI-only entrypoints are registered in `tui.jsonc` and stay outside server plugin auto-discovery.
-Keep config/context views read-only and preserve evidence limits. Bookmark storage stays scoped by project,
-workspace, directory, and session; preserve malformed records on errors. Handoff drafts require explicit copy
-and must never submit prompts automatically. Do not add workflow-stage tracking to these panels.
+Keep config/context views read-only and preserve evidence limits. Session Bookmarks is retired.
+Leave existing bookmark data untouched. Do not add workflow-stage tracking to these panels.
 
 ## Documentation and third-party material
 

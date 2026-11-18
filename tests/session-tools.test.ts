@@ -2,18 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import type { Agent, Config, Session } from '@kilocode/sdk/v2';
 import type { TuiPluginApi } from '@kilocode/plugin/tui';
-import {
-  type Bookmark,
-  type Entry,
-  bookmarkKey,
-  clean,
-  configFacts,
-  contextRecords,
-  handoff,
-  lastAssistant,
-  readBookmarks,
-} from '../extensions/session-tools/model.ts';
-import { bookmarkStore } from '../extensions/session-tools/storage.ts';
+import { type Entry, clean, configFacts, contextRecords, lastAssistant } from '../extensions/session-tools/model.ts';
 import configPlugin from '../extensions/session-tools/config.ts';
 import contextPlugin from '../extensions/session-tools/context.ts';
 const session = (id = 'session-a', parentID?: string): Session => ({
@@ -45,16 +34,6 @@ const entry = (time: number, parts: unknown[] = [], info: Record<string, unknown
     },
     parts,
   }) as Entry;
-const mark = (id = 'bookmark-a'): Bookmark => ({
-  id,
-  label: 'Output contract',
-  note: 'JSON only on stdout.',
-  kind: 'Decision',
-  sessionID: 'session-a',
-  messageID: 'message-1',
-  created: 1,
-  selected: true,
-});
 
 test('context records require actual attachments and completed tool evidence', () => {
   const records = contextRecords([
@@ -152,67 +131,6 @@ test('config inspection separates global, merged, agent, and observed settings w
   assert.equal(lastAssistant([entry(2), entry(1)])?.id, 'message-2');
 });
 
-test('bookmarks persist by project, workspace, directory, and session without overwriting corrupt data', () => {
-  const values = new Map<string, unknown>();
-  const api = {
-    kv: {
-      ready: true,
-      get: (key: string) => values.get(key),
-      set: (key: string, value: unknown) => values.set(key, structuredClone(value)),
-    },
-  } as Pick<TuiPluginApi, 'kv'>;
-  const legacyKey = 'session-tools.bookmarks.v1:["project-a","","/project","session-a"]';
-  assert.equal(bookmarkKey(session()), legacyKey);
-  values.set(legacyKey, { version: 1, bookmarks: [mark('legacy')] });
-  const store = bookmarkStore(api, { session: session() });
-  assert.equal(store.read()[0]?.id, 'legacy');
-  values.clear();
-  store.write((items) => [...items, mark()]);
-  assert.equal(bookmarkStore(api, { session: session() }).read()[0]?.label, 'Output contract');
-  assert.deepEqual(bookmarkStore(api, { session: session('other') }).read(), []);
-  assert.deepEqual(bookmarkStore(api, { session: { ...session(), projectID: 'other' } }).read(), []);
-  assert.deepEqual(bookmarkStore(api, { session: { ...session(), workspaceID: 'other' } }).read(), []);
-  assert.deepEqual(bookmarkStore(api, { session: { ...session(), directory: '/other' } }).read(), []);
-  const invalid = { version: 2, bookmarks: [] };
-  values.set(bookmarkKey(session()), invalid);
-  assert.throws(() => store.write(() => []), /preserved/);
-  assert.equal(values.get(bookmarkKey(session())), invalid);
-});
-
-test('invalid and duplicate bookmarks are rejected rather than silently replaced', () => {
-  assert.throws(() => readBookmarks({ version: 1, bookmarks: [mark(), mark()] }, 'session-a'), /invalid/);
-  assert.throws(
-    () => readBookmarks({ version: 1, bookmarks: [{ ...mark(), sessionID: 'other' }] }, 'session-a'),
-    /invalid/,
-  );
-  assert.throws(() => readBookmarks({ version: 1, bookmarks: [{ ...mark(), created: NaN }] }, 'session-a'), /invalid/);
-  assert.throws(() => readBookmarks({ version: 1, bookmarks: [{ ...mark(), label: ' ' }] }, 'session-a'), /invalid/);
-});
-
-test('handoff drafts preserve task context, selected notes, and source provenance', () => {
-  const text = handoff(session(), [mark(), { ...mark('excluded'), note: 'EXCLUDED_NOTE', selected: false }]);
-  assert.match(text, /Add structured output/);
-  assert.match(text, /\/project/);
-  assert.match(text, /Output contract/);
-  assert.match(text, /JSON only on stdout/);
-  assert.ok(!text.includes('EXCLUDED_NOTE'));
-  assert.match(text, /Source session: session-a; message: message-1/);
-  assert.doesNotThrow(() =>
-    handoff(session(), [
-      ...Array.from({ length: 20 }, (_, i) => mark(String(i))),
-      { ...mark('excluded'), selected: false },
-    ]),
-  );
-  assert.throws(
-    () =>
-      handoff(
-        session(),
-        Array.from({ length: 21 }, (_, i) => mark(String(i))),
-      ),
-    /at most 20/,
-  );
-});
-
 test('metadata sanitizer strips terminal controls and enforces the length limit', () => {
   assert.equal(clean('before\x1b]52;c;SECRET\x07\x1b[31mafter\x00'), 'beforeafter');
   assert.equal(clean('hello\nworld', 7), 'hello\nw');
@@ -220,8 +138,15 @@ test('metadata sanitizer strips terminal controls and enforces the length limit'
 
 test('config and context register commands and open mocked menus with completed-request usage', async () => {
   const commands = new Map<string, () => Promise<void>>();
+  const storedBookmarks = { version: 1, bookmarks: [{ id: 'saved', note: 'Retained note' }] };
+  const saved = structuredClone(storedBookmarks);
   let shown: { title: string; options: { title: string; value: string; description?: string }[] } | undefined;
   const api = {
+    kv: {
+      ready: true,
+      get: () => storedBookmarks,
+      set: () => assert.fail('Inspection panels must not write stored data'),
+    },
     lifecycle: { signal: new AbortController().signal },
     route: { current: { name: 'session', params: { sessionID: 'session-a' } } },
     keymap: {
@@ -257,6 +182,7 @@ test('config and context register commands and open mocked menus with completed-
   } as unknown as TuiPluginApi;
   await configPlugin.tui(api);
   await contextPlugin.tui(api);
+  assert.deepEqual([...commands.keys()].sort(), ['context-inspector.open', 'effective-config.open']);
   await commands.get('effective-config.open')!();
   assert.equal(shown?.title, 'Effective config: agent');
   assert.equal(shown.options[0]?.title, 'lead');
@@ -264,4 +190,5 @@ test('config and context register commands and open mocked menus with completed-
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- The command can replace the captured dialog.
   assert.equal(shown?.title, 'Context inspector');
   assert.match(shown.options[0]?.description ?? '', /10 input/);
+  assert.deepEqual(storedBookmarks, saved);
 });
