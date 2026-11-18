@@ -105,7 +105,7 @@ None of them reads OpenCode directories or `OPENCODE_*` variables.
   Use `edit: { "*": allow }` in YAML to override `"edit": { "*": "ask" }`; do not use `edit: allow`.
 - Keep Kilo's built-in shell default `ask` and permitted helper allows.
   Do not add a wildcard fallback or redundant asks.
-  Add generally safe commands only when authorized. Prefer simple prefixes such as `git status*` over flag variants.
+  Add generally safe commands only when authorized. Prefer simple prefixes such as `git status *` over flag variants.
   Use a command boundary for short helper names: `comm *` must not allow `command <program>`.
   Keep `git diff *` separate from `git difftool`, which can execute custom commands.
   Deny shell substitutes for the native read, grep, glob, edit, and web tools. Keep native tools available.
