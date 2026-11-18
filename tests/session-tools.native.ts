@@ -128,7 +128,7 @@ test('Kilo TUI activates session inspection panels from source', { timeout: 90_0
     const panels = statuses.filter((status) => status.spec.includes('/extensions/'));
     assert.deepEqual(
       panels.map((status) => status.id),
-      ['effective-config', 'context-inspector', 'session-bookmarks'],
+      ['effective-config', 'context-inspector'],
     );
     assert.ok(panels.every((status) => status.active && status.enabled && status.source === 'file'));
     assert.deepEqual(registryRequests, [], 'Source panels must load using the installed fixture dependencies');

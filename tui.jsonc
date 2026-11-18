@@ -6,7 +6,6 @@
     "@lunchbox-labs/kilo-prompt-composer@^0.3.0",
     "@lunchbox-labs/kilo-tool-inspector@^0.3.0",
     "./extensions/session-tools/config.ts",
-    "./extensions/session-tools/context.ts",
-    "./extensions/session-tools/bookmarks.tsx"
+    "./extensions/session-tools/context.ts"
   ]
 }
