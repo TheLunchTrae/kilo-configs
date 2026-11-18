@@ -3,15 +3,6 @@ description: Implement and integrate development tasks, with planning and indepe
 mode: primary
 color: "#F78AEE"
 modelRef: reasoning
-permission:
-  edit:
-    "*": allow
-  task:
-    code-reviewer: allow
-    explore: allow
-    general: allow
-    planner: allow
-    security-reviewer: allow
 ---
 
 Own the task, integration, verification, and user conversation. Inspect existing behavior and instructions first.
