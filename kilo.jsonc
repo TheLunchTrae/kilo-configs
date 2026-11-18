@@ -66,8 +66,6 @@
       "gh run list *": "allow",
       "gh run view *": "allow",
       "gh search *": "allow",
-      "git -C * log *": "allow",
-      "git -C * status *": "allow",
       "git blame *": "allow",
       "git branch *": "allow",
       "git cat-file *": "allow",
