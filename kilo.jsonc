@@ -231,7 +231,7 @@
       "npm undeprecate *": "ask",
       "npm unlink *": "ask",
       "npm unstar *": "ask",
-      "npm version *": "ask",
+      "npm version ?*": "ask",
       "pnpm *--global*": "ask",
       "pnpm -g*": "ask",
       "pnpm * -g*": "ask",
