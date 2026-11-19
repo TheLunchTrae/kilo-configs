@@ -106,7 +106,7 @@ None of them reads OpenCode directories or `OPENCODE_*` variables.
 - Keep object-valued permissions in object form across global defaults, JSON agent overrides, and agent frontmatter.
   Use `edit: { "*": allow }` in YAML to override `"edit": { "*": "ask" }`; do not use `edit: allow`.
 - Keep Kilo's built-in shell default `ask` and permitted helper allows.
-  Do not add a wildcard fallback or redundant asks.
+  Do not add a shell-wide wildcard fallback or redundant asks.
   Add generally safe commands only when authorized. Prefer simple prefixes such as `git status *` over flag variants.
   Use a command boundary for short helper names: `comm *` must not allow `command <program>`.
   Keep `git diff *` separate from `git difftool`, which can execute custom commands.
@@ -116,7 +116,10 @@ None of them reads OpenCode directories or `OPENCODE_*` variables.
   Root `AGENTS.md` Shell Safety lists commands agents must not run without specific approval.
   Agents run project scripts through the shell, so `shell.env` scrubbing covers them.
   Do not set rules that match a Kilo default.
-- Keep permissions minimal. Add a rule only when it changes behavior; never restate a default or an inherited rule.
+- Keep permissions minimal. Prefer a tool-prefix allow with explicit approval or denial exceptions when it needs fewer
+  rules than an allowlist of subcommands. Put broad allows before their exceptions. Use a scoped allowlist when it
+  needs fewer rules or the exceptions cannot express the required boundaries. Preserve task authorization and safety
+  requirements. Add a rule only when it changes behavior; never restate a default or an inherited rule.
 - Read-only agents inherit the global shell policy. Their prompts forbid commands that change files, Git state, or
   remote services.
   Complete file reads, listings, and searches use the native `read`, `grep`, and `glob` tools.
