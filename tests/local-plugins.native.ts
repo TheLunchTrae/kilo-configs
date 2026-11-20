@@ -62,8 +62,11 @@ test('Kilo loads the local plugins and runs their tool hooks', async (t) => {
       model: 'fixture/native',
       small_model: 'fixture/native',
       enabled_providers: ['fixture'],
-      // Allow everything so a block can come only from the local plugin, not from Kilo's own rules.
-      permission: { '*': 'allow' },
+      // Allow the secret read so its denial can come only from the local plugin.
+      permission: { '*': 'allow', edit: { '*': 'ask' } },
+      agent: {
+        code: { permission: { edit: { '*': 'ask', 'protected.txt': 'deny', 'reviewed.txt': 'ask' }, bash: 'ask' } },
+      },
       provider: {
         fixture: {
           npm: '@ai-sdk/openai-compatible',
@@ -104,6 +107,7 @@ test('Kilo loads the local plugins and runs their tool hooks', async (t) => {
   const config = JSON.parse(discovered.stdout) as { plugin: unknown[] };
   for (const file of [
     'block-secrets.ts',
+    'code-defaults.ts',
     'comment-guard.ts',
     'compaction-task-state.ts',
     'scrub-secrets.ts',
@@ -112,6 +116,17 @@ test('Kilo loads the local plugins and runs their tool hooks', async (t) => {
     assert.ok(config.plugin.some((entry) => typeof entry === 'string' && entry.endsWith(`/plugins/${file}`)));
   }
   assert.ok(config.plugin.every((entry) => typeof entry === 'string' && entry.startsWith('file:')));
+  const code = command(['debug', 'agent', 'code']);
+  assert.equal(code.status, 0, code.stderr);
+  const agent = JSON.parse(code.stdout) as {
+    permission: { permission: string; pattern: string; action: string }[];
+  };
+  const rule = (permission: string, pattern: string) =>
+    agent.permission.findLast((entry) => entry.permission === permission && entry.pattern === pattern)?.action;
+  assert.equal(rule('edit', '*'), 'allow');
+  assert.equal(rule('edit', 'protected.txt'), 'deny');
+  assert.equal(rule('edit', 'reviewed.txt'), 'ask');
+  assert.equal(rule('bash', '*'), 'ask');
   const scratch = command([
     'debug',
     'agent',
