@@ -251,6 +251,7 @@
       "npm unlink *": "ask",
       "npm unstar *": "ask",
       "npm version ?*": "ask",
+      "php -l -*": "ask",
       "pnpm *--global*": "ask",
       "pnpm -g*": "ask",
       "pnpm * -g*": "ask",
