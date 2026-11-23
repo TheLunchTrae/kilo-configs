@@ -22,6 +22,10 @@
   Omit greetings, praise, acknowledgments, decoration, repeated instructions, and duplicate summaries.
 - Assignments need the task, scope, constraints, context, expected output, relevant interfaces, and prior findings.
   Do not assume shared context.
+- Omit working-directory context from subagent assignments, including absolute paths and "use the current directory."
+  Use relative paths. Name a subdirectory only when it limits task scope.
+  Subdirectory scope does not change where commands run. Do not add `cd`, `git -C`, or working-directory overrides
+  to express that scope.
 - Report the result, evidence, verification limits, risks, and needed decisions.
   Omit empty sections and routine narration.
 - On follow-up, report new information and changed conclusions. Repeat context only when needed to act correctly.
