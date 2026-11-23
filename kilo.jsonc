@@ -179,6 +179,7 @@
       "node --experimental-strip-types --test *": "allow",
       "npm *": "allow",
       "npx *": "allow",
+      "php -l *": "allow",
       "pnpm *": "allow",
       "printf *": "allow",
       "readlink *": "allow",
