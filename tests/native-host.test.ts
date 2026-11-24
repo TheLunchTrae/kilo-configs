@@ -9,7 +9,7 @@ test('direct native tests require runner selection and reject a matching unsuppo
     /Native Kilo must satisfy/,
   );
   assert.throws(
-    () => nativeBinary({ KILO_BIN: process.execPath, KILO_NATIVE_VERSION: '7.8.27' }),
+    () => nativeBinary({ KILO_BIN: process.execPath, KILO_NATIVE_VERSION: '7.8.32' }),
     /Native executable changed/,
   );
 });

@@ -15,17 +15,17 @@
     "check": "npm run typecheck && npm run lint && npm run format:check && npm test"
   },
   "engines": {
-    "kilo": "7.8.27"
+    "kilo": "7.8.32"
   },
   "dependencies": {
-    "@kilocode/plugin": "7.8.27",
+    "@kilocode/plugin": "7.8.32",
     "jsonc-parser": "3.3.1"
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.4",
     "@eslint-community/eslint-plugin-eslint-comments": "4.7.2",
     "@eslint/js": "10.0.1",
-    "@kilocode/sdk": "7.8.27",
+    "@kilocode/sdk": "7.8.32",
     "@opentui/core": "0.4.5",
     "@opentui/keymap": "0.4.5",
     "@opentui/solid": "0.4.5",
