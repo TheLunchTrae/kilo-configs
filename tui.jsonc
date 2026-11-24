@@ -4,7 +4,7 @@
   "plugin": [
     "@lunchbox-labs/kilo-model-profiles@^0.3.1",
     "@lunchbox-labs/kilo-prompt-composer@^0.3.0",
-    "@lunchbox-labs/kilo-tool-inspector@^0.3.0",
+    "@lunchbox-labs/kilo-tool-inspector@^0.3.1",
     "./extensions/session-tools/config.ts",
     "./extensions/session-tools/context.ts"
   ]
