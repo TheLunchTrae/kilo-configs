@@ -1,6 +1,6 @@
 {
   "$schema": "https://app.kilo.ai/config.json",
-  "plugin": ["@lunchbox-labs/kilo-model-profiles@^0.3.1", "@lunchbox-labs/kilo-prompt-composer@^0.3.0"],
+  "plugin": ["@lunchbox-labs/kilo-model-profiles@^0.3.2", "@lunchbox-labs/kilo-prompt-composer@^0.3.1"],
   "shell": "C:/Program Files/Git/bin/bash.exe",
   "disabled_providers": ["opencode"],
   "model": "openai/gpt-6-astra",
