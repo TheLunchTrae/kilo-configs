@@ -231,7 +231,7 @@ and compatible with the running Node version; otherwise the best-ranked satisfyi
 Bare specs are cached as `@latest` and are covered. Exact versions, Git, and alias specs are left alone.
 On Windows, ranges with `<`, `>`, `|`, or `*` are stored under replaced names and are not checked.
 `semver` is a runtime dependency for range matching; `extensions/plugin-cache/semver.d.ts` declares its types.
-About 15 seconds after startup, it removes outdated entries and shows a toast asking for a restart. The delay keeps
+About 3 seconds after startup, it removes outdated entries and shows a toast asking for a restart. The delay keeps
 removal out of the TUI's own plugin loading. A reload reinstalls the files but keeps the loaded modules, so only a
 restart loads the new versions. The process hosting the server, such as the Kilo daemon, needs a restart too.
 Removal while running is safe only for plugins that import all their code at load and read no files from their
