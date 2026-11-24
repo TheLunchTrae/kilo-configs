@@ -38,8 +38,8 @@ None of them reads OpenCode directories or `OPENCODE_*` variables.
   directories, the same directories under the home directory, and `KILO_CONFIG_DIR` when set.
   It takes no plugin options.
 - Kilo installs each npm plugin specifier once into `$XDG_CACHE_HOME/kilo/packages/<specifier>`
-  (else `~/.cache/kilo/packages/`) and does not refresh it. A version range gets a newer release only after that
-  directory is removed or the specifier changes.
+  (else `~/.cache/kilo/packages/`) and does not refresh it. The plugin cache refresh under Plugin contracts removes
+  an outdated range install at exit, so the next start installs the newest matching release.
 
 ### Native behavior and plugin limits
 
@@ -221,6 +221,37 @@ conversation, prompt, requests, or earlier iterations. It checks added line, blo
 comments in code files, not strings, code, or prose files. Keep its phrase list narrow to avoid false positives.
 `KILO_COMMENT_GUARD=all` blocks every new non-directive comment, `off` disables the guard, and any other value
 blocks only leaks. Comment detection is heuristic, not a parser.
+
+`plugins/plugin-cache-refresh.ts` and `extensions/plugin-cache/tui.ts` work around Kilo caching each npm plugin
+spec in `<XDG cache>/kilo/packages/<name>@<spec>` with no expiry, so a dist-tag such as `@latest` or a range such as
+`^0.3.2` keeps its first install. The Lunchbox ranges above therefore need these entrypoints to pick up releases.
+Once per process, in the background, they check each cached tag or range install against the registry npm would use.
+A range resolves as npm-pick-manifest does: `latest` when it satisfies the range and is published, not deprecated,
+and compatible with the running Node version; otherwise the best-ranked satisfying version.
+Bare specs are cached as `@latest` and are covered. Exact versions, Git, and alias specs are left alone.
+On Windows, ranges with `<`, `>`, `|`, or `*` are stored under replaced names and are not checked.
+`semver` is a runtime dependency for range matching; `extensions/plugin-cache/semver.d.ts` declares its types.
+Outdated entries are removed only at process exit, and the next start reinstalls them. Instances are disposed and
+recreated while Kilo runs, so disposal is not a safe removal point.
+The TUI runs server plugins in a worker that it terminates without exit handlers. The TUI entrypoint does the work
+from the main thread, and the server entrypoint skips worker threads. Keep both registrations.
+The embedded TUI and `kilo serve`, including the daemon, exit through `process.exit()` after SIGHUP, SIGINT, and
+SIGTERM too, so closing the terminal or stopping the server still removes the entries.
+The TUI entrypoint skips `kilo attach` and a TUI attached to a running Kilo daemon, because their server runs in
+another process and can still use the entries. The daemon's server entrypoint removes them when it stops.
+The daemon check mirrors `DaemonClient.connect`: KILO_NO_DAEMON unset and a live pid in `daemon.json` in either
+state directory. Processes ended by a signal in other ways keep the entries for a later normal exit. Do not add
+SIGINT or SIGTERM listeners: libraries that re-raise a signal only as its sole listener would stop doing so.
+Removal skips an entry whose installed version changed since the check. It records the version each removal
+targeted. If a reinstall still differs, it warns and does not remove the entry again.
+Registry settings come from environment variables, the user npmrc, and the npmrc in `npm_config_globalconfig`.
+It reads `registry`, `@scope:registry`, `before`, and per-registry `_authToken`, `_auth`, or `username`/`_password`.
+Credentials go only to their matching registry, without following redirects. Registry failures keep the cache.
+A `before` setting disables the check. Custom CA settings such as `cafile` are not read.
+Other running processes that use a removed entry can fail to read its files later.
+Shared logic lives in `extensions/plugin-cache/` because the loader calls every function export of a `plugins/` file
+as a plugin. The implementation matches the opencode-configs copy except for the cache path, product names, and the
+daemon check, which only Kilo needs.
 
 Session tools live in `extensions/session-tools/` with shared UI helpers outside auto-discovered plugin directories.
 Their TUI-only entrypoints are registered in `tui.jsonc` and stay outside server plugin auto-discovery.
