@@ -1,31 +1,29 @@
 import {
-  type OutdatedPackage,
   defaultPackagesDirectory,
-  discardPackagesSync,
+  discardPackages,
   findOutdatedPackages,
   npmSettings,
   registryPackument,
 } from './refresh.ts';
 
 export type Log = (level: 'info' | 'warn', message: string, extra: Record<string, unknown>) => Promise<void>;
+export type Notify = (message: string) => Promise<void>;
 
 export const LOG_SERVICE = 'plugin-cache-refresh';
 
-// The TUI plugin and the server plugin can both run in one process. They load this module from the same file,
-// but the key on globalThis keeps one check per process even if the module is evaluated more than once.
+// Kilo starts the plugin once per project instance, and all instances in a process share this module.
+// The key on globalThis keeps one check per process even if the module is evaluated more than once.
 const STARTED = Symbol.for('plugin-cache-refresh.started');
 type Started = typeof globalThis & { [STARTED]?: true };
 
 export const errorText = (error: unknown) => (error instanceof Error ? error.message : String(error));
 
-// Checks the cache in the background, so registry requests do not delay startup. Outdated entries are removed when
-// the process exits: the process has already loaded them, and a plugin can read more of its files later. Kilo
-// also disposes and recreates instances while it runs, so instance disposal is not a safe point. The next start
-// installs the current versions. The TUI and `kilo serve`, including the daemon, exit through `process.exit()` after
-// SIGHUP, SIGINT, or SIGTERM. A process ended by a signal in another way keeps the entries; they are removed when a
-// later process exits normally. Signal listeners are not added: libraries that re-raise signals only when they are
-// the sole listener would stop doing so, and `kilo run` uses SIGINT without exiting.
-export function startPluginCacheRefresh(log: Log, env: NodeJS.ProcessEnv = process.env): void {
+// Checks the cache in the background, so registry requests do not delay startup, and removes outdated entries as
+// soon as it finds them. Plugins are imported when they load, so the running process keeps the old versions. A
+// plugin that reads more of its own files later, such as lazily imported chunks or bundled assets, would fail after
+// the removal. The next start installs the current versions. A reload does not: the loader imports the same path,
+// and the runtime returns the module it already loaded.
+export function startPluginCacheRefresh(log: Log, notify: Notify, env: NodeJS.ProcessEnv = process.env): void {
   const started = globalThis as Started;
   if (started[STARTED] === true) {
     return;
@@ -38,23 +36,34 @@ export function startPluginCacheRefresh(log: Log, env: NodeJS.ProcessEnv = proce
       return;
     }
     const packagesDirectory = defaultPackagesDirectory(env);
-    const packages: readonly OutdatedPackage[] = await findOutdatedPackages({
+    const outdated = await findOutdatedPackages({
       packagesDirectory,
       fetchPackument: registryPackument(settings),
       warn: (message, extra) => log('warn', message, extra),
     });
-    if (packages.length === 0) {
+    if (outdated.length === 0) {
       return;
     }
-    process.once('exit', () => discardPackagesSync(packagesDirectory, packages));
-    await log(
-      'info',
-      'Cached plugin packages have newer versions; they are removed when Kilo exits normally and reinstalled at the next start',
-      {
-        packages: packages.map(
-          (entry) => `${entry.name}@${entry.spec}: ${entry.installedVersion} -> ${entry.availableVersion}`,
-        ),
-      },
+    const discarded = new Set(discardPackages(packagesDirectory, outdated));
+    const removed = outdated.filter((entry) => discarded.has(entry.entry));
+    const kept = outdated.filter((entry) => !discarded.has(entry.entry));
+    if (kept.length > 0) {
+      await log('warn', 'Could not remove outdated cached plugin packages; the next start checks them again', {
+        packages: kept.map((entry) => `${entry.name}@${entry.spec}`),
+      });
+    }
+    if (removed.length === 0) {
+      return;
+    }
+    const updates = removed.map(
+      (entry) => `${entry.name}@${entry.spec}: ${entry.installedVersion} -> ${entry.availableVersion}`,
+    );
+    await log('info', 'Removed outdated cached plugin packages; the next start installs the new versions', {
+      packages: updates,
+    });
+    await notify(
+      `Plugin updates: ${updates.join(', ')}. Restart Kilo to load them; a reload keeps the old versions. ` +
+        'Also restart the Kilo daemon or any `kilo serve` that uses these plugins.',
     );
   })().catch((error: unknown) => log('warn', 'Plugin cache refresh failed', { error: errorText(error) }));
 }

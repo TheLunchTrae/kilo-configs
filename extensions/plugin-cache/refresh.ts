@@ -397,12 +397,11 @@ export async function findOutdatedPackages(options: FindOptions): Promise<Outdat
   return results.filter((result) => result !== undefined);
 }
 
-// Runs from a process `exit` handler, so it must be synchronous. An entry is skipped when its installed version has
-// changed since the check, because another process may have reinstalled it already. The directory is renamed before it
-// is deleted: Kilo treats any existing `node_modules/<name>` as a complete install, so a recursive delete that
-// stopped partway would leave a broken package that is never reinstalled. Errors are not reported because the process
-// is ending; an entry that stays in place is checked again at the next start.
-export function discardPackagesSync(packagesDirectory: string, packages: readonly OutdatedPackage[]): string[] {
+// An entry is skipped when its installed version has changed since the check, because another process may have
+// reinstalled it already. The directory is renamed before it is deleted: Kilo treats any existing
+// `node_modules/<name>` as a complete install, so a recursive delete that stopped partway would leave a broken package
+// that is never reinstalled. An entry that cannot be renamed stays in place and is checked again at the next start.
+export function discardPackages(packagesDirectory: string, packages: readonly OutdatedPackage[]): string[] {
   const discarded: string[] = [];
   const state = readState(packagesDirectory);
   for (const entry of packages) {
@@ -418,14 +417,14 @@ export function discardPackagesSync(packagesDirectory: string, packages: readonl
       state[entry.entry] = entry.availableVersion;
       rmSync(staleDirectory, { recursive: true, force: true });
     } catch {
-      // See the function comment.
+      // The entry stays in place; see the function comment.
     }
   }
   if (discarded.length > 0) {
     try {
       writeFileSync(join(packagesDirectory, STATE_FILE), JSON.stringify(state));
     } catch {
-      // See the function comment.
+      // The removals stand. Without the record, a reinstall that still differs is removed once more.
     }
   }
   return discarded;

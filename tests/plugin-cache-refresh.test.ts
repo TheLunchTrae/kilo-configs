@@ -1,16 +1,16 @@
+import type { PluginInput } from '@kilocode/plugin';
 import assert from 'node:assert/strict';
-import { spawn } from 'node:child_process';
 import { once } from 'node:events';
 import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { homedir, tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { type TestContext, test } from 'node:test';
-import { fileURLToPath } from 'node:url';
+import { setTimeout as delay } from 'node:timers/promises';
 import {
   type OutdatedPackage,
   defaultPackagesDirectory,
-  discardPackagesSync,
+  discardPackages,
   findOutdatedPackages,
   nerfDart,
   npmSettings,
@@ -20,7 +20,7 @@ import {
   registryPackument,
   resolveSpec,
 } from '../extensions/plugin-cache/refresh.ts';
-import { daemonRunning, daemonStateFiles, isAttachCommand } from '../extensions/plugin-cache/tui.ts';
+import { PluginCacheRefreshPlugin } from '../plugins/plugin-cache-refresh.ts';
 
 async function packagesFixture(t: TestContext) {
   const root = await mkdtemp(join(tmpdir(), 'plugin-cache-refresh-test-'));
@@ -270,7 +270,7 @@ test('discarded packages are removed whole and are not removed again for the sam
   await install('stale@latest', 'stale', '1.0.0');
   const lookup = () => Promise.resolve(tagsOnly({ latest: '1.1.0' }));
   const first = await findOutdatedPackages({ packagesDirectory: root, fetchPackument: lookup, warn: noWarning });
-  assert.deepEqual(discardPackagesSync(root, first), ['stale@latest']);
+  assert.deepEqual(discardPackages(root, first), ['stale@latest']);
   assert.equal(await exists(root, 'stale@latest'), false);
   assert.deepEqual(await readdir(join(root, '.stale')), []);
   assert.deepEqual(JSON.parse(await readFile(join(root, '.plugin-cache-refresh.json'), 'utf8')), {
@@ -313,7 +313,7 @@ test('a package that cannot be moved stays in place', async (t) => {
     installedVersion: '1.0.0',
     availableVersion: '1.1.0',
   };
-  assert.deepEqual(discardPackagesSync(root, [missing]), []);
+  assert.deepEqual(discardPackages(root, [missing]), []);
   assert.equal(await exists(root, '.plugin-cache-refresh.json'), false);
 });
 
@@ -367,72 +367,65 @@ test('a package reinstalled after the check is not removed', async (t) => {
     warn: noWarning,
   });
   await install('stale@latest', 'stale', '2.0.0');
-  assert.deepEqual(discardPackagesSync(root, outdated), []);
+  assert.deepEqual(discardPackages(root, outdated), []);
   assert.equal(await exists(root, 'stale@latest'), true);
 });
 
-async function runPlugin(t: TestContext, mode: 'process' | 'worker') {
+test('the plugin checks once per process, removes outdated packages at once, and asks for a restart', async (t) => {
   const { root, install } = await packagesFixture(t);
   const packages = join(root, 'cache', 'kilo', 'packages');
   await install('cache/kilo/packages/stale@latest', 'stale', '1.0.0');
   await install('cache/kilo/packages/current@latest', 'current', '1.0.0');
   const registry = await registryFixture(t, { '/stale': { latest: '2.0.0' }, '/current': { latest: '1.0.0' } });
-  const child = spawn(
-    process.execPath,
-    ['--experimental-strip-types', fileURLToPath(new URL('./plugin-cache-refresh-child.ts', import.meta.url)), mode],
-    {
-      env: {
-        ...process.env,
-        XDG_CACHE_HOME: join(root, 'cache'),
-        npm_config_registry: registry.url,
-        npm_config_userconfig: join(root, 'missing-npmrc'),
+  const names = ['XDG_CACHE_HOME', 'npm_config_registry', 'npm_config_userconfig'] as const;
+  const previous = names.map((name) => [name, process.env[name]] as const);
+  t.after(() => {
+    for (const [name, value] of previous) {
+      if (value === undefined) {
+        Reflect.deleteProperty(process.env, name);
+      } else {
+        process.env[name] = value;
+      }
+    }
+  });
+  process.env.XDG_CACHE_HOME = join(root, 'cache');
+  process.env.npm_config_registry = registry.url;
+  process.env.npm_config_userconfig = join(root, 'missing-npmrc');
+  const logs: unknown[] = [];
+  const toasts: unknown[] = [];
+  const client = {
+    app: {
+      log: (options: { body: unknown }) => {
+        logs.push(options.body);
+        return Promise.resolve({});
       },
     },
-  );
-  let output = '';
-  child.stdout.setEncoding('utf8').on('data', (chunk: string) => (output += chunk));
-  const [code, signal] = (await once(child, 'exit')) as [number | null, NodeJS.Signals | null];
-  assert.deepEqual([code, signal], [0, null]);
-  return {
-    logs: (JSON.parse(output) as { logs: unknown[] }).logs,
-    requests: registry.requests.map((request) => request.url).sort(),
-    staleExists: await exists(packages, 'stale@latest'),
-    currentExists: await exists(packages, 'current@latest'),
-  };
-}
-
-test('the server plugin checks once per process and removes outdated packages when the process exits', async (t) => {
-  assert.deepEqual(await runPlugin(t, 'process'), {
-    logs: [
-      {
-        service: 'plugin-cache-refresh',
-        level: 'info',
-        message:
-          'Cached plugin packages have newer versions; they are removed when Kilo exits normally and reinstalled at the next start',
-        extra: { packages: ['stale@latest: 1.0.0 -> 2.0.0'] },
+    tui: {
+      showToast: (options: { body: unknown }) => {
+        toasts.push(options.body);
+        return Promise.resolve({});
       },
-    ],
-    requests: ['/current', '/stale'],
-    staleExists: false,
-    currentExists: true,
-  });
-});
-
-test('the server plugin does nothing in a worker thread, where the TUI entrypoint does the work', async (t) => {
-  assert.deepEqual(await runPlugin(t, 'worker'), {
-    logs: [],
-    requests: [],
-    staleExists: true,
-    currentExists: true,
-  });
-});
-
-test('the TUI entrypoint recognizes the attach command', () => {
-  assert.equal(isAttachCommand(['bun', 'kilo', 'attach', 'http://localhost:4096']), true);
-  assert.equal(isAttachCommand(['bun', 'kilo', '--print-logs', 'attach']), true);
-  assert.equal(isAttachCommand(['bun', 'kilo', '--log-level', 'DEBUG', 'attach', 'http://localhost:4096']), true);
-  assert.equal(isAttachCommand(['bun', 'kilo']), false);
-  assert.equal(isAttachCommand(['bun', 'kilo', '--print-logs', 'project']), false);
+    },
+  };
+  const input = { client } as unknown as PluginInput;
+  await PluginCacheRefreshPlugin(input);
+  await PluginCacheRefreshPlugin(input);
+  for (let attempt = 0; attempt < 200 && toasts.length === 0; attempt++) {
+    await delay(20);
+  }
+  assert.equal(await exists(packages, 'stale@latest'), false);
+  assert.equal(await exists(packages, 'current@latest'), true);
+  assert.deepEqual(registry.requests.map((request) => request.url).sort(), ['/current', '/stale']);
+  assert.deepEqual(logs, [
+    {
+      service: 'plugin-cache-refresh',
+      level: 'info',
+      message: 'Removed outdated cached plugin packages; the next start installs the new versions',
+      extra: { packages: ['stale@latest: 1.0.0 -> 2.0.0'] },
+    },
+  ]);
+  assert.equal(toasts.length, 1);
+  assert.match(JSON.stringify(toasts[0]), /stale@latest: 1\.0\.0 -> 2\.0\.0.*Restart Kilo.*reload keeps the old/);
 });
 
 test('an invalid registry URL is reported without its text', async () => {
@@ -592,33 +585,4 @@ test('registry packuments include the Node engine range of each version', async 
     { version: '1.0.0', deprecated: false, node: '>=22' },
     { version: '1.1.0', deprecated: false },
   ]);
-});
-
-test('daemon state files follow Kilo state directories', () => {
-  assert.deepEqual(daemonStateFiles({ XDG_STATE_HOME: '/state', XDG_DATA_HOME: '/data' }), [
-    join('/state', 'kilo', 'daemon.json'),
-  ]);
-  assert.deepEqual(daemonStateFiles({ XDG_DATA_HOME: '/data' }), [
-    join(homedir(), '.local/state', 'kilo', 'daemon.json'),
-    join('/data', 'kilo', 'state', 'daemon.json'),
-  ]);
-  assert.deepEqual(daemonStateFiles({ KILO_TEST_DAEMON_STATE_DIR: '/daemon' }), [join('/daemon', 'daemon.json')]);
-});
-
-test('a running Kilo daemon is detected from a live pid unless KILO_NO_DAEMON is set', async (t) => {
-  const { root } = await packagesFixture(t);
-  const state = join(root, 'state');
-  await mkdir(join(state, 'kilo'), { recursive: true });
-  const env = { XDG_STATE_HOME: state, XDG_DATA_HOME: join(root, 'data') };
-  assert.equal(daemonRunning(env), false, 'no state file');
-  await writeFile(join(state, 'kilo', 'daemon.json'), JSON.stringify({ pid: process.pid, url: 'http://127.0.0.1:1' }));
-  assert.equal(daemonRunning(env), true);
-  assert.equal(daemonRunning({ ...env, KILO_NO_DAEMON: '1' }), false);
-  const exited = spawn(process.execPath, ['-e', '']);
-  await once(exited, 'exit');
-  assert.ok(exited.pid !== undefined);
-  await writeFile(join(state, 'kilo', 'daemon.json'), JSON.stringify({ pid: exited.pid }));
-  assert.equal(daemonRunning(env), false, 'a pid that is no longer running');
-  await writeFile(join(state, 'kilo', 'daemon.json'), '{"pid":"1"}');
-  assert.equal(daemonRunning(env), false, 'a malformed state file');
 });
