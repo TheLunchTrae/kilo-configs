@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, renameSync, rmSync } from 'node:fs';
 import { readFile, readdir, rm } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
@@ -14,7 +14,6 @@ const PACKAGE_NAME = /^(?:@[a-z0-9~-][\w.~-]*\/)?[a-z0-9~-][\w.~-]*$/i;
 const DIST_TAG = /^[a-z][\w.-]*$/i;
 const RANGE_LIKE_TAG = /^(?:v\d|[x*](?:\.|$))/i;
 const STALE_DIRECTORY = '.stale';
-const STATE_FILE = '.plugin-cache-refresh.json';
 const DEFAULT_REGISTRY = 'https://registry.npmjs.org';
 const REQUEST_TIMEOUT_MS = 10_000;
 // npm parses versions and ranges loosely.
@@ -56,15 +55,10 @@ export interface FindOptions {
 
 export interface NpmSettings {
   readonly registry: string;
-  readonly scopes: Readonly<Record<string, string>>;
-  // Credential fields by registry "nerf dart", the `//host/path/` form npmrc credential keys use.
-  readonly credentials: Readonly<Partial<Record<string, CredentialFields>>>;
-  readonly pinnedDate: boolean;
+  readonly scopes: Readonly<Partial<Record<string, string>>>;
+  // Authorization header values by registry "nerf dart", the `//host/path/` form npmrc credential keys use.
+  readonly credentials: Readonly<Partial<Record<string, string>>>;
 }
-
-export type CredentialFields = Partial<Record<'_authToken' | '_auth' | 'username' | '_password', string>>;
-
-export type NpmrcValues = Partial<Pick<NpmSettings, 'registry'>> & Omit<NpmSettings, 'registry'>;
 
 export function defaultPackagesDirectory(env: NodeJS.ProcessEnv = process.env): string {
   // xdg-basedir, which Kilo uses, treats an empty XDG_CACHE_HOME as unset. Kilo also removes newline characters.
@@ -74,9 +68,6 @@ export function defaultPackagesDirectory(env: NodeJS.ProcessEnv = process.env): 
 }
 
 const trimRegistry = (registry: string) => registry.replace(/\/+$/, '');
-
-const expandEnvironment = (value: string, env: NodeJS.ProcessEnv) =>
-  value.replace(/\$\{([^}]+)\}/g, (_match, name: string) => env[name] ?? '');
 
 export function nerfDart(url: string): string | undefined {
   try {
@@ -88,129 +79,57 @@ export function nerfDart(url: string): string | undefined {
   }
 }
 
-const CREDENTIAL_FIELDS: readonly string[] = ['_authToken', '_auth', 'username', '_password'];
-const isCredentialField = (field: string): field is keyof CredentialFields => CREDENTIAL_FIELDS.includes(field);
+const CREDENTIAL_KEY = /^(\/\/.+\/):(_authToken|_auth)$/;
 
-const CREDENTIAL_KEY = /^(\/\/.+\/):(_authToken|_auth|username|_password)$/;
-
-// Reads the settings that decide where a plugin install comes from and how it authenticates: `registry`,
-// `@scope:registry`, `before`, and per-registry `_authToken`, `_auth`, or `username` with `_password`.
-// Other keys are ignored. Credential values are kept only to send to the registry they are configured for.
-export function parseNpmrc(text: string, env: NodeJS.ProcessEnv = process.env): NpmrcValues {
-  let registry: string | undefined;
+// Reads `registry`, `@scope:registry`, and per-registry `_authToken` or `_auth` from an npmrc. `${VAR}` references
+// are expanded as npm does. Other keys are ignored, and credentials are only sent to the registry they belong to.
+export function parseNpmrc(text: string, env: NodeJS.ProcessEnv = process.env): NpmSettings {
+  let registry = DEFAULT_REGISTRY;
   const scopes: Record<string, string> = {};
-  const credentials: Record<string, CredentialFields> = {};
-  let pinnedDate = false;
+  const credentials: Record<string, string> = {};
   for (const rawLine of text.split(/\r?\n/)) {
     const line = rawLine.trim();
-    if (line === '' || line.startsWith('#') || line.startsWith(';')) {
-      continue;
-    }
     const separator = line.indexOf('=');
-    if (separator <= 0) {
+    if (line.startsWith('#') || line.startsWith(';') || separator <= 0) {
       continue;
     }
     const key = line.slice(0, separator).trim();
-    const value = expandEnvironment(
-      line
-        .slice(separator + 1)
-        .trim()
-        .replace(/^(["'])(.*)\1$/, '$2'),
-      env,
-    );
+    const value = line
+      .slice(separator + 1)
+      .trim()
+      .replace(/^(["'])(.*)\1$/, '$2')
+      .replace(/\$\{([^}]+)\}/g, (_match, name: string) => env[name] ?? '');
+    const credential = CREDENTIAL_KEY.exec(key);
     if (value === '') {
       continue;
-    }
-    const credential = CREDENTIAL_KEY.exec(key);
-    if (key === 'registry') {
+    } else if (key === 'registry') {
       registry = trimRegistry(value);
     } else if (/^@[^:]+:registry$/.test(key)) {
       scopes[key.slice(0, key.indexOf(':'))] = trimRegistry(value);
-    } else if (key === 'before') {
-      pinnedDate = true;
     } else if (credential !== null) {
       const [, dart, field] = credential;
-      if (isCredentialField(field)) {
-        credentials[dart] = { ...credentials[dart], [field]: value };
-      }
+      credentials[dart] = field === '_authToken' ? `Bearer ${value}` : `Basic ${value}`;
     }
   }
-  return { ...(registry === undefined ? {} : { registry }), scopes, credentials, pinnedDate };
+  return { registry, scopes, credentials };
 }
 
-const nonEmpty = (...values: (string | undefined)[]) => values.find((value) => value !== undefined && value !== '');
-
-const readNpmrc = (file: string | undefined, env: NodeJS.ProcessEnv): NpmrcValues | undefined => {
-  if (file === undefined) {
-    return undefined;
-  }
+// These machines configure npm in the user's `~/.npmrc`, the same file Kilo's installer reads.
+export function npmSettings(home: string = homedir()): NpmSettings {
   try {
-    return parseNpmrc(readFileSync(file, 'utf8'), env);
+    return parseNpmrc(readFileSync(join(home, '.npmrc'), 'utf8'));
   } catch {
-    // A missing or unreadable npmrc leaves the other sources in place.
-    return undefined;
+    return parseNpmrc('');
   }
-};
-
-// Follows npm's precedence: environment variables, then the user npmrc, then the global npmrc. The global npmrc
-// is read only when `npm_config_globalconfig` names it, because its default location depends on the npm prefix.
-// Kilo installs from its cache directory, so a project npmrc does not apply to plugin installs.
-export function npmSettings(env: NodeJS.ProcessEnv = process.env): NpmSettings {
-  const files = [
-    readNpmrc(nonEmpty(env.npm_config_globalconfig, env.NPM_CONFIG_GLOBALCONFIG), env),
-    readNpmrc(nonEmpty(env.npm_config_userconfig, env.NPM_CONFIG_USERCONFIG) ?? join(homedir(), '.npmrc'), env),
-  ].filter((values) => values !== undefined);
-  const scopes: Record<string, string> = {};
-  const credentials: Record<string, CredentialFields> = {};
-  for (const values of files) {
-    Object.assign(scopes, values.scopes);
-    // npm merges each credential field separately, so a username and password can come from different files.
-    for (const [dart, fields] of Object.entries(values.credentials)) {
-      credentials[dart] = { ...credentials[dart], ...fields };
-    }
-  }
-  for (const [key, value] of Object.entries(env)) {
-    const scope = /^npm_config_(@[^:]+):registry$/i.exec(key)?.[1];
-    const registry = nonEmpty(value);
-    if (scope !== undefined && registry !== undefined) {
-      scopes[scope] = trimRegistry(registry);
-    }
-  }
-  const registry =
-    nonEmpty(env.npm_config_registry, env.NPM_CONFIG_REGISTRY) ??
-    files.findLast((values) => values.registry !== undefined)?.registry ??
-    DEFAULT_REGISTRY;
-  return {
-    registry: trimRegistry(registry),
-    scopes,
-    credentials,
-    pinnedDate:
-      nonEmpty(env.npm_config_before, env.NPM_CONFIG_BEFORE) !== undefined || files.some((values) => values.pinnedDate),
-  };
 }
 
-const authorizationHeader = (fields: CredentialFields): string | undefined => {
-  if (fields._authToken !== undefined) {
-    return `Bearer ${fields._authToken}`;
-  }
-  if (fields._auth !== undefined) {
-    return `Basic ${fields._auth}`;
-  }
-  if (fields.username !== undefined && fields._password !== undefined) {
-    const password = Buffer.from(fields._password, 'base64').toString('utf8');
-    return `Basic ${Buffer.from(`${fields.username}:${password}`).toString('base64')}`;
-  }
-  return undefined;
-};
-
-// Like npm, this walks from the registry URL up through its parent paths on the same host and uses the first one
-// that has any credential field. An incomplete credential there gives no authorization.
+// Like npm, this walks from the registry URL up through its parent paths on the same host.
 export function registryAuthorization(settings: NpmSettings, registry: string): string | undefined {
   let dart = nerfDart(registry);
   while (dart !== undefined) {
-    const fields = settings.credentials[dart];
-    if (fields !== undefined) {
-      return authorizationHeader(fields);
+    const authorization = settings.credentials[dart];
+    if (authorization !== undefined) {
+      return authorization;
     }
     const parent = dart.replace(/[^/]+\/$/, '');
     dart = parent === dart || parent === '//' ? undefined : parent;
@@ -341,26 +260,8 @@ export async function listCachedPackages(packagesDirectory: string): Promise<Cac
   return packages.filter((cached) => cached !== undefined);
 }
 
-// The state file records, per cache entry, the version it was removed for. If the reinstall still does not
-// produce that version, the registry Kilo installs from differs from the one checked here, and removing the
-// entry again would only reinstall the same version at every start.
-const readState = (packagesDirectory: string): Record<string, string> => {
-  try {
-    const state: unknown = JSON.parse(readFileSync(join(packagesDirectory, STATE_FILE), 'utf8'));
-    if (typeof state !== 'object' || state === null) {
-      return {};
-    }
-    return Object.fromEntries(
-      Object.entries(state).filter((item): item is [string, string] => typeof item[1] === 'string'),
-    );
-  } catch {
-    return {};
-  }
-};
-
 export async function findOutdatedPackages(options: FindOptions): Promise<OutdatedPackage[]> {
   await rm(join(options.packagesDirectory, STALE_DIRECTORY), { recursive: true, force: true });
-  const removedFor = readState(options.packagesDirectory);
   const cached = await listCachedPackages(options.packagesDirectory);
   const packuments = new Map<string, ReturnType<PackumentLookup>>();
   const results = await Promise.all(
@@ -376,14 +277,6 @@ export async function findOutdatedPackages(options: FindOptions): Promise<Outdat
         if (availableVersion === undefined || availableVersion === comparableVersion(entry.installedVersion)) {
           return undefined;
         }
-        if (removedFor[entry.entry] === availableVersion) {
-          await options.warn('Reinstalling the cached plugin package did not produce the registry version', {
-            package: `${entry.name}@${entry.spec}`,
-            installed: entry.installedVersion,
-            registry: availableVersion,
-          });
-          return undefined;
-        }
         return { ...entry, availableVersion };
       } catch (error) {
         await options.warn('Could not check cached plugin package', {
@@ -397,14 +290,12 @@ export async function findOutdatedPackages(options: FindOptions): Promise<Outdat
   return results.filter((result) => result !== undefined);
 }
 
-// Runs from a process `exit` handler, so it must be synchronous. An entry is skipped when its installed version has
-// changed since the check, because another process may have reinstalled it already. The directory is renamed before it
-// is deleted: Kilo treats any existing `node_modules/<name>` as a complete install, so a recursive delete that
-// stopped partway would leave a broken package that is never reinstalled. Errors are not reported because the process
-// is ending; an entry that stays in place is checked again at the next start.
-export function discardPackagesSync(packagesDirectory: string, packages: readonly OutdatedPackage[]): string[] {
+// An entry is skipped when its installed version has changed since the check, because another process may have
+// reinstalled it already. The directory is renamed before it is deleted: Kilo treats any existing
+// `node_modules/<name>` as a complete install, so a recursive delete that stopped partway would leave a broken package
+// that is never reinstalled.
+export function discardPackages(packagesDirectory: string, packages: readonly OutdatedPackage[]): string[] {
   const discarded: string[] = [];
-  const state = readState(packagesDirectory);
   for (const entry of packages) {
     try {
       if (manifestVersion(readFileSync(manifestPath(entry.directory, entry.name), 'utf8')) !== entry.installedVersion) {
@@ -415,17 +306,9 @@ export function discardPackagesSync(packagesDirectory: string, packages: readonl
       const staleDirectory = join(staleRoot, randomUUID());
       renameSync(entry.directory, staleDirectory);
       discarded.push(entry.entry);
-      state[entry.entry] = entry.availableVersion;
       rmSync(staleDirectory, { recursive: true, force: true });
     } catch {
-      // See the function comment.
-    }
-  }
-  if (discarded.length > 0) {
-    try {
-      writeFileSync(join(packagesDirectory, STATE_FILE), JSON.stringify(state));
-    } catch {
-      // See the function comment.
+      // The entry stays in place and is checked again at the next start.
     }
   }
   return discarded;
@@ -434,24 +317,8 @@ export function discardPackagesSync(packagesDirectory: string, packages: readonl
 export function registryPackument(settings: NpmSettings): PackumentLookup {
   return async (name) => {
     const scope = name.startsWith('@') ? name.slice(0, name.indexOf('/')) : undefined;
-    const configured = (scope === undefined ? undefined : settings.scopes[scope]) ?? settings.registry;
-    // npm accepts credentials inside the registry URL. They are moved to the header so that request errors, which
-    // can include the URL, do not expose them in logs.
-    let url: URL;
-    try {
-      url = new URL(`${configured}/`);
-    } catch {
-      // The parse error can include the URL and any credentials in it, so it is not passed on.
-      throw new Error('The configured registry URL is not valid');
-    }
-    const urlAuthorization =
-      url.username === ''
-        ? undefined
-        : `Basic ${Buffer.from(`${decodeURIComponent(url.username)}:${decodeURIComponent(url.password)}`).toString('base64')}`;
-    url.username = '';
-    url.password = '';
-    const registry = trimRegistry(url.href);
-    const authorization = registryAuthorization(settings, registry) ?? urlAuthorization;
+    const registry = (scope === undefined ? undefined : settings.scopes[scope]) ?? settings.registry;
+    const authorization = registryAuthorization(settings, registry);
     const response = await fetch(`${registry}/${name.replaceAll('/', '%2f')}`, {
       headers: {
         accept: 'application/vnd.npm.install-v1+json',

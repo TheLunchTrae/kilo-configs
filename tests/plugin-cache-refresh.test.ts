@@ -1,16 +1,15 @@
 import assert from 'node:assert/strict';
-import { spawn } from 'node:child_process';
 import { once } from 'node:events';
-import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readdir, rm, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { homedir, tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { type TestContext, test } from 'node:test';
-import { fileURLToPath } from 'node:url';
+import { setTimeout as delay } from 'node:timers/promises';
 import {
   type OutdatedPackage,
   defaultPackagesDirectory,
-  discardPackagesSync,
+  discardPackages,
   findOutdatedPackages,
   nerfDart,
   npmSettings,
@@ -20,7 +19,7 @@ import {
   registryPackument,
   resolveSpec,
 } from '../extensions/plugin-cache/refresh.ts';
-import { daemonRunning, daemonStateFiles, isAttachCommand } from '../extensions/plugin-cache/tui.ts';
+import { startPluginCacheRefresh } from '../extensions/plugin-cache/runner.ts';
 
 async function packagesFixture(t: TestContext) {
   const root = await mkdtemp(join(tmpdir(), 'plugin-cache-refresh-test-'));
@@ -98,7 +97,7 @@ test('the cache directory follows XDG_CACHE_HOME, treats an empty value as unset
   assert.equal(defaultPackagesDirectory({ XDG_CACHE_HOME: '' }), fallback);
 });
 
-test('npmrc registry settings are read and other keys are ignored', () => {
+test('npmrc registry, scope registry, and credential settings are read and other keys are ignored', () => {
   const text = [
     '; comment',
     '# comment',
@@ -106,73 +105,25 @@ test('npmrc registry settings are read and other keys are ignored', () => {
     '@scope:registry=${SCOPE_REGISTRY}/',
     '//mirror.example.test/npm/:_authToken=${NPM_TOKEN}',
     '//basic.example.test/:_auth=c3ludGhldGljOnBhc3N3b3Jk',
-    '//split.example.test/:username=synthetic',
-    `//split.example.test/:_password=${Buffer.from('password').toString('base64')}`,
-    '//partial.example.test/:username=synthetic',
+    '//other.example.test/:username=synthetic',
     'email=synthetic@example.test',
-    'before=2026-01-01',
   ].join('\r\n');
   assert.deepEqual(parseNpmrc(text, { SCOPE_REGISTRY: 'https://scope.example.test', NPM_TOKEN: 'synthetic-token' }), {
     registry: 'https://mirror.example.test/npm',
     scopes: { '@scope': 'https://scope.example.test' },
     credentials: {
-      '//mirror.example.test/npm/': { _authToken: 'synthetic-token' },
-      '//basic.example.test/': { _auth: 'c3ludGhldGljOnBhc3N3b3Jk' },
-      '//split.example.test/': { username: 'synthetic', _password: Buffer.from('password').toString('base64') },
-      '//partial.example.test/': { username: 'synthetic' },
+      '//mirror.example.test/npm/': 'Bearer synthetic-token',
+      '//basic.example.test/': 'Basic c3ludGhldGljOnBhc3N3b3Jk',
     },
-    pinnedDate: true,
   });
-  assert.deepEqual(parseNpmrc('', {}), { scopes: {}, credentials: {}, pinnedDate: false });
+  assert.deepEqual(parseNpmrc('', {}), { registry: 'https://registry.npmjs.org', scopes: {}, credentials: {} });
 });
 
-test('npm settings merge the global npmrc, the user npmrc, and environment variables in npm order', async (t) => {
+test('npm settings come from ~/.npmrc, with npm defaults when it is missing', async (t) => {
   const { root } = await packagesFixture(t);
-  const globalConfig = join(root, 'global-npmrc');
-  const userConfig = join(root, 'npmrc');
-  await writeFile(
-    globalConfig,
-    'registry=https://global.example.test\n@other:registry=https://other.example.test\n' +
-      '//global.example.test/:_authToken=synthetic-global\n//split.example.test/:username=synthetic\n',
-  );
-  await writeFile(
-    userConfig,
-    'registry=https://file.example.test\n@scope:registry=https://scope-file.example.test\n' +
-      '//file.example.test/:_authToken=synthetic-user\n//split.example.test/:_password=cGFzc3dvcmQ=\n',
-  );
-  assert.deepEqual(npmSettings({ npm_config_userconfig: userConfig, npm_config_globalconfig: globalConfig }), {
-    registry: 'https://file.example.test',
-    scopes: { '@other': 'https://other.example.test', '@scope': 'https://scope-file.example.test' },
-    credentials: {
-      '//global.example.test/': { _authToken: 'synthetic-global' },
-      '//split.example.test/': { username: 'synthetic', _password: 'cGFzc3dvcmQ=' },
-      '//file.example.test/': { _authToken: 'synthetic-user' },
-    },
-    pinnedDate: false,
-  });
-  assert.deepEqual(
-    npmSettings({
-      npm_config_userconfig: userConfig,
-      npm_config_registry: 'https://env.example.test/',
-      'npm_config_@scope:registry': 'https://scope-env.example.test',
-      npm_config_before: '2026-01-01',
-    }),
-    {
-      registry: 'https://env.example.test',
-      scopes: { '@scope': 'https://scope-env.example.test' },
-      credentials: {
-        '//file.example.test/': { _authToken: 'synthetic-user' },
-        '//split.example.test/': { _password: 'cGFzc3dvcmQ=' },
-      },
-      pinnedDate: true,
-    },
-  );
-  assert.deepEqual(npmSettings({ npm_config_userconfig: join(root, 'missing') }), {
-    registry: 'https://registry.npmjs.org',
-    scopes: {},
-    credentials: {},
-    pinnedDate: false,
-  });
+  assert.deepEqual(npmSettings(root), { registry: 'https://registry.npmjs.org', scopes: {}, credentials: {} });
+  await writeFile(join(root, '.npmrc'), 'registry=https://artifactory.example.test/api/npm/npm/\n');
+  assert.equal(npmSettings(root).registry, 'https://artifactory.example.test/api/npm/npm');
 });
 
 test('registry credentials match the registry path and then its parent paths on the same host', () => {
@@ -180,26 +131,16 @@ test('registry credentials match the registry path and then its parent paths on 
     registry: 'https://registry.example.test',
     scopes: {},
     credentials: {
-      '//npm.example.test/api/npm/': { _authToken: 'synthetic-path' },
-      '//host.example.test/': { _authToken: 'synthetic-host' },
-      '//port.example.test:8443/': { _auth: 'c3ludGhldGljOnBvcnQ=' },
-      '//nested.example.test/': { _authToken: 'synthetic-parent' },
-      '//nested.example.test/incomplete/': { username: 'synthetic' },
-      '//split.example.test/': { username: 'synthetic', _password: Buffer.from('password').toString('base64') },
+      '//npm.example.test/api/npm/': 'Bearer synthetic-path',
+      '//host.example.test/': 'Bearer synthetic-host',
+      '//port.example.test:8443/': 'Basic c3ludGhldGljOnBvcnQ=',
     },
-    pinnedDate: false,
   };
   assert.equal(registryAuthorization(settings, 'https://npm.example.test/api/npm'), 'Bearer synthetic-path');
   assert.equal(registryAuthorization(settings, 'https://npm.example.test/api/npm/virtual/'), 'Bearer synthetic-path');
   assert.equal(registryAuthorization(settings, 'https://npm.example.test/api'), undefined);
   assert.equal(registryAuthorization(settings, 'https://host.example.test/a/b'), 'Bearer synthetic-host');
   assert.equal(registryAuthorization(settings, 'https://port.example.test:8443'), 'Basic c3ludGhldGljOnBvcnQ=');
-  assert.equal(registryAuthorization(settings, 'https://nested.example.test/incomplete/x'), undefined);
-  assert.equal(registryAuthorization(settings, 'https://nested.example.test/other'), 'Bearer synthetic-parent');
-  assert.equal(
-    registryAuthorization(settings, 'https://split.example.test'),
-    `Basic ${Buffer.from('synthetic:password').toString('base64')}`,
-  );
   assert.equal(registryAuthorization(settings, 'https://port.example.test'), undefined);
   assert.equal(registryAuthorization(settings, 'https://other.example.test'), undefined);
   assert.equal(registryAuthorization(settings, 'not a url'), undefined);
@@ -265,41 +206,23 @@ test('a missing cache directory reports nothing', async () => {
   assert.deepEqual(outdated, []);
 });
 
-test('discarded packages are removed whole and are not removed again for the same version', async (t) => {
+test('discarded packages are removed whole', async (t) => {
   const { root, install } = await packagesFixture(t);
   await install('stale@latest', 'stale', '1.0.0');
-  const lookup = () => Promise.resolve(tagsOnly({ latest: '1.1.0' }));
-  const first = await findOutdatedPackages({ packagesDirectory: root, fetchPackument: lookup, warn: noWarning });
-  assert.deepEqual(discardPackagesSync(root, first), ['stale@latest']);
-  assert.equal(await exists(root, 'stale@latest'), false);
-  assert.deepEqual(await readdir(join(root, '.stale')), []);
-  assert.deepEqual(JSON.parse(await readFile(join(root, '.plugin-cache-refresh.json'), 'utf8')), {
-    'stale@latest': '1.1.0',
-  });
-
-  // A registry mismatch reinstalls the same old version.
-  await install('stale@latest', 'stale', '1.0.0');
-  const warnings: unknown[] = [];
-  const again = await findOutdatedPackages({
+  const outdated = await findOutdatedPackages({
     packagesDirectory: root,
-    fetchPackument: lookup,
-    warn: (_message, extra) => {
-      warnings.push(extra);
-    },
-  });
-  assert.deepEqual(again, []);
-  assert.deepEqual(warnings, [{ package: 'stale@latest', installed: '1.0.0', registry: '1.1.0' }]);
-  assert.equal(await exists(root, '.stale'), false);
-
-  const newer = await findOutdatedPackages({
-    packagesDirectory: root,
-    fetchPackument: () => Promise.resolve(tagsOnly({ latest: '1.2.0' })),
+    fetchPackument: () => Promise.resolve(tagsOnly({ latest: '1.1.0' })),
     warn: noWarning,
   });
-  assert.deepEqual(
-    newer.map((entry) => entry.availableVersion),
-    ['1.2.0'],
-  );
+  assert.deepEqual(discardPackages(root, outdated), ['stale@latest']);
+  assert.equal(await exists(root, 'stale@latest'), false);
+  assert.deepEqual(await readdir(join(root, '.stale')), []);
+  await findOutdatedPackages({
+    packagesDirectory: root,
+    fetchPackument: () => Promise.resolve(undefined),
+    warn: noWarning,
+  });
+  assert.equal(await exists(root, '.stale'), false);
 });
 
 test('a package that cannot be moved stays in place', async (t) => {
@@ -313,8 +236,7 @@ test('a package that cannot be moved stays in place', async (t) => {
     installedVersion: '1.0.0',
     availableVersion: '1.1.0',
   };
-  assert.deepEqual(discardPackagesSync(root, [missing]), []);
-  assert.equal(await exists(root, '.plugin-cache-refresh.json'), false);
+  assert.deepEqual(discardPackages(root, [missing]), []);
 });
 
 test('registry packuments use the scope registry, its credential, and the abbreviated packument', async (t) => {
@@ -323,8 +245,7 @@ test('registry packuments use the scope registry, its credential, and the abbrev
   const fetchPackument = registryPackument({
     registry: main.url,
     scopes: { '@scope': scoped.url },
-    credentials: { [String(nerfDart(scoped.url))]: { _authToken: 'synthetic-scope' } },
-    pinnedDate: false,
+    credentials: { [String(nerfDart(scoped.url))]: 'Bearer synthetic-scope' },
   });
   assert.deepEqual(await fetchPackument('@scope/plugin'), tagsOnly({ latest: '1.2.3' }));
   assert.deepEqual(await fetchPackument('plugin'), tagsOnly({ latest: '1.0.0' }));
@@ -347,17 +268,6 @@ test('registry packuments use the scope registry, its credential, and the abbrev
   );
 });
 
-test('registry credentials in the URL are sent as a header and removed from the request URL', async (t) => {
-  const main = await registryFixture(t, { '/plugin': { latest: '1.0.0' } });
-  const withUser = main.url.replace('http://', 'http://synthetic%40user:pass%3Aword@');
-  const fetchPackument = registryPackument({ registry: withUser, scopes: {}, credentials: {}, pinnedDate: false });
-  assert.deepEqual(await fetchPackument('plugin'), tagsOnly({ latest: '1.0.0' }));
-  assert.deepEqual(
-    main.requests.map((request) => [request.url, request.authorization]),
-    [['/plugin', `Basic ${Buffer.from('synthetic@user:pass:word').toString('base64')}`]],
-  );
-});
-
 test('a package reinstalled after the check is not removed', async (t) => {
   const { root, install } = await packagesFixture(t);
   await install('stale@latest', 'stale', '1.0.0');
@@ -367,82 +277,57 @@ test('a package reinstalled after the check is not removed', async (t) => {
     warn: noWarning,
   });
   await install('stale@latest', 'stale', '2.0.0');
-  assert.deepEqual(discardPackagesSync(root, outdated), []);
+  assert.deepEqual(discardPackages(root, outdated), []);
   assert.equal(await exists(root, 'stale@latest'), true);
 });
 
-async function runPlugin(t: TestContext, mode: 'process' | 'worker') {
+test('the refresh checks once per process, removes outdated packages, and asks for a restart', async (t) => {
   const { root, install } = await packagesFixture(t);
   const packages = join(root, 'cache', 'kilo', 'packages');
   await install('cache/kilo/packages/stale@latest', 'stale', '1.0.0');
   await install('cache/kilo/packages/current@latest', 'current', '1.0.0');
   const registry = await registryFixture(t, { '/stale': { latest: '2.0.0' }, '/current': { latest: '1.0.0' } });
-  const child = spawn(
-    process.execPath,
-    ['--experimental-strip-types', fileURLToPath(new URL('./plugin-cache-refresh-child.ts', import.meta.url)), mode],
-    {
-      env: {
-        ...process.env,
-        XDG_CACHE_HOME: join(root, 'cache'),
-        npm_config_registry: registry.url,
-        npm_config_userconfig: join(root, 'missing-npmrc'),
-      },
-    },
-  );
-  let output = '';
-  child.stdout.setEncoding('utf8').on('data', (chunk: string) => (output += chunk));
-  const [code, signal] = (await once(child, 'exit')) as [number | null, NodeJS.Signals | null];
-  assert.deepEqual([code, signal], [0, null]);
-  return {
-    logs: (JSON.parse(output) as { logs: unknown[] }).logs,
-    requests: registry.requests.map((request) => request.url).sort(),
-    staleExists: await exists(packages, 'stale@latest'),
-    currentExists: await exists(packages, 'current@latest'),
+  const names = ['XDG_CACHE_HOME', 'HOME', 'USERPROFILE'] as const;
+  const previous = names.map((name) => [name, process.env[name]] as const);
+  t.after(() => {
+    for (const [name, value] of previous) {
+      if (value === undefined) {
+        Reflect.deleteProperty(process.env, name);
+      } else {
+        process.env[name] = value;
+      }
+    }
+  });
+  process.env.XDG_CACHE_HOME = join(root, 'cache');
+  process.env.HOME = root;
+  process.env.USERPROFILE = root;
+  await writeFile(join(root, '.npmrc'), `registry=${registry.url}\n`);
+  const logs: unknown[] = [];
+  const toasts: unknown[] = [];
+  const log = (level: string, message: string, extra: Record<string, unknown>) => {
+    logs.push({ level, message, extra });
+    return Promise.resolve();
   };
-}
-
-test('the server plugin checks once per process and removes outdated packages when the process exits', async (t) => {
-  assert.deepEqual(await runPlugin(t, 'process'), {
-    logs: [
-      {
-        service: 'plugin-cache-refresh',
-        level: 'info',
-        message:
-          'Cached plugin packages have newer versions; they are removed when Kilo exits normally and reinstalled at the next start',
-        extra: { packages: ['stale@latest: 1.0.0 -> 2.0.0'] },
-      },
-    ],
-    requests: ['/current', '/stale'],
-    staleExists: false,
-    currentExists: true,
-  });
-});
-
-test('the server plugin does nothing in a worker thread, where the TUI entrypoint does the work', async (t) => {
-  assert.deepEqual(await runPlugin(t, 'worker'), {
-    logs: [],
-    requests: [],
-    staleExists: true,
-    currentExists: true,
-  });
-});
-
-test('the TUI entrypoint recognizes the attach command', () => {
-  assert.equal(isAttachCommand(['bun', 'kilo', 'attach', 'http://localhost:4096']), true);
-  assert.equal(isAttachCommand(['bun', 'kilo', '--print-logs', 'attach']), true);
-  assert.equal(isAttachCommand(['bun', 'kilo', '--log-level', 'DEBUG', 'attach', 'http://localhost:4096']), true);
-  assert.equal(isAttachCommand(['bun', 'kilo']), false);
-  assert.equal(isAttachCommand(['bun', 'kilo', '--print-logs', 'project']), false);
-});
-
-test('an invalid registry URL is reported without its text', async () => {
-  const fetchPackument = registryPackument({
-    registry: 'https://synthetic:secret@exa mple.test',
-    scopes: {},
-    credentials: {},
-    pinnedDate: false,
-  });
-  await assert.rejects(fetchPackument('plugin'), { message: 'The configured registry URL is not valid' });
+  const notify = (message: string) => {
+    toasts.push(message);
+    return Promise.resolve();
+  };
+  startPluginCacheRefresh(log, notify, { removalDelayMs: 0 });
+  startPluginCacheRefresh(log, notify, { removalDelayMs: 0 });
+  for (let attempt = 0; attempt < 200 && toasts.length === 0; attempt++) {
+    await delay(20);
+  }
+  assert.equal(await exists(packages, 'stale@latest'), false);
+  assert.equal(await exists(packages, 'current@latest'), true);
+  assert.deepEqual(registry.requests.map((request) => request.url).sort(), ['/current', '/stale']);
+  assert.deepEqual(logs, [
+    {
+      level: 'info',
+      message: 'Removed outdated cached plugin packages; the next start installs the new versions',
+      extra: { packages: ['stale@latest: 1.0.0 -> 2.0.0'] },
+    },
+  ]);
+  assert.deepEqual(toasts, ['Plugin updates are ready. Restart Kilo to load them.']);
 });
 
 test('ranges resolve like npm: latest when it satisfies the range, otherwise the highest non-deprecated match', () => {
@@ -511,7 +396,6 @@ test('registry packuments include each version and whether it is deprecated', as
     registry: `http://127.0.0.1:${String(address.port)}`,
     scopes: {},
     credentials: {},
-    pinnedDate: false,
   });
   assert.deepEqual(await fetchPackument('plugin'), {
     distTags: { latest: '1.1.0' },
@@ -586,39 +470,9 @@ test('registry packuments include the Node engine range of each version', async 
     registry: `http://127.0.0.1:${String(address.port)}`,
     scopes: {},
     credentials: {},
-    pinnedDate: false,
   });
   assert.deepEqual((await fetchPackument('plugin'))?.versions, [
     { version: '1.0.0', deprecated: false, node: '>=22' },
     { version: '1.1.0', deprecated: false },
   ]);
-});
-
-test('daemon state files follow Kilo state directories', () => {
-  assert.deepEqual(daemonStateFiles({ XDG_STATE_HOME: '/state', XDG_DATA_HOME: '/data' }), [
-    join('/state', 'kilo', 'daemon.json'),
-  ]);
-  assert.deepEqual(daemonStateFiles({ XDG_DATA_HOME: '/data' }), [
-    join(homedir(), '.local/state', 'kilo', 'daemon.json'),
-    join('/data', 'kilo', 'state', 'daemon.json'),
-  ]);
-  assert.deepEqual(daemonStateFiles({ KILO_TEST_DAEMON_STATE_DIR: '/daemon' }), [join('/daemon', 'daemon.json')]);
-});
-
-test('a running Kilo daemon is detected from a live pid unless KILO_NO_DAEMON is set', async (t) => {
-  const { root } = await packagesFixture(t);
-  const state = join(root, 'state');
-  await mkdir(join(state, 'kilo'), { recursive: true });
-  const env = { XDG_STATE_HOME: state, XDG_DATA_HOME: join(root, 'data') };
-  assert.equal(daemonRunning(env), false, 'no state file');
-  await writeFile(join(state, 'kilo', 'daemon.json'), JSON.stringify({ pid: process.pid, url: 'http://127.0.0.1:1' }));
-  assert.equal(daemonRunning(env), true);
-  assert.equal(daemonRunning({ ...env, KILO_NO_DAEMON: '1' }), false);
-  const exited = spawn(process.execPath, ['-e', '']);
-  await once(exited, 'exit');
-  assert.ok(exited.pid !== undefined);
-  await writeFile(join(state, 'kilo', 'daemon.json'), JSON.stringify({ pid: exited.pid }));
-  assert.equal(daemonRunning(env), false, 'a pid that is no longer running');
-  await writeFile(join(state, 'kilo', 'daemon.json'), '{"pid":"1"}');
-  assert.equal(daemonRunning(env), false, 'a malformed state file');
 });
