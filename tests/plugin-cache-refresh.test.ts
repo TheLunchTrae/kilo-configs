@@ -424,8 +424,9 @@ test('the plugin checks once per process, removes outdated packages at once, and
       extra: { packages: ['stale@latest: 1.0.0 -> 2.0.0'] },
     },
   ]);
-  assert.equal(toasts.length, 1);
-  assert.match(JSON.stringify(toasts[0]), /stale@latest: 1\.0\.0 -> 2\.0\.0.*Restart Kilo.*reload keeps the old/);
+  assert.deepEqual(toasts, [
+    { title: 'Plugin updates', message: 'Plugin updates are ready. Restart Kilo to load them.', variant: 'info' },
+  ]);
 });
 
 test('an invalid registry URL is reported without its text', async () => {

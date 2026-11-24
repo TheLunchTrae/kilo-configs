@@ -61,9 +61,6 @@ export function startPluginCacheRefresh(log: Log, notify: Notify, env: NodeJS.Pr
     await log('info', 'Removed outdated cached plugin packages; the next start installs the new versions', {
       packages: updates,
     });
-    await notify(
-      `Plugin updates: ${updates.join(', ')}. Restart Kilo to load them; a reload keeps the old versions. ` +
-        'Also restart the Kilo daemon or any `kilo serve` that uses these plugins.',
-    );
+    await notify('Plugin updates are ready. Restart Kilo to load them.');
   })().catch((error: unknown) => log('warn', 'Plugin cache refresh failed', { error: errorText(error) }));
 }
