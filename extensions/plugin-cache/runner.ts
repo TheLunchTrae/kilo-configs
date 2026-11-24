@@ -19,7 +19,7 @@ type Started = typeof globalThis & { [STARTED]?: true };
 
 // The TUI loads its own copies of npm plugins while the instance starts. Removing an entry during that load would
 // make the TUI plugin fail for the session, so removal waits until startup is over.
-export const REMOVAL_DELAY_MS = 15_000;
+export const REMOVAL_DELAY_MS = 3_000;
 
 export interface RefreshOptions {
   readonly env?: NodeJS.ProcessEnv;
