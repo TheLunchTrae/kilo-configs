@@ -12,7 +12,7 @@ Read affected source before editing. Follow root authorization, tool-selection, 
 
 ## Kilo runtime
 
-The configuration targets [Kilo 7.8.27](https://github.com/Kilo-Org/kilocode/releases/tag/v7.8.27).
+The configuration targets [Kilo 7.8.32](https://github.com/Kilo-Org/kilocode/releases/tag/v7.8.32).
 Use Kilo configuration and state paths. Preserve published API identifiers that the current plugins require.
 
 ### Configuration paths
@@ -89,8 +89,8 @@ None of them reads OpenCode directories or `OPENCODE_*` variables.
 - Configuration and discovery:
   [Kilo CLI](https://kilo.ai/docs/code-with-ai/platforms/cli),
   [plugins](https://kilo.ai/docs/automate/extending/plugins),
-  [released reference resolution](https://github.com/Kilo-Org/kilocode/blob/v7.8.27/packages/opencode/src/kilocode/reference.ts),
-  [released agent policy](https://github.com/Kilo-Org/kilocode/blob/v7.8.27/packages/opencode/src/kilocode/agent/index.ts).
+  [released reference resolution](https://github.com/Kilo-Org/kilocode/blob/v7.8.32/packages/opencode/src/kilocode/reference.ts),
+  [released agent policy](https://github.com/Kilo-Org/kilocode/blob/v7.8.32/packages/opencode/src/kilocode/agent/index.ts).
 
 ## Configuration and prompts
 
