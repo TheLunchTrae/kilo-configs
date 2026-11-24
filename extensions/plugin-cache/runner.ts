@@ -1,3 +1,4 @@
+import { setTimeout as delay } from 'node:timers/promises';
 import {
   defaultPackagesDirectory,
   discardPackages,
@@ -16,25 +17,31 @@ export const LOG_SERVICE = 'plugin-cache-refresh';
 const STARTED = Symbol.for('plugin-cache-refresh.started');
 type Started = typeof globalThis & { [STARTED]?: true };
 
+// The TUI loads its own copies of npm plugins while the instance starts. Removing an entry during that load would
+// make the TUI plugin fail for the session, so removal waits until startup is over.
+export const REMOVAL_DELAY_MS = 15_000;
+
+export interface RefreshOptions {
+  readonly env?: NodeJS.ProcessEnv;
+  readonly removalDelayMs?: number;
+}
+
 export const errorText = (error: unknown) => (error instanceof Error ? error.message : String(error));
 
-// Checks the cache in the background, so registry requests do not delay startup, and removes outdated entries as
-// soon as it finds them. Plugins are imported when they load, so the running process keeps the old versions. A
+// Checks the cache in the background, so registry requests do not delay startup, and removes outdated entries
+// shortly after startup. Plugins are imported when they load, so the running process keeps the old versions. A
 // plugin that reads more of its own files later, such as lazily imported chunks or bundled assets, would fail after
-// the removal. The next start installs the current versions. A reload does not: the loader imports the same path,
-// and the runtime returns the module it already loaded.
-export function startPluginCacheRefresh(log: Log, notify: Notify, env: NodeJS.ProcessEnv = process.env): void {
+// the removal. The next start installs the current versions. A reload reinstalls the files but keeps running the
+// modules it already loaded, so only a restart loads the new versions.
+export function startPluginCacheRefresh(log: Log, notify: Notify, options: RefreshOptions = {}): void {
+  const env = options.env ?? process.env;
   const started = globalThis as Started;
   if (started[STARTED] === true) {
     return;
   }
   started[STARTED] = true;
   void (async () => {
-    const settings = npmSettings(env);
-    // With `before` set, npm installs the newest version published before that date, not the current version.
-    if (settings.pinnedDate) {
-      return;
-    }
+    const settings = npmSettings();
     const packagesDirectory = defaultPackagesDirectory(env);
     const outdated = await findOutdatedPackages({
       packagesDirectory,
@@ -44,6 +51,8 @@ export function startPluginCacheRefresh(log: Log, notify: Notify, env: NodeJS.Pr
     if (outdated.length === 0) {
       return;
     }
+    // An unreferenced timer does not keep a finished process, such as `kilo run`, alive.
+    await delay(options.removalDelayMs ?? REMOVAL_DELAY_MS, undefined, { ref: false });
     const discarded = new Set(discardPackages(packagesDirectory, outdated));
     const removed = outdated.filter((entry) => discarded.has(entry.entry));
     const kept = outdated.filter((entry) => !discarded.has(entry.entry));

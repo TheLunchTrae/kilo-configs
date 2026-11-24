@@ -11,7 +11,7 @@ export const PluginCacheRefreshPlugin: Plugin = async ({ client }) => {
       ),
     // Without a TUI, as in `kilo serve`, the toast has nowhere to go; the log entry remains.
     (message) =>
-      client.tui.showToast({ body: { title: 'Plugin updates', message, variant: 'info' } }).then(
+      client.tui.showToast({ body: { title: 'Plugin updates', message, variant: 'info', duration: 30_000 } }).then(
         () => undefined,
         () => undefined,
       ),
