@@ -235,10 +235,13 @@ Outdated entries are removed only at process exit, and the next start reinstalls
 recreated while Kilo runs, so disposal is not a safe removal point.
 The TUI runs server plugins in a worker that it terminates without exit handlers. The TUI entrypoint does the work
 from the main thread, and the server entrypoint skips worker threads. Keep both registrations.
-The TUI exits through `process.exit()` after SIGHUP, SIGINT, and SIGTERM too, so closing its terminal still removes
-the entries. The TUI entrypoint skips `kilo attach`, whose server runs in another process and can still use them.
-Other processes ended by a signal, such as `kilo serve`, keep the entries for a later normal exit. Do not add SIGINT
-or SIGTERM listeners: libraries that re-raise a signal only as its sole listener would stop doing so.
+The embedded TUI and `kilo serve`, including the daemon, exit through `process.exit()` after SIGHUP, SIGINT, and
+SIGTERM too, so closing the terminal or stopping the server still removes the entries.
+The TUI entrypoint skips `kilo attach` and a TUI attached to a running Kilo daemon, because their server runs in
+another process and can still use the entries. The daemon's server entrypoint removes them when it stops.
+The daemon check mirrors `DaemonClient.connect`: KILO_NO_DAEMON unset and a live pid in `daemon.json` in either
+state directory. Processes ended by a signal in other ways keep the entries for a later normal exit. Do not add
+SIGINT or SIGTERM listeners: libraries that re-raise a signal only as its sole listener would stop doing so.
 Removal skips an entry whose installed version changed since the check. It records the version each removal
 targeted. If a reinstall still differs, it warns and does not remove the entry again.
 Registry settings come from environment variables, the user npmrc, and the npmrc in `npm_config_globalconfig`.
@@ -246,8 +249,9 @@ It reads `registry`, `@scope:registry`, `before`, and per-registry `_authToken`,
 Credentials go only to their matching registry, without following redirects. Registry failures keep the cache.
 A `before` setting disables the check. Custom CA settings such as `cafile` are not read.
 Other running processes that use a removed entry can fail to read its files later.
-Shared logic lives in `extensions/plugin-cache/` because the loader treats every export of a `plugins/` file as a
-plugin. The implementation matches the opencode-configs copy except for the cache path and product names.
+Shared logic lives in `extensions/plugin-cache/` because the loader calls every function export of a `plugins/` file
+as a plugin. The implementation matches the opencode-configs copy except for the cache path, product names, and the
+daemon check, which only Kilo needs.
 
 Session tools live in `extensions/session-tools/` with shared UI helpers outside auto-discovered plugin directories.
 Their TUI-only entrypoints are registered in `tui.jsonc` and stay outside server plugin auto-discovery.

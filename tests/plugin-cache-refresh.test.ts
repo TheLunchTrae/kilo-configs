@@ -20,7 +20,7 @@ import {
   registryPackument,
   resolveSpec,
 } from '../extensions/plugin-cache/refresh.ts';
-import { isAttachCommand } from '../extensions/plugin-cache/tui.ts';
+import { daemonRunning, daemonStateFiles, isAttachCommand } from '../extensions/plugin-cache/tui.ts';
 
 async function packagesFixture(t: TestContext) {
   const root = await mkdtemp(join(tmpdir(), 'plugin-cache-refresh-test-'));
@@ -592,4 +592,33 @@ test('registry packuments include the Node engine range of each version', async 
     { version: '1.0.0', deprecated: false, node: '>=22' },
     { version: '1.1.0', deprecated: false },
   ]);
+});
+
+test('daemon state files follow Kilo state directories', () => {
+  assert.deepEqual(daemonStateFiles({ XDG_STATE_HOME: '/state', XDG_DATA_HOME: '/data' }), [
+    join('/state', 'kilo', 'daemon.json'),
+  ]);
+  assert.deepEqual(daemonStateFiles({ XDG_DATA_HOME: '/data' }), [
+    join(homedir(), '.local/state', 'kilo', 'daemon.json'),
+    join('/data', 'kilo', 'state', 'daemon.json'),
+  ]);
+  assert.deepEqual(daemonStateFiles({ KILO_TEST_DAEMON_STATE_DIR: '/daemon' }), [join('/daemon', 'daemon.json')]);
+});
+
+test('a running Kilo daemon is detected from a live pid unless KILO_NO_DAEMON is set', async (t) => {
+  const { root } = await packagesFixture(t);
+  const state = join(root, 'state');
+  await mkdir(join(state, 'kilo'), { recursive: true });
+  const env = { XDG_STATE_HOME: state, XDG_DATA_HOME: join(root, 'data') };
+  assert.equal(daemonRunning(env), false, 'no state file');
+  await writeFile(join(state, 'kilo', 'daemon.json'), JSON.stringify({ pid: process.pid, url: 'http://127.0.0.1:1' }));
+  assert.equal(daemonRunning(env), true);
+  assert.equal(daemonRunning({ ...env, KILO_NO_DAEMON: '1' }), false);
+  const exited = spawn(process.execPath, ['-e', '']);
+  await once(exited, 'exit');
+  assert.ok(exited.pid !== undefined);
+  await writeFile(join(state, 'kilo', 'daemon.json'), JSON.stringify({ pid: exited.pid }));
+  assert.equal(daemonRunning(env), false, 'a pid that is no longer running');
+  await writeFile(join(state, 'kilo', 'daemon.json'), '{"pid":"1"}');
+  assert.equal(daemonRunning(env), false, 'a malformed state file');
 });

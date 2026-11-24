@@ -21,9 +21,10 @@ export const errorText = (error: unknown) => (error instanceof Error ? error.mes
 // Checks the cache in the background, so registry requests do not delay startup. Outdated entries are removed when
 // the process exits: the process has already loaded them, and a plugin can read more of its files later. Kilo
 // also disposes and recreates instances while it runs, so instance disposal is not a safe point. The next start
-// installs the current versions. A process ended by a signal, as `kilo serve` usually is, keeps the entries; they
-// are removed when a later process exits normally. Signal listeners are not added: libraries that re-raise signals
-// only when they are the sole listener would stop doing so, and `kilo run` uses SIGINT without exiting.
+// installs the current versions. The TUI and `kilo serve`, including the daemon, exit through `process.exit()` after
+// SIGHUP, SIGINT, or SIGTERM. A process ended by a signal in another way keeps the entries; they are removed when a
+// later process exits normally. Signal listeners are not added: libraries that re-raise signals only when they are
+// the sole listener would stop doing so, and `kilo run` uses SIGINT without exiting.
 export function startPluginCacheRefresh(log: Log, env: NodeJS.ProcessEnv = process.env): void {
   const started = globalThis as Started;
   if (started[STARTED] === true) {
